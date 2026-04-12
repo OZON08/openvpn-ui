@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"github.com/beego/beego/v2/server/web"
-	"github.com/d3vilh/openvpn-ui/models"
+	"github.com/OZON08/openvpn-ui/models"
 )
 
 type BaseController struct {
@@ -54,8 +54,14 @@ func (c *BaseController) Finish() {
 }
 
 func (c *BaseController) GetLogin() *models.User {
-	u := &models.User{Id: c.GetSession("userinfo").(int64)}
-	u.Read("Id")
+	id, ok := c.GetSession("userinfo").(int64)
+	if !ok {
+		return nil
+	}
+	u := &models.User{Id: id}
+	if err := u.Read("Id"); err != nil {
+		return nil
+	}
 	return u
 }
 
@@ -84,7 +90,9 @@ func (c *BaseController) SetParams() {
 		return
 	}
 	for k, v := range input {
-		c.Data["Params"].(map[string]string)[k] = v[0]
+		if len(v) > 0 {
+			c.Data["Params"].(map[string]string)[k] = v[0]
+		}
 	}
 }
 

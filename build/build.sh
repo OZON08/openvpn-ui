@@ -1,5 +1,5 @@
 #!/bin/bash
-# VERSION 1.3 by d3vilh@github.com aka Mr. Philipp. Thanks bugsyb@github.com for all the efforts ;)
+# VERSION 1.3 by OZON08@github.com aka Mr. Philipp. Thanks bugsyb@github.com for all the efforts ;)
 set -e  # Exit immediately if a command exits with a non-zero status. Set -x option for debugging
 
 # Define the machine architecture
@@ -10,7 +10,7 @@ case $ARCH in
     PLATFORM="linux/arm/v5"
     #UIIMAGE="FROM arm32v5/debian:stable-slim"
     UIIMAGE="FROM arm32v6/alpine" #moving to unstable because it has easy-rsa v3.1.6 which supports cert renewal
-    BEEIMAGE="FROM arm32v5/golang:1.21-bookworm"
+    BEEIMAGE="FROM arm32v5/golang:1.23.4-bookworm"
     ;;
   armv7*)
     PLATFORM="linux/arm/v7"
@@ -22,13 +22,13 @@ case $ARCH in
     PLATFORM="linux/arm64/v8"
     #UIIMAGE="FROM arm64v8/debian:stable-slim"
     UIIMAGE="FROM arm64v8/alpine" #moving to unstable because it has easy-rsa v3.1.6 which supports cert renewal
-    BEEIMAGE="FROM golang:1.23.4-bookworm"
+    BEEIMAGE="FROM arm64v8/golang:1.23.4-bookworm"
     ;;
   arm64*)
     PLATFORM="linux/arm64/v8"
     #UIIMAGE="FROM arm64v8/debian:stable-slim"
     UIIMAGE="FROM arm64v8/alpine" #moving to unstable because it has easy-rsa v3.1.6 which supports cert renewal
-    BEEIMAGE="FROM golang:1.23.4-bookworm"
+    BEEIMAGE="FROM arm64v8/golang:1.23.4-bookworm"
     ;;
   *)
     PLATFORM="linux/amd64"
@@ -42,9 +42,17 @@ esac
 start_time=$(date +%s)
 
 printf "\033[1;34mBuilding for\033[0m $ARCH ($PLATFORM) with: \n  \033[1;34mUI Image:\033[0m $UIIMAGE \n  \033[1;34mBeeGo Image:\033[0m $BEEIMAGE \n"
-# Update Dockerfile based on platform
+
+# Patch Dockerfiles with the target architecture.
+# Always restore the placeholder on exit (success or failure) so the files
+# remain re-usable for subsequent builds on any architecture.
+restore_dockerfiles() {
+  sed -i "s#$UIIMAGE#FROM DEFINE-YOUR-ARCH#g" Dockerfile 2>/dev/null || true
+  sed -i "s#$BEEIMAGE#FROM DEFINE-YOUR-ARCH#g" Dockerfile-beego 2>/dev/null || true
+}
+trap restore_dockerfiles EXIT
+
 sed -i "s#FROM DEFINE-YOUR-ARCH#$UIIMAGE#g" Dockerfile
-# Update Dockerfile-beego based on platform
 sed -i "s#FROM DEFINE-YOUR-ARCH#$BEEIMAGE#g" Dockerfile-beego
 printf "Dockerfiles updated \n\033[1;34mBuilding Golang and Bee enviroment.\033[0m\n"
 
@@ -56,21 +64,21 @@ printf "\033[1;34mBuilding OpenVPN-UI and qrencode binaries.\033[0m\n"
 printf "OpenVPN-UI and qrencode were built \n\033[1;34mBuilding OpenVPN-UI image.\033[0m\n"
 
 time docker run \
-    -v "$PWD/../":/go/src/github.com/d3vilh/openvpn-ui \
+    -v "$PWD/../":/go/src/github.com/OZON08/openvpn-ui \
     -e GO111MODULE='auto' \
     -e CGO_ENABLED=1 \
     --rm \
     -w /usr/src/myapp \
     local/beego-v8 \
-sh -c "cd /go/src/github.com/d3vilh/openvpn-ui/ && \
-    git config --global --add safe.directory /go/src/github.com/d3vilh/openvpn-ui && \
+sh -c "cd /go/src/github.com/OZON08/openvpn-ui/ && \
+    git config --global --add safe.directory /go/src/github.com/OZON08/openvpn-ui && \
     go env -w GOFLAGS=\"-buildvcs=false\" && \
     bee version && \
     CGO_ENABLED=1 CC=musl-gcc bee pack -exr='^vendor|^ace.tar.bz2|^data.db|^build|^README.md|^docs' && \
     cd /app/qrencode && \
     go build -o qrencode main.go && \
     chmod +x /app/qrencode/qrencode && \
-    cp -p /app/qrencode/qrencode /go/src/github.com/d3vilh/openvpn-ui/"
+    cp -p /app/qrencode/qrencode /go/src/github.com/OZON08/openvpn-ui/"
 printf "OpenVPN-UI and qrencode were built \n\033[1;34mBuilding OpenVPN-UI image.\033[0m\n"
 
 # Build OpenVPN-UI image

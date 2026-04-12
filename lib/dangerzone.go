@@ -1,20 +1,21 @@
 package lib
 
 import (
-	"fmt"
+	"errors"
+	"os"
 	"os/exec"
 
 	"github.com/beego/beego/v2/core/logs"
-	"github.com/d3vilh/openvpn-ui/state"
+	"github.com/OZON08/openvpn-ui/state"
 )
 
 func DeletePKI(name string) error {
-	//logs.Info("Lib: Deleting:", name)
-	cmd := exec.Command("/bin/bash", "-c",
-		fmt.Sprintf(
-			"cd /opt/scripts/ && "+
-				"./remove.sh %s", name))
+	if !SafeNameRegex.MatchString(name) {
+		return errors.New("invalid name")
+	}
+	cmd := exec.Command("/bin/bash", "/opt/scripts/remove.sh", name)
 	cmd.Dir = state.GlobalCfg.OVConfigPath
+	cmd.Env = os.Environ()
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		logs.Debug(string(output))
@@ -25,12 +26,12 @@ func DeletePKI(name string) error {
 }
 
 func InitPKI(name string) error {
-	//logs.Info("Lib: Runing init for:", name)
-	cmd := exec.Command("/bin/bash", "-c",
-		fmt.Sprintf(
-			"cd /opt/scripts/ && "+
-				"./generate_ca_and_server_certs.sh %s", name))
+	if !SafeNameRegex.MatchString(name) {
+		return errors.New("invalid name")
+	}
+	cmd := exec.Command("/bin/bash", "/opt/scripts/generate_ca_and_server_certs.sh", name)
 	cmd.Dir = state.GlobalCfg.OVConfigPath
+	cmd.Env = os.Environ()
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		logs.Debug(string(output))
@@ -41,12 +42,12 @@ func InitPKI(name string) error {
 }
 
 func RestartContainer(name string) error {
-	//logs.Info("Lib: Restarting:", name)
-	cmd := exec.Command("/bin/bash", "-c",
-		fmt.Sprintf(
-			"cd /opt/scripts/ && "+
-				"./restart.sh %s", name))
+	if !SafeNameRegex.MatchString(name) {
+		return errors.New("invalid name")
+	}
+	cmd := exec.Command("/bin/bash", "/opt/scripts/restart.sh", name)
 	cmd.Dir = state.GlobalCfg.OVConfigPath
+	cmd.Env = os.Environ()
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		logs.Debug(string(output))

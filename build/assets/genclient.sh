@@ -1,5 +1,5 @@
 #!/bin/bash
-#VERSION 1.4 by d3vilh@github.com aka Mr. Philipp. Updated with Easyrsa 3 support.
+#VERSION 1.4 by OZON08@github.com aka Mr. Philipp. Updated with Easyrsa 3 support.
 # Exit immediately if a command exits with a non-zero status.
 set -e
 

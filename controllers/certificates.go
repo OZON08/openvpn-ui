@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
+	"strings"
 	"text/template"
 
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/core/validation"
 	"github.com/beego/beego/v2/server/web"
-	clientconfig "github.com/d3vilh/openvpn-server-config/client/client-config"
-	"github.com/d3vilh/openvpn-ui/lib"
-	"github.com/d3vilh/openvpn-ui/models"
-	"github.com/d3vilh/openvpn-ui/state"
+	clientconfig "github.com/OZON08/openvpn-server-config/client/client-config"
+	"github.com/OZON08/openvpn-ui/lib"
+	"github.com/OZON08/openvpn-ui/models"
+	"github.com/OZON08/openvpn-ui/state"
 )
 
 type NewCertParams struct {
@@ -50,6 +50,10 @@ func (c *CertificatesController) NestPrepare() {
 // @router /certificates/:key [get]
 func (c *CertificatesController) Download() {
 	name := c.GetString(":key")
+	if !lib.SafeNameRegex.MatchString(name) {
+		c.Ctx.Output.SetStatus(400)
+		return
+	}
 	filename := fmt.Sprintf("%s.ovpn", name)
 
 	c.Ctx.Output.Header("Content-Type", "application/octet-stream")
@@ -86,14 +90,28 @@ func (c *CertificatesController) Get() {
 }
 
 func (c *CertificatesController) DisplayImage() {
-	imageName := c.Ctx.Input.Param(":imageName")
-	logs.Info("Image name: %s", imageName)
-	imagePath := filepath.Join(state.GlobalCfg.OVConfigPath, "clients/", imageName+".png")
-	// destPath := filepath.Join(state.GlobalCfg.OVConfigPath, "clients", name+".ovpn")
-	//imagePath := "./openvpn/clients/" + imageName + ".png"
+	// Strip any path components — only the bare filename is allowed
+	imageName := filepath.Base(c.Ctx.Input.Param(":imageName"))
+
+	// Allowlist: only alphanumeric characters, dots, underscores and hyphens
+	if !lib.SafeNameRegex.MatchString(imageName) {
+		c.Ctx.Output.SetStatus(400)
+		c.Ctx.WriteString("Invalid image name")
+		return
+	}
+
+	allowedDir := filepath.Clean(filepath.Join(state.GlobalCfg.OVConfigPath, "clients"))
+	imagePath := filepath.Join(allowedDir, imageName+".png")
+
+	// Guard against any remaining path traversal attempts
+	if !strings.HasPrefix(filepath.Clean(imagePath), allowedDir+string(filepath.Separator)) {
+		c.Ctx.Output.SetStatus(403)
+		c.Ctx.WriteString("Access denied")
+		return
+	}
+
 	logs.Info("Image path: %s", imagePath)
 
-	// Check if the image file exists
 	data, err := os.ReadFile(imagePath)
 	if err != nil {
 		c.Ctx.Output.SetStatus(404)
@@ -102,10 +120,7 @@ func (c *CertificatesController) DisplayImage() {
 		return
 	}
 
-	// Set the content type header to indicate it's an image
 	c.Ctx.Output.Header("Content-Type", "image/png")
-
-	// Write the image data directly to the response body
 	c.Ctx.Output.Body(data)
 }
 
@@ -133,19 +148,19 @@ func (c *CertificatesController) Post() {
 	cParams := NewCertParams{}
 	if err := c.ParseForm(&cParams); err != nil {
 		logs.Error(err)
-		flash.Error(err.Error())
+		flash.Error("%s", err.Error())
 		flash.Store(&c.Controller)
 	} else {
 		if vMap := validateCertParams(cParams); vMap != nil {
 			c.Data["validation"] = vMap
 		} else {
-			logs.Info("Controller: Creating certificate with parameters: Name=%s, Staticip=%s, Passphrase=%s, ExpireDays=%s, Email=%s, Country=%s, Province=%s, City=%s, Org=%s, OrgUnit=%s, TFAName=%s, TFAIssuer=%s", cParams.Name, cParams.Staticip, cParams.Passphrase, cParams.ExpireDays, cParams.Email, cParams.Country, cParams.Province, strconv.Quote(cParams.City), strconv.Quote(cParams.Org), strconv.Quote(cParams.OrgUnit), cParams.TFAName, cParams.TFAIssuer)
-			if err := lib.CreateCertificate(cParams.Name, cParams.Staticip, cParams.Passphrase, cParams.ExpireDays, cParams.Email, cParams.Country, cParams.Province, strconv.Quote(cParams.City), strconv.Quote(cParams.Org), strconv.Quote(cParams.OrgUnit), cParams.TFAName, cParams.TFAIssuer); err != nil {
+			logs.Info("Controller: Creating certificate with parameters: Name=%s, Staticip=%s, Passphrase=%s, ExpireDays=%s, Email=%s, Country=%s, Province=%s, City=%s, Org=%s, OrgUnit=%s, TFAName=%s, TFAIssuer=%s", cParams.Name, cParams.Staticip, cParams.Passphrase, cParams.ExpireDays, cParams.Email, cParams.Country, cParams.Province, cParams.City, cParams.Org, cParams.OrgUnit, cParams.TFAName, cParams.TFAIssuer)
+			if err := lib.CreateCertificate(cParams.Name, cParams.Staticip, cParams.Passphrase, cParams.ExpireDays, cParams.Email, cParams.Country, cParams.Province, cParams.City, cParams.Org, cParams.OrgUnit, cParams.TFAName, cParams.TFAIssuer); err != nil {
 				logs.Error(err)
-				flash.Error(err.Error())
+				flash.Error("%s", err.Error())
 				flash.Store(&c.Controller)
 			} else {
-				flash.Success("Success! Certificate for the name \"" + cParams.Name + "\" has been created")
+				flash.Success("Success! Certificate for the name \"%s\" has been created", cParams.Name)
 				flash.Store(&c.Controller)
 			}
 		}
@@ -169,7 +184,7 @@ func (c *CertificatesController) Revoke() {
 		//flash.Error(err.Error())
 		//flash.Store(&c.Controller)
 	} else {
-		flash.Success("Success! Certificate for the name \"" + name + "\" and serial  \"" + serial + "\" has been revoked")
+		flash.Success("Success! Certificate for the name \"%s\" and serial \"%s\" has been revoked", name, serial)
 		flash.Store(&c.Controller)
 	}
 	c.showCerts()
@@ -195,7 +210,7 @@ func (c *CertificatesController) Burn() {
 		//flash.Error(err.Error())
 		//flash.Store(&c.Controller)
 	} else {
-		flash.Success("Success! Certificate for the name \"" + CN + "\" and serial  \"" + serial + "\"  has been removed")
+		flash.Success("Success! Certificate for the name \"%s\" and serial \"%s\" has been removed", CN, serial)
 		flash.Store(&c.Controller)
 	}
 	c.showCerts()
@@ -214,7 +229,7 @@ func (c *CertificatesController) Renew() {
 		//flash.Error(err.Error())
 		//flash.Store(&c.Controller)
 	} else {
-		flash.Success("Success! Certificate for the name \"" + name + "\"  and IP \"" + localip + "\" and Serial \"" + serial + "\" has been renewed")
+		flash.Success("Success! Certificate for the name \"%s\" and IP \"%s\" and Serial \"%s\" has been renewed", name, localip, serial)
 		flash.Store(&c.Controller)
 	}
 	c.showCerts()
@@ -328,5 +343,5 @@ func SaveToFile(tplPath string, c clientconfig.Config, destPath string) error {
 		return err
 	}
 
-	return os.WriteFile(destPath, []byte(str), 0644)
+	return os.WriteFile(destPath, []byte(str), 0600)
 }
