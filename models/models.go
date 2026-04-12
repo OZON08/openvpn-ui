@@ -8,9 +8,9 @@ import (
 	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web"
-	clientconfig "github.com/d3vilh/openvpn-server-config/client/client-config"
-	easyrsaconfig "github.com/d3vilh/openvpn-server-config/easyrsa/config"
-	"github.com/d3vilh/openvpn-server-config/server/config"
+	clientconfig "github.com/OZON08/openvpn-server-config/client/client-config"
+	easyrsaconfig "github.com/OZON08/openvpn-server-config/easyrsa/config"
+	"github.com/OZON08/openvpn-server-config/server/config"
 	"gopkg.in/hlandau/passlib.v1"
 )
 
@@ -29,7 +29,9 @@ func InitDB() {
 	if err != nil {
 		panic(err)
 	}
-	orm.Debug = true
+	if os.Getenv("APP_ENV") == "development" {
+		orm.Debug = true
+	}
 	orm.RegisterModel(
 		new(User),
 		new(Settings),

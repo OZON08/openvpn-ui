@@ -1,6 +1,6 @@
 package controllers
 
-import "github.com/d3vilh/openvpn-ui/lib"
+import "github.com/OZON08/openvpn-ui/lib"
 
 // APISysloadController provides system information
 type APISysloadController struct {

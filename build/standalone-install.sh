@@ -1,5 +1,5 @@
 #!/bin/bash
-# VERSION 0.3 by d3vilh@github.com aka Mr. Philipp.
+# VERSION 0.3 by OZON08@github.com aka Mr. Philipp.
 #
 
 # All the variables
@@ -108,7 +108,7 @@ then
     echo "Installing OpenVPN-UI and qrencode"
     source ~/.bashrc # reload bashrc to get bee command
     echo "Cloning qrencode into build directory"
-    git clone https://github.com/d3vilh/qrencode
+    git clone --depth 1 --branch v0.2.0 https://github.com/OZON08/qrencode
 
     # Set environment variables
     export GO111MODULE='auto'

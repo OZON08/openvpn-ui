@@ -1,11 +1,11 @@
-module github.com/d3vilh/openvpn-ui
+module github.com/OZON08/openvpn-ui
 
 go 1.23.4
 
 require (
 	github.com/beego/beego/v2 v2.3.4
 	github.com/cloudfoundry/gosigar v1.3.81
-	github.com/d3vilh/openvpn-server-config v0.3.5
+	github.com/OZON08/openvpn-server-config v0.3.5
 	github.com/go-ldap/ldap/v3 v3.4.9
 	github.com/mattn/go-sqlite3 v1.14.24
 	golang.org/x/oauth2 v0.24.0

@@ -2,7 +2,7 @@
 # AMD64 64bit: golang:1.20, armv8l raspberry pi 3/4 64bit: FROM arm64v8/golang:1.20
 FROM DEFINE-YOUR-ARCH
 
-LABEL maintainer="Mr.Philipp <d3vilh@github.com>"
+LABEL maintainer="OZON08 <65833863+OZON08@users.noreply.github.com>"
 
 # Set the working directory to /beego and installing dependencies
 WORKDIR /beego
@@ -18,12 +18,12 @@ COPY go.mod go.sum ./
 # Download the dependencies
 RUN go mod download
 
-# Install the beego and bee packages
-RUN go install github.com/beego/bee/v2@develop
+# Install the beego and bee packages — pinned to a specific release for reproducible builds
+RUN go install github.com/beego/bee/v2@v2.3.0
 
 # Setting working directory to /app and getting qrencode from github
 WORKDIR /app
-RUN git clone https://github.com/d3vilh/qrencode
+RUN git clone --depth 1 --branch v0.2.0 https://github.com/OZON08/qrencode
 
 # Set the working directory to /
 WORKDIR /
