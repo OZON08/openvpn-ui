@@ -15,7 +15,6 @@
 package web
 
 import (
-	"context"
 	"bytes"
 	"errors"
 	"fmt"
@@ -1101,7 +1100,7 @@ func (p *ControllerRegister) serveHttp(ctx *beecontext.Context) {
 		}
 		defer func() {
 			if ctx.Input.CruSession != nil {
-				ctx.Input.CruSession.SessionRelease(context.Background(), rw)
+				ctx.Input.CruSession.SessionRelease(r.Context(), rw)
 			}
 		}()
 	}

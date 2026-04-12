@@ -4,19 +4,19 @@
 # LINE 33 is WA for current version of easy-rsa, it will be removed in future!! 
 
 FROM DEFINE-YOUR-ARCH
-LABEL maintainer="Mr.Philipp <d3vilh@github.com>"
-LABEL version="0.9.5.6"
+LABEL maintainer="OZON08 <65833863+OZON08@users.noreply.github.com>"
+LABEL version="0.9.6"
 WORKDIR /opt
 EXPOSE 8080/tcp
 
 RUN apk update \
- && apk add --update-cache \
-    bash \
-    easy-rsa \
-    curl \
-    jq \
-    oath-toolkit-oathtool \
- && rm -rf /var/cache/apk/* && chmod 755 /usr/share/easy-rsa/*
+   && apk add --update-cache \
+      bash \
+      easy-rsa \
+      curl \
+      jq \
+      oath-toolkit-oathtool \
+   && rm -rf /var/cache/apk/* && chmod 755 /usr/share/easy-rsa/*
 
 ADD assets/start.sh /opt/start.sh
 ADD assets/generate_ca_and_server_certs.sh /opt/scripts/generate_ca_and_server_certs.sh

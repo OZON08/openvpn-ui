@@ -14,7 +14,7 @@ type User struct {
 	IsAdmin       bool      `orm:"default(false)" form:"IsAdmin" valid:"Required;"`
 	Name          string    `orm:"size(64);unique" form:"Name" valid:"Required;"`
 	Email         string    `orm:"size(64);unique" form:"Email" valid:"Required;Email"`
-	Password      string    `orm:"size(32)" form:"Password" valid:"Required;MinSize(6)"`
+	Password      string    `orm:"size(128)" form:"Password" valid:"Required;MinSize(12)"`
 	Repassword    string    `orm:"-" form:"Repassword" valid:"Required"`
 	Lastlogintime time.Time `orm:"type(datetime);null" form:"-"`
 	Created       time.Time `orm:"auto_now_add;type(datetime)"`

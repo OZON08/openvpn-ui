@@ -1,9 +1,9 @@
 #!/bin/sh
-# v.0.1 by @d3vilh@github.com aka Mr. Philipp
-# d3vilh/openvpn-server drafted 2FA support
+# v.0.1 by @OZON08@github.com aka Mr. Philipp
+# OZON08/openvpn-server drafted 2FA support
 #
 # MFA verification by OpenVPN server using oath-tool
-# This should be part of OpenVPN server container (github.com/d3vilh/openvpn-server). 
+# This should be part of OpenVPN server container (github.com/OZON08/openvpn-server). 
 # This particular script is just example and does not use by OpenVPN-UI at all.
 
 # VARIABLES

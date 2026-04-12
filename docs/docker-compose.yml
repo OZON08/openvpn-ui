@@ -1,39 +1,55 @@
-version: "3.5"
-
 services:
     openvpn:
-       container_name: openvpn
-       image: d3vilh/openvpn-server:latest
-       privileged: true
-       ports: 
-          - "1194:1194/udp"
-       environment:
-           TRUST_SUB: 10.0.70.0/24
-           GUEST_SUB: 10.0.71.0/24
-           HOME_SUB: 192.168.88.0/24
-       volumes:
-           - ./pki:/etc/openvpn/pki
-           - ./clients:/etc/openvpn/clients
-           - ./config:/etc/openvpn/config
-           - ./staticclients:/etc/openvpn/staticclients
-           - ./log:/var/log/openvpn
-           - ./fw-rules.sh:/opt/app/fw-rules.sh
-       cap_add:
-           - NET_ADMIN
-       restart: always
+        container_name: openvpn
+        image: ozon08/openvpn-server:latest
+        privileged: true
+        ports:
+            - "1194:1194/udp"   # openvpn UDP port
+            # - "1194:1194/tcp"   # openvpn TCP port
+            # - "2080:2080/tcp"  # management port. uncomment if you would like to share it with the host
+        environment:
+            TRUST_SUB: "10.0.70.0/24"
+            GUEST_SUB: "10.0.71.0/24"
+            HOME_SUB: "192.168.88.0/24"
+        volumes:
+            - ./pki:/etc/openvpn/pki
+            - ./clients:/etc/openvpn/clients
+            - ./config:/etc/openvpn/config
+            - ./staticclients:/etc/openvpn/staticclients
+            - ./log:/var/log/openvpn
+            - ./fw-rules.sh:/opt/app/fw-rules.sh
+            - ./checkpsw.sh:/opt/app/checkpsw.sh
+            - ./server.conf:/etc/openvpn/server.conf
+        cap_add:
+            - NET_ADMIN
+        restart: always
+        healthcheck:
+            test: ["CMD-SHELL", "echo '' > /dev/tcp/127.0.0.1/2080 2>/dev/null || exit 1"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 60s
 
     openvpn-ui:
-       container_name: openvpn-ui
-       image: d3vilh/openvpn-ui:latest
-       environment:
-           - OPENVPN_ADMIN_USERNAME=admin
-           - OPENVPN_ADMIN_PASSWORD=gagaZush
-       privileged: true
-       ports:
-           - "8080:8080/tcp"
-       volumes:
-           - ./:/etc/openvpn
-           - ./db:/opt/openvpn-ui/db
-           - ./pki:/usr/share/easy-rsa/pki
-           - /var/run/docker.sock:/var/run/docker.sock:ro
-       restart: always
+        container_name: openvpn-ui
+        image: ozon08/openvpn-ui:latest
+        environment:
+            - OPENVPN_ADMIN_USERNAME=${OPENVPN_ADMIN_USERNAME}
+            - OPENVPN_ADMIN_PASSWORD=${OPENVPN_ADMIN_PASSWORD}
+        ports:
+            - "8080:8080/tcp"
+        volumes:
+            - ./:/etc/openvpn
+            - ./db:/opt/openvpn-ui/db
+            - ./pki:/usr/share/easy-rsa/pki
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+        restart: always
+        healthcheck:
+            test: ["CMD", "wget", "-qO/dev/null", "http://localhost:8080"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 15s
+        depends_on:
+            openvpn:
+                condition: service_healthy

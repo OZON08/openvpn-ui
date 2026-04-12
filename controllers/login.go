@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"html/template"
 	"log"
 	"os"
@@ -10,8 +12,8 @@ import (
 
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web"
-	"github.com/d3vilh/openvpn-ui/lib"
-	"github.com/d3vilh/openvpn-ui/models"
+	"github.com/OZON08/openvpn-ui/lib"
+	"github.com/OZON08/openvpn-ui/models"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	oauth2api "google.golang.org/api/oauth2/v2"
@@ -19,10 +21,20 @@ import (
 
 // Initialize OAuth2 configuration
 var (
-	oauthConf        *oauth2.Config
-	oauthStateString = "random" // use a random string for security purposes
-	allowedDomains   []string
+	oauthConf      *oauth2.Config
+	allowedDomains []string
 )
+
+// generateOAuthState returns a cryptographically random hex string for use as the
+// OAuth2 state parameter. A fresh value is generated per request and stored in the
+// session, so CSRF attacks against the OAuth flow are not possible.
+func generateOAuthState() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
+}
 
 func init() {
 	clientID := os.Getenv("GOOGLE_CLIENT_ID")
@@ -79,21 +91,21 @@ func (c *LoginController) Login() {
 
 	authType, err := web.AppConfig.String("AuthType")
 	if err != nil {
-		flash.Warning(err.Error())
+		flash.Warning("%s", err.Error())
 		flash.Store(&c.Controller)
 		return
 	}
 	user, err := lib.Authenticate(login, password, authType)
 
 	if err != nil {
-		flash.Warning(err.Error())
+		flash.Warning("%s", err.Error())
 		flash.Store(&c.Controller)
 		return
 	}
 	user.Lastlogintime = time.Now()
 	err = user.Update("Lastlogintime")
 	if err != nil {
-		flash.Warning(err.Error())
+		flash.Warning("%s", err.Error())
 		flash.Store(&c.Controller)
 		return
 	}
@@ -115,13 +127,21 @@ func (c *LoginController) Logout() {
 }
 
 func (c *LoginController) GoogleLogin() {
-	url := oauthConf.AuthCodeURL(oauthStateString)
+	state, err := generateOAuthState()
+	if err != nil {
+		c.Ctx.WriteString("Failed to generate OAuth state")
+		return
+	}
+	c.SetSession("oauth_state", state)
+	url := oauthConf.AuthCodeURL(state)
 	c.Redirect(url, 302)
 }
 
 func (c *LoginController) GoogleCallback() {
 	state := c.GetString("state")
-	if state != oauthStateString {
+	sessionState, _ := c.GetSession("oauth_state").(string)
+	c.DelSession("oauth_state")
+	if state == "" || sessionState == "" || state != sessionState {
 		c.Ctx.WriteString("Invalid OAuth state")
 		return
 	}
@@ -129,30 +149,38 @@ func (c *LoginController) GoogleCallback() {
 	code := c.GetString("code")
 	token, err := oauthConf.Exchange(context.Background(), code)
 	if err != nil {
-		c.Ctx.WriteString("Code exchange failed: " + err.Error())
+		logs.Error("OAuth code exchange failed: %v", err)
+		c.Ctx.WriteString("Authentication failed")
 		return
 	}
 
 	client := oauthConf.Client(context.Background(), token)
 	service, err := oauth2api.New(client)
 	if err != nil {
-		c.Ctx.WriteString("Failed to create OAuth2 service: " + err.Error())
+		logs.Error("OAuth2 service creation failed: %v", err)
+		c.Ctx.WriteString("Authentication failed")
 		return
 	}
 
 	userinfo, err := service.Userinfo.Get().Do()
 	if err != nil {
-		c.Ctx.WriteString("Failed to get user info: " + err.Error())
+		logs.Error("OAuth2 user info fetch failed: %v", err)
+		c.Ctx.WriteString("Authentication failed")
 		return
 	}
 
 	logs.Info("User Info: %+v", userinfo)
 
 	// Check if the user's email domain is allowed
-	emailDomain := strings.Split(userinfo.Email, "@")[1]
+	emailParts := strings.Split(userinfo.Email, "@")
+	if len(emailParts) != 2 {
+		c.Ctx.WriteString("Invalid email address from OAuth provider")
+		return
+	}
+	emailDomain := emailParts[1]
 	allowed := false
 	for _, domain := range allowedDomains {
-		if emailDomain == domain {
+		if strings.EqualFold(emailDomain, domain) {
 			allowed = true
 			break
 		}
@@ -178,11 +206,13 @@ func (c *LoginController) GoogleCallback() {
 			}
 			err = user.Insert()
 			if err != nil {
-				c.Ctx.WriteString("Failed to create new user: " + err.Error())
+				logs.Error("OAuth2 failed to create new user: %v", err)
+				c.Ctx.WriteString("Authentication failed")
 				return
 			}
 		} else {
-			c.Ctx.WriteString("Error fetching user: " + err.Error())
+			logs.Error("OAuth2 error fetching user: %v", err)
+			c.Ctx.WriteString("Authentication failed")
 			return
 		}
 	} else {
@@ -192,7 +222,8 @@ func (c *LoginController) GoogleCallback() {
 		user.Name = userinfo.Email // Set the name to the email address
 		err = user.Update("Allowed", "Lastlogintime", "Name")
 		if err != nil {
-			c.Ctx.WriteString("Failed to update user: " + err.Error())
+			logs.Error("OAuth2 failed to update user: %v", err)
+			c.Ctx.WriteString("Authentication failed")
 			return
 		}
 	}

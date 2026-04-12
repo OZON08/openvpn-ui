@@ -3,7 +3,7 @@ package controllers
 import (
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web"
-	"github.com/d3vilh/openvpn-ui/lib"
+	"github.com/OZON08/openvpn-ui/lib"
 )
 
 type DangerController struct {
@@ -32,10 +32,10 @@ func (c *DangerController) DeletePKI() {
 	//logs.Info("Controller: Deleting:", name)
 	if err := lib.DeletePKI(name); err != nil {
 		logs.Error(err)
-		flash.Error(err.Error())
+		flash.Error("%s", err.Error())
 		flash.Store(&c.Controller)
 	} else {
-		flash.Success("Success! The \"" + name + "\" has been deleted")
+		flash.Success("Success! The \"%s\" has been deleted", name)
 		flash.Store(&c.Controller)
 	}
 	c.Data["Flash"] = flash.Data
@@ -51,10 +51,10 @@ func (c *DangerController) InitPKI() {
 	//logs.Info("Controller: Runing init for:", name)
 	if err := lib.InitPKI(name); err != nil {
 		logs.Error(err)
-		flash.Error(err.Error())
+		flash.Error("%s", err.Error())
 		flash.Store(&c.Controller)
 	} else {
-		flash.Success("Success! The \"" + name + "\" has been initialized.")
+		flash.Success("Success! The \"%s\" has been initialized.", name)
 		flash.Store(&c.Controller)
 	}
 	c.Data["Flash"] = flash.Data
@@ -71,10 +71,10 @@ func (c *DangerController) RestartContainer() {
 	if err := lib.RestartContainer(name); err != nil {
 		logs.Error("Error restarting container:", err)
 		//	logs.Error("Stack trace:", string(debug.Stack()))
-		flash.Error(err.Error())
+		flash.Error("%s", err.Error())
 		flash.Store(&c.Controller)
 	} else {
-		flash.Success("Success! Container \"" + name + "\" has been restarted")
+		flash.Success("Success! Container \"%s\" has been restarted", name)
 		flash.Store(&c.Controller)
 	}
 	c.Data["Flash"] = flash.Data

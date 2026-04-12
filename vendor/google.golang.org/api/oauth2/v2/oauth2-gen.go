@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC.
+// Copyright 2026 Google LLC.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -131,9 +131,6 @@ func NewService(ctx context.Context, opts ...option.ClientOption) (*Service, err
 	}
 	s := &Service{client: client, BasePath: basePath, logger: internaloption.GetLogger(opts)}
 	s.Userinfo = NewUserinfoService(s)
-	if err != nil {
-		return nil, err
-	}
 	if endpoint != "" {
 		s.BasePath = endpoint
 	}
@@ -149,7 +146,7 @@ func New(client *http.Client) (*Service, error) {
 	if client == nil {
 		return nil, errors.New("client is nil")
 	}
-	return NewService(context.Background(), option.WithHTTPClient(client))
+	return NewService(context.TODO(), option.WithHTTPClient(client))
 }
 
 type Service struct {

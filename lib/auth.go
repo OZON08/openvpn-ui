@@ -4,14 +4,19 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"regexp"
 
 	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web"
-	"github.com/d3vilh/openvpn-ui/models"
+	"github.com/OZON08/openvpn-ui/models"
 	"github.com/go-ldap/ldap/v3"
 	"gopkg.in/hlandau/passlib.v1"
 )
+
+// safeLdapLoginRegex allows only characters that are safe in an LDAP DN component.
+// This prevents LDAP injection via crafted login names.
+var safeLdapLoginRegex = regexp.MustCompile(`^[a-zA-Z0-9@._-]+$`)
 
 var authError = errors.New("invalid login or password")
 
@@ -43,6 +48,10 @@ func authenticateSimple(login, password string) (*models.User, error) {
 }
 
 func authenticateLdap(login, password string) (*models.User, error) {
+	if !safeLdapLoginRegex.MatchString(login) {
+		logs.Error("LDAP login contains invalid characters")
+		return nil, authError
+	}
 	address, _ := web.AppConfig.String("LdapAddress")
 	var connection *ldap.Conn
 	var err error
@@ -76,7 +85,7 @@ func authenticateLdap(login, password string) (*models.User, error) {
 
 	bindDn, _ := web.AppConfig.String("LdapBindDn")
 
-	err = connection.Bind(fmt.Sprintf(bindDn, login), password)
+	err = connection.Bind(fmt.Sprintf(bindDn, ldap.EscapeFilter(login)), password)
 	if err != nil {
 		logs.Error("LDAP Bind:", err)
 		return nil, authError

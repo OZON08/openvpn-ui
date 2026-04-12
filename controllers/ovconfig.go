@@ -8,11 +8,11 @@ import (
 	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web"
-	"github.com/d3vilh/openvpn-server-config/server/config"
-	mi "github.com/d3vilh/openvpn-server-config/server/mi"
-	"github.com/d3vilh/openvpn-ui/lib"
-	"github.com/d3vilh/openvpn-ui/models"
-	"github.com/d3vilh/openvpn-ui/state"
+	"github.com/OZON08/openvpn-server-config/server/config"
+	mi "github.com/OZON08/openvpn-server-config/server/mi"
+	"github.com/OZON08/openvpn-ui/lib"
+	"github.com/OZON08/openvpn-ui/models"
+	"github.com/OZON08/openvpn-ui/state"
 )
 
 type OVConfigController struct {
@@ -64,7 +64,7 @@ func (c *OVConfigController) Post() {
 	logs.Info("Form data before parsing: %v", c.Ctx.Request.Form)
 	if err := c.ParseForm(&cfg); err != nil {
 		logs.Warning(err)
-		flash.Error(err.Error())
+		flash.Error("%s", err.Error())
 		flash.Store(&c.Controller)
 		return
 	}
@@ -81,7 +81,7 @@ func (c *OVConfigController) Post() {
 	err := config.SaveToFile(filepath.Join(c.ConfigDir, "openvpn-server-config.tpl"), cfg.Config, destPath)
 	if err != nil {
 		logs.Warning(err)
-		flash.Error(err.Error())
+		flash.Error("%s", err.Error())
 		flash.Store(&c.Controller)
 		return
 	}
@@ -89,12 +89,12 @@ func (c *OVConfigController) Post() {
 	logs.Info("Post: Updating configuration in database")
 	o := orm.NewOrm()
 	if _, err := o.Update(&cfg); err != nil {
-		flash.Error(err.Error())
+		flash.Error("%s", err.Error())
 	} else {
 		flash.Success("Post: Config has been updated")
 		client := mi.NewClient(state.GlobalCfg.MINetwork, state.GlobalCfg.MIAddress)
 		if err := client.Signal("SIGTERM"); err != nil {
-			flash.Warning("Config has been updated but OpenVPN server was NOT reloaded: " + err.Error())
+			flash.Warning("Config has been updated but OpenVPN server was NOT reloaded: %s", err.Error())
 		}
 	}
 
@@ -120,7 +120,7 @@ func (c *OVConfigController) Edit() {
 	//logs.Info("Post: Parsing form data")
 	if err := c.ParseForm(&cfg); err != nil {
 		logs.Warning(err)
-		flash.Error(err.Error())
+		flash.Error("%s", err.Error())
 		flash.Store(&c.Controller)
 		return
 	}

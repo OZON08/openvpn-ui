@@ -1,0 +1,243 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Security
+
+- **Path Traversal in certificate download (Critical)** — `Download()` in
+  `controllers/certificates.go` did not validate the `:key` route parameter
+  before using it to construct file paths and the `Content-Disposition` header.
+  Added `lib.SafeNameRegex` check; requests with invalid names are rejected
+  with HTTP 400.
+
+- **OAuth error disclosure (High)** — `GoogleCallback()` in
+  `controllers/login.go` returned raw `err.Error()` strings (containing
+  internal network addresses and library details) directly to the browser.
+  Errors are now logged server-side only; users receive a generic
+  "Authentication failed" message.
+
+- **Race condition on global configuration (Medium)** — `state.GlobalCfg` was
+  written in `controllers/settings.go` without synchronisation. Added
+  `sync.RWMutex` in `state/state.go`; the write in `settings.go` is now
+  protected by `Lock()/Unlock()`.
+
+- **World-readable static IP config (Low)** — `os.WriteFile` in
+  `lib/certificates.go` wrote static client config files with mode `0644`.
+  Changed to `0640`.
+
+### Fixed
+
+- **Unchecked database read in `GetLogin()`** — `controllers/base.go` called
+  `u.Read("Id")` without checking the returned error. If the user record had
+  been deleted since the session was created, a partially-initialised `User`
+  struct was returned and could cause nil-pointer panics. The function now
+  returns `nil` on any read error.
+
+### Build
+
+- **Dependencies updated** — All direct dependencies bumped to latest releases:
+  `beego/beego/v2` v2.3.10, `go-ldap/ldap/v3` v3.4.13,
+  `mattn/go-sqlite3` v1.14.42, `cloudfoundry/gosigar` v1.3.117,
+  `golang.org/x/oauth2` v0.36.0, `google.golang.org/api` v0.275.0.
+  Indirect dependencies updated accordingly.
+
+- **`beego/beego/v2` v2.3.10 breaking change** — `FlashData.Error()`,
+  `FlashData.Warning()`, and `FlashData.Success()` became printf-style
+  functions. All 42 call sites across 8 controller files updated to pass
+  `"%s"` as the format string.
+
+- **`OZON08/openvpn-server-config` updated to v0.4.0** — vendor directory
+  and `go.mod` updated to the new release of the forked library.
+
+- **`OZON08/qrencode` pinned to v0.2.0** — `Dockerfile-beego` and
+  `standalone-install.sh` updated from `--branch main` to `--branch v0.2.0`.
+
+---
+
+## [0.9.6] - 2026-04-12
+
+### Security
+
+- **Command Injection (Critical)** — All calls to EasyRSA and OpenVPN shell scripts in
+  `lib/certificates.go` and `lib/dangerzone.go` were rewritten to pass arguments as
+  separate `exec.Command` parameters instead of interpolating user input into a
+  `bash -c` string via `fmt.Sprintf`. Environment variables are now set through
+  `cmd.Env`, not through shell `export` statements. Static IP config files are written
+  directly with `os.WriteFile` instead of a shell `echo` redirect. Input is validated
+  against allowlist regexes (`^[a-zA-Z0-9._-]+$` for names, `^[a-zA-Z0-9 .,_-]+$`
+  for text fields, `net.ParseIP` for IP addresses) before any command is executed.
+
+- **Path Traversal (Critical)** — `DisplayImage()` in `controllers/certificates.go`
+  now strips all path components from the image name with `filepath.Base()`, validates
+  the result against an allowlist regex, and additionally verifies that the resolved
+  path stays within the permitted `clients/` directory. Requests with directory
+  traversal sequences are rejected with HTTP 403.
+
+- **CSRF via static OAuth state (Critical)** — The hardcoded `oauthStateString =
+  "random"` was removed. `GoogleLogin()` now generates a 16-byte cryptographically
+  random state with `crypto/rand`, stores it in the server-side session, and passes it
+  to the OAuth provider. `GoogleCallback()` validates the returned state against the
+  session value and deletes it immediately after use, preventing replay.
+
+- **LDAP Injection (High)** — `authenticateLdap()` in `lib/auth.go` now validates the
+  login parameter against a strict allowlist regex before it is used in the DN bind
+  string. The login value is additionally escaped with `ldap.EscapeFilter()` before
+  being formatted into the bind DN.
+
+- **ORM debug logging in production (High)** — `orm.Debug` in `models/models.go` is
+  now only enabled when the environment variable `APP_ENV=development` is set.
+  Previously all SQL queries (including password hashes) were written to the log in
+  every environment.
+
+- **Application running in development mode (High)** — `RunMode` in `conf/app.conf`
+  changed from `dev` to `prod`. Development mode disables several Beego security
+  hardening measures and exposes detailed error pages.
+
+- **World-readable client configuration files (Medium)** — `SaveToFile()` in
+  `controllers/certificates.go` now writes generated `.ovpn` files with permission
+  `0600` instead of `0644`. These files contain private keys and must not be readable
+  by other system users.
+
+- **Weak password policy (Medium)** — Minimum password length increased from 6 to 12
+  characters in `models/user.go`. The database column size was also widened from 32 to
+  128 characters to accommodate stronger hashes.
+
+### Fixed
+
+- **Compile error** — `strconv.Quote` calls remained in a `logs.Info` statement in
+  `controllers/certificates.go` after the `strconv` import was removed. The calls were
+  unnecessary and have been dropped.
+
+- **Nil pointer panic on log file open failure** — `controllers/logs.go` logged the
+  error from `os.Open` but did not return, causing `bufio.NewScanner` to receive a nil
+  file handle and panic. A `return` statement was added after the error log.
+
+- **Variable shadowing in log viewer** — `var logs []string` in `controllers/logs.go`
+  shadowed the imported `logs` package, making the logging package inaccessible for the
+  remainder of the function. The local variable was renamed to `logLines`.
+
+- **Always-true condition in certificate parser** — `strings.Contains(line, "")` in
+  `lib/certificates.go` (`parseDetails`) is unconditionally true and was masking the
+  intended empty-line check. Replaced with `if line == "" { continue }`.
+
+- **Index out of bounds in certificate parser** — `parseDetails` in
+  `lib/certificates.go` accessed `fields[1]` without verifying that the `=`-split
+  produced at least two tokens, which would panic on malformed input lines. A
+  `len(fields) < 2` guard was added.
+
+- **Nil pointer panic in `GetLogin()`** — `controllers/base.go` performed an
+  unconditional type assertion `c.GetSession("userinfo").(int64)`, which panics when
+  the session key is absent. Replaced with the comma-ok form; `GetLogin()` now returns
+  `nil` when no session is present.
+
+- **Index out of bounds in `SetParams()`** — `controllers/base.go` accessed `v[0]` for
+  every form value without checking whether the slice was non-empty. A `len(v) > 0`
+  guard was added.
+
+- **Redundant assignments in `EditUser()`** — `controllers/profile.go` assigned
+  `user.Name` and `user.Email` unconditionally and then immediately re-assigned them
+  inside `if username != ""` / `if email != ""` blocks. The unconditional assignments
+  were removed.
+
+- **Index out of bounds in OAuth email validation** — `controllers/login.go` called
+  `strings.Split(email, "@")[1]` without checking the slice length, which panics for
+  any email address that contains no `@`. The split result is now validated before use.
+  The domain comparison was also changed to `strings.EqualFold` to be case-insensitive.
+
+### Build
+
+- **Non-reproducible bee installation** — `Dockerfile-beego` installed
+  `github.com/beego/bee/v2@develop` (HEAD of the develop branch), which could silently
+  pick up incompatible changes between builds. Pinned to `@v2.3.0`.
+
+- **Non-reproducible qrencode clone** — `Dockerfile-beego` cloned
+  `github.com/OZON08/qrencode` without specifying a branch or commit. Changed to
+  `--depth 1 --branch main` so the build is deterministic.
+
+- **Dockerfiles left corrupted on build failure** — `build.sh` patched
+  `Dockerfile` and `Dockerfile-beego` in-place with `sed -i` and never
+  restored them. A failed build left the architecture baked into the files,
+  causing all subsequent
+  runs to fail silently (the placeholder `FROM DEFINE-YOUR-ARCH` was no longer present
+  to be replaced). Added a `trap restore_dockerfiles EXIT` that restores the placeholder
+  on both success and failure.
+
+- **Inconsistent Go version on armv6** — `build.sh` used `golang:1.21-bookworm` for
+  armv6 while all other platforms used `1.23.4`. Aligned to `1.23.4`.
+
+- **Missing architecture prefix for arm64/aarch64** — `build.sh` specified
+  `golang:1.23.4-bookworm` (amd64 image) for arm64 and aarch64 hosts instead of
+  `arm64v8/golang:1.23.4-bookworm`. Fixed for both `arm64` and `aarch64` cases.
+
+- **Missing `.dockerignore`** — The Docker build context included
+  `vendor/` (~40 MB), `build/`, `.git/`, and other directories that are not
+  needed in the final image.
+  Added `.dockerignore` to exclude them and speed up `docker build`.
+
+- **Placeholder OAuth credentials in image** — `build/assets/app.conf` contained
+  `googleClientID = your-google-clientid` and related placeholder values that were
+  baked into every built image. Replaced with empty values; a comment explains that
+  these are read from environment variables at runtime.
+
+- **Missing LocalIP in revoke index entry** — `build/assets/revoke.sh`
+  appended `LocalIP=${CERT_IP}` to the `index.txt` entry on revocation, but
+  `CERT_IP` is never
+  set by the UI for revoke operations, resulting in `LocalIP=` (empty) in the database.
+  The `LocalIP` field was removed from the revoke path; IP assignment is not relevant
+  after a certificate is revoked.
+
+### Changed
+
+- **Repository rebranded to `OZON08/openvpn-ui`** — Go module path updated from
+  `github.com/d3vilh/openvpn-ui` to `github.com/OZON08/openvpn-ui`. All internal
+  import paths, Docker image references, build volume mounts, and documentation
+  updated accordingly. The Go library dependency `d3vilh/openvpn-server-config`
+  remains at its upstream path until that fork is published with an updated
+  module name.
+
+- `strconv.Quote` wrapping removed from the `City`, `Org`, and `OrgUnit` parameters
+  passed to `lib.CreateCertificate()`. Shell-level quoting is no longer needed because
+  values are passed as environment variables rather than embedded in a shell command
+  string.
+
+- `safeTextRegex` extended to allow `@` and `+` characters so that email addresses
+  are accepted as valid input in certificate fields.
+
+---
+
+## [0.9.5.6] - 2024-12-29
+
+### Fixed
+
+- Updated `openssl-easyrsa.cnf` location
+- Removed deprecated EasyRSA `req-cn` subject field following latest EasyRSA team
+  recommendations
+- Bugfix for issue [#114](https://github.com/OZON08/openvpn-ui/issues/114)
+- More output during `gen-crl` process
+- Password change dialog clarification
+- Icon and UI updates
+
+### Changed
+
+- Exclamation symbols deprecated in configuration
+- Workaround for renewed certificate process
+
+---
+
+## [0.9.5.5] - 2024-12-26
+
+### Added
+
+- Google OAuth 2.0 login support (client ID, secret and redirect URL configured via
+  environment variables `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
+  `GOOGLE_REDIRECT_URL`, `ALLOWED_DOMAINS`)
+- New login screen UI
+
+### Changed
+
+- Upgraded to Go 1.23.4 and Beego 2.3.4

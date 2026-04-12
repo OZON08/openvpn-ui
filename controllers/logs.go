@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/beego/beego/v2/core/logs"
-	"github.com/d3vilh/openvpn-ui/models"
+	"github.com/OZON08/openvpn-ui/models"
 )
 
 type LogsController struct {
@@ -38,22 +38,22 @@ func (c *LogsController) Get() {
 	file, err := os.Open(fName)
 	if err != nil {
 		logs.Error(err)
+		return
 	}
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
-	var logs []string
+	var logLines []string
 	for scanner.Scan() {
 		line := scanner.Text()
-		//	if strings.Index(line, " MANAGEMENT: ") == -1 {
 		if !strings.Contains(line, " MANAGEMENT: ") {
-			logs = append(logs, strings.Trim(line, "\t"))
+			logLines = append(logLines, strings.Trim(line, "\t"))
 		}
 	}
-	start := len(logs) - 300 // :P
+	start := len(logLines) - 300
 	if start < 0 {
 		start = 0
 	}
-	c.Data["logs"] = logs[start:]
+	c.Data["logs"] = logLines[start:]
 	//c.Data["logs"] = reverse(logs[start:])
 }
 

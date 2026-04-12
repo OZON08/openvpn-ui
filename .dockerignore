@@ -1,0 +1,14 @@
+# Exclude vendored dependencies — the binary is built inside the beego container
+vendor/
+
+# Build tooling and docs
+build/
+docs/
+.github/
+*.md
+swagger/
+
+# Development artefacts
+*.db
+*.log
+.git/
