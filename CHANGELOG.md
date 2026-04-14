@@ -7,59 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Security
-
-- **Path Traversal in certificate download (Critical)** — `Download()` in
-  `controllers/certificates.go` did not validate the `:key` route parameter
-  before using it to construct file paths and the `Content-Disposition` header.
-  Added `lib.SafeNameRegex` check; requests with invalid names are rejected
-  with HTTP 400.
-
-- **OAuth error disclosure (High)** — `GoogleCallback()` in
-  `controllers/login.go` returned raw `err.Error()` strings (containing
-  internal network addresses and library details) directly to the browser.
-  Errors are now logged server-side only; users receive a generic
-  "Authentication failed" message.
-
-- **Race condition on global configuration (Medium)** — `state.GlobalCfg` was
-  written in `controllers/settings.go` without synchronisation. Added
-  `sync.RWMutex` in `state/state.go`; the write in `settings.go` is now
-  protected by `Lock()/Unlock()`.
-
-- **World-readable static IP config (Low)** — `os.WriteFile` in
-  `lib/certificates.go` wrote static client config files with mode `0644`.
-  Changed to `0640`.
-
-### Fixed
-
-- **Unchecked database read in `GetLogin()`** — `controllers/base.go` called
-  `u.Read("Id")` without checking the returned error. If the user record had
-  been deleted since the session was created, a partially-initialised `User`
-  struct was returned and could cause nil-pointer panics. The function now
-  returns `nil` on any read error.
-
-### Build
-
-- **Dependencies updated** — All direct dependencies bumped to latest releases:
-  `beego/beego/v2` v2.3.10, `go-ldap/ldap/v3` v3.4.13,
-  `mattn/go-sqlite3` v1.14.42, `cloudfoundry/gosigar` v1.3.117,
-  `golang.org/x/oauth2` v0.36.0, `google.golang.org/api` v0.275.0.
-  Indirect dependencies updated accordingly.
-
-- **`beego/beego/v2` v2.3.10 breaking change** — `FlashData.Error()`,
-  `FlashData.Warning()`, and `FlashData.Success()` became printf-style
-  functions. All 42 call sites across 8 controller files updated to pass
-  `"%s"` as the format string.
-
-- **`OZON08/openvpn-server-config` updated to v0.4.0** — vendor directory
-  and `go.mod` updated to the new release of the forked library.
-
-- **`OZON08/qrencode` pinned to v0.2.0** — `Dockerfile-beego` and
-  `standalone-install.sh` updated from `--branch main` to `--branch v0.2.0`.
-
 ---
 
-## [0.9.6] - 2026-04-12
+## [0.9.6] - 2026-04-14
 
 ### Security
 
@@ -72,17 +22,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   against allowlist regexes (`^[a-zA-Z0-9._-]+$` for names, `^[a-zA-Z0-9 .,_-]+$`
   for text fields, `net.ParseIP` for IP addresses) before any command is executed.
 
-- **Path Traversal (Critical)** — `DisplayImage()` in `controllers/certificates.go`
-  now strips all path components from the image name with `filepath.Base()`, validates
-  the result against an allowlist regex, and additionally verifies that the resolved
-  path stays within the permitted `clients/` directory. Requests with directory
-  traversal sequences are rejected with HTTP 403.
+- **Path Traversal in certificate download (Critical)** — `Download()` in
+  `controllers/certificates.go` did not validate the `:key` route parameter
+  before using it to construct file paths and the `Content-Disposition` header.
+  Added `lib.SafeNameRegex` check; requests with invalid names are rejected
+  with HTTP 400.
+
+- **Path Traversal in image display (Critical)** — `DisplayImage()` in
+  `controllers/certificates.go` now strips all path components from the image
+  name with `filepath.Base()`, validates the result against an allowlist regex,
+  and additionally verifies that the resolved path stays within the permitted
+  `clients/` directory. Requests with directory traversal sequences are rejected
+  with HTTP 403.
 
 - **CSRF via static OAuth state (Critical)** — The hardcoded `oauthStateString =
   "random"` was removed. `GoogleLogin()` now generates a 16-byte cryptographically
   random state with `crypto/rand`, stores it in the server-side session, and passes it
   to the OAuth provider. `GoogleCallback()` validates the returned state against the
   session value and deletes it immediately after use, preventing replay.
+
+- **OAuth error disclosure (High)** — `GoogleCallback()` in
+  `controllers/login.go` returned raw `err.Error()` strings (containing
+  internal network addresses and library details) directly to the browser.
+  Errors are now logged server-side only; users receive a generic
+  "Authentication failed" message.
 
 - **LDAP Injection (High)** — `authenticateLdap()` in `lib/auth.go` now validates the
   login parameter against a strict allowlist regex before it is used in the DN bind
@@ -98,6 +61,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   changed from `dev` to `prod`. Development mode disables several Beego security
   hardening measures and exposes detailed error pages.
 
+- **Race condition on global configuration (Medium)** — `state.GlobalCfg` was
+  written in `controllers/settings.go` without synchronisation. Added
+  `sync.RWMutex` in `state/state.go`; the write in `settings.go` is now
+  protected by `Lock()/Unlock()`.
+
 - **World-readable client configuration files (Medium)** — `SaveToFile()` in
   `controllers/certificates.go` now writes generated `.ovpn` files with permission
   `0600` instead of `0644`. These files contain private keys and must not be readable
@@ -107,11 +75,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   characters in `models/user.go`. The database column size was also widened from 32 to
   128 characters to accommodate stronger hashes.
 
+- **World-readable static IP config (Low)** — `os.WriteFile` in
+  `lib/certificates.go` wrote static client config files with mode `0644`.
+  Changed to `0640`.
+
 ### Fixed
 
-- **Compile error** — `strconv.Quote` calls remained in a `logs.Info` statement in
-  `controllers/certificates.go` after the `strconv` import was removed. The calls were
-  unnecessary and have been dropped.
+- **Unchecked database read in `GetLogin()`** — `controllers/base.go` called
+  `u.Read("Id")` without checking the returned error. If the user record had
+  been deleted since the session was created, a partially-initialised `User`
+  struct was returned and could cause nil-pointer panics. The function now
+  returns `nil` on any read error.
 
 - **Nil pointer panic on log file open failure** — `controllers/logs.go` logged the
   error from `os.Open` but did not return, causing `bufio.NewScanner` to receive a nil
@@ -149,7 +123,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   any email address that contains no `@`. The split result is now validated before use.
   The domain comparison was also changed to `strings.EqualFold` to be case-insensitive.
 
+- **Compile error** — `strconv.Quote` calls remained in a `logs.Info` statement in
+  `controllers/certificates.go` after the `strconv` import was removed. The calls were
+  unnecessary and have been dropped.
+
 ### Build
+
+- **Go updated to 1.25.0** — `go.mod` directive and all builder images
+  (`Dockerfile-beego`, `build.sh`) updated from 1.23.4 to 1.25.0. Transitive
+  dependencies updated to versions requiring Go 1.25.
+
+- **Dependencies updated** — All direct dependencies bumped to latest releases:
+  `beego/beego/v2` v2.3.10, `go-ldap/ldap/v3` v3.4.13,
+  `mattn/go-sqlite3` v1.14.42, `cloudfoundry/gosigar` v1.3.117,
+  `golang.org/x/oauth2` v0.36.0, `google.golang.org/api` v0.275.0.
+  Indirect dependencies updated accordingly.
+
+- **`beego/beego/v2` v2.3.10 breaking change** — `FlashData.Error()`,
+  `FlashData.Warning()`, and `FlashData.Success()` became printf-style
+  functions. All 42 call sites across 8 controller files updated to pass
+  `"%s"` as the format string.
+
+- **`OZON08/openvpn-server-config` updated to v0.4.0** — vendor directory
+  and `go.mod` updated to the new release of the forked library.
+
+- **`OZON08/qrencode` pinned to v0.2.0** — `Dockerfile-beego` and
+  `standalone-install.sh` updated from `--branch main` to `--branch v0.2.0`.
 
 - **Non-reproducible bee installation** — `Dockerfile-beego` installed
   `github.com/beego/bee/v2@develop` (HEAD of the develop branch), which could silently
@@ -162,13 +161,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dockerfiles left corrupted on build failure** — `build.sh` patched
   `Dockerfile` and `Dockerfile-beego` in-place with `sed -i` and never
   restored them. A failed build left the architecture baked into the files,
-  causing all subsequent
-  runs to fail silently (the placeholder `FROM DEFINE-YOUR-ARCH` was no longer present
-  to be replaced). Added a `trap restore_dockerfiles EXIT` that restores the placeholder
-  on both success and failure.
+  causing all subsequent runs to fail silently (the placeholder `FROM DEFINE-YOUR-ARCH`
+  was no longer present to be replaced). Added a `trap restore_dockerfiles EXIT` that
+  restores the placeholder on both success and failure.
 
 - **Inconsistent Go version on armv6** — `build.sh` used `golang:1.21-bookworm` for
-  armv6 while all other platforms used `1.23.4`. Aligned to `1.23.4`.
+  armv6 while all other platforms used `1.23.4`. Aligned to `1.25.0`.
 
 - **Missing architecture prefix for arm64/aarch64** — `build.sh` specified
   `golang:1.23.4-bookworm` (amd64 image) for arm64 and aarch64 hosts instead of
@@ -176,8 +174,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Missing `.dockerignore`** — The Docker build context included
   `vendor/` (~40 MB), `build/`, `.git/`, and other directories that are not
-  needed in the final image.
-  Added `.dockerignore` to exclude them and speed up `docker build`.
+  needed in the final image. Added `.dockerignore` to exclude them and speed up
+  `docker build`.
 
 - **Placeholder OAuth credentials in image** — `build/assets/app.conf` contained
   `googleClientID = your-google-clientid` and related placeholder values that were
@@ -186,10 +184,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Missing LocalIP in revoke index entry** — `build/assets/revoke.sh`
   appended `LocalIP=${CERT_IP}` to the `index.txt` entry on revocation, but
-  `CERT_IP` is never
-  set by the UI for revoke operations, resulting in `LocalIP=` (empty) in the database.
-  The `LocalIP` field was removed from the revoke path; IP assignment is not relevant
-  after a certificate is revoked.
+  `CERT_IP` is never set by the UI for revoke operations, resulting in `LocalIP=`
+  (empty) in the database. The `LocalIP` field was removed from the revoke path;
+  IP assignment is not relevant after a certificate is revoked.
 
 ### Changed
 
