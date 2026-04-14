@@ -1,0 +1,10 @@
+# Force LF line endings for shell scripts and other Unix files
+*.sh        text eol=lf
+*.lib       text eol=lf
+*.conf      text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+Dockerfile* text eol=lf
+
+# Auto-detect everything else
+*           text=auto
