@@ -74,7 +74,7 @@ Quick to deploy and easy to use, makes work with small OpenVPN environments a br
 * Updated infrastructure:
   * Alpine Linux as fastest and secure base image
   * GoLang 1.25.0
-  * Beego 2.3.4
+  * Beego 2.3.10
   * Easy-rsa 3.X
   * Openssl 3.X
   * OpenVPN 2.5.8 Server is fully compatible
