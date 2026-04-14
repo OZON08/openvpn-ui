@@ -38,7 +38,7 @@
 > - `OZON08/qrencode` pinned to v0.2.0
 > - Dockerfiles corrupted in-place on failed builds — restored via `trap`
 > - Non-reproducible `bee` install (`@develop`) — pinned to `v2.3.0`
-> - Go version inconsistency across architectures — aligned to 1.23.4
+> - Go updated to 1.25.0; builder images aligned across all architectures
 > - Missing `arm64v8/` prefix for arm64/aarch64 builder image
 > - Missing `.dockerignore` — `vendor/` (~40 MB) excluded from build context
 > - Placeholder OAuth credentials baked into image — replaced with empty values
@@ -73,7 +73,7 @@ Quick to deploy and easy to use, makes work with small OpenVPN environments a br
 * OpenVPN-UI Admin user and password can be passed via environment variables to container
 * Updated infrastructure:
   * Alpine Linux as fastest and secure base image
-  * GoLang 1.23.4
+  * GoLang 1.25.0
   * Beego 2.3.4
   * Easy-rsa 3.X
   * Openssl 3.X
