@@ -1,8 +1,9 @@
-# Exclude vendored dependencies — the binary is built inside the beego container
+# Exclude vendored dependencies — the binary is built via go mod download in CI
 vendor/
 
-# Build tooling and docs
-build/
+# Build tooling and docs (kept: build/assets needed by Dockerfile.ci)
+build/*.sh
+build/Dockerfile*
 docs/
 .github/
 *.md
