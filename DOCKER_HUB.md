@@ -28,6 +28,7 @@ OpenVPN server web administration interface — quick to deploy, easy to use.
 - Admin credentials passed via environment variables
 - Google OAuth 2.0 login support
 - Alpine Linux base, Go 1.25.0, Beego 2.3.10, EasyRSA 3.x, OpenSSL 3.x
+- **v0.9.6.1**: CRLF line ending fix — container now starts correctly on all Linux hosts
 - AMD64 and ARM images available
 
 ## Security fixes in this fork
