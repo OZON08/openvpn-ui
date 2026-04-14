@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.6.1] - 2026-04-14
+
+### Fixed
+
+- **CRLF line endings in container scripts** — `start.sh`, `restart.sh`, and
+  `easyrsa-tools.lib` had Windows-style CRLF line endings, causing
+  `/bin/sh: /opt/start.sh: not found` on container start. Converted to LF.
+  Added `.gitattributes` to enforce LF for all shell scripts and config files.
+
+---
+
 ## [0.9.6] - 2026-04-14
 
 ### Security
