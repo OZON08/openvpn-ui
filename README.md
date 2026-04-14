@@ -53,9 +53,9 @@ Quick to deploy and easy to use, makes work with small OpenVPN environments a br
 
 <img src="https://raw.githubusercontent.com/OZON08/openvpn-ui/main/docs/images/OpenVPN-UI-Home.png" alt="Openvpn-ui home screen"/>
 
-[![latest version](https://img.shields.io/github/v/release/OZON08/openvpn-ui?color=%2344cc11&label=LATEST%20RELEASE&style=flat-square&logo=Github)](https://github.com/OZON08/openvpn-ui/releases/latest) [![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/OZON08/openvpn-ui/latest?logo=docker&label=DOCKER%20IMAGE&color=2344cc11&style=flat-square&logoColor=white)](https://hub.docker.com/r/OZON08/openvpn-ui) ![Docker Image Size (tag)](https://img.shields.io/docker/image-size/OZON08/openvpn-ui/latest?logo=Docker&color=2344cc11&label=IMAGE%20SIZE&style=flat-square&logoColor=white)
+[![latest version](https://img.shields.io/github/v/release/OZON08/openvpn-ui?color=%2344cc11&label=LATEST%20RELEASE&style=flat-square&logo=Github)](https://github.com/OZON08/openvpn-ui/releases/latest) [![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/ozon08/openvpn-ui/latest?logo=docker&label=DOCKER%20IMAGE&color=%2344cc11&style=flat-square&logoColor=white)](https://hub.docker.com/r/ozon08/openvpn-ui) ![Docker Image Size (tag)](https://img.shields.io/docker/image-size/ozon08/openvpn-ui/latest?logo=Docker&color=%2344cc11&label=IMAGE%20SIZE&style=flat-square&logoColor=white)
 
-[![latest version](https://img.shields.io/github/v/release/OZON08/openvpn-server?color=%2344cc11&label=OpenVPN-SERVER&style=flat-square&logo=Github)](https://github.com/OZON08/openvpn-server)  [![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/OZON08/openvpn-server/latest?style=flat-square&logo=docker&logoColor=white&label=OpenVPN-SERVER%20IMAGE&color=2344cc11)](https://hub.docker.com/r/OZON08/openvpn-server)
+[![latest version](https://img.shields.io/github/v/release/OZON08/openvpn-server?color=%2344cc11&label=OpenVPN-SERVER&style=flat-square&logo=Github)](https://github.com/OZON08/openvpn-server)  [![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/ozon08/openvpn-server/latest?style=flat-square&logo=docker&logoColor=white&label=OpenVPN-SERVER%20IMAGE&color=%2344cc11)](https://hub.docker.com/r/ozon08/openvpn-server)
 
 ## Features
 
