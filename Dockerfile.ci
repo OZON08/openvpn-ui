@@ -4,11 +4,8 @@ FROM golang:1.25.0-alpine AS builder
 RUN apk add --no-cache gcc musl-dev git
 
 WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
-
 COPY . .
-RUN CGO_ENABLED=1 go build -mod=mod -o openvpn-ui .
+RUN CGO_ENABLED=1 go build -mod=vendor -o openvpn-ui .
 
 # ---- Stage 2: Build qrencode ----
 FROM golang:1.25.0-alpine AS qrencode-builder
