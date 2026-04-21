@@ -43,6 +43,7 @@ COPY build/assets/restart.sh                      /opt/scripts/restart.sh
 COPY build/assets/rmcert.sh                       /opt/scripts/rmcert.sh
 COPY build/assets/remove.sh                       /opt/scripts/remove.sh
 COPY build/assets/renew.sh                        /opt/scripts/renew.sh
+COPY build/assets/client-disconnect.sh            /opt/scripts/client-disconnect.sh
 COPY build/assets/easyrsa-tools.lib               /usr/share/easy-rsa/easyrsa-tools.lib
 COPY build/assets/app.conf                        /opt/openvpn-ui/conf/app.conf
 
@@ -55,6 +56,7 @@ COPY --from=qrencode-builder /app/qrencode/qrencode /opt/scripts/qrencode
 
 RUN chmod +x /opt/start.sh \
              /opt/scripts/qrencode \
+             /opt/scripts/client-disconnect.sh \
              /opt/openvpn-ui/openvpn-ui \
     && rm -f /opt/openvpn-ui/data.db
 

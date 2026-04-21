@@ -1,50 +1,12 @@
 # OpenVPN UI
 
-> **This is a security-hardened fork of [d3vilh/openvpn-ui](https://github.com/d3vilh/openvpn-ui),
-> maintained by [OZON08](https://github.com/OZON08).**
+> **Security-hardened fork of [d3vilh/openvpn-ui](https://github.com/d3vilh/openvpn-ui),
+> maintained by [OZON08](https://github.com/OZON08).** Critical/high vulnerabilities
+> fixed, dependencies updated, build reliability improved, plus new features such as
+> long-term user monitoring with optional InfluxDB v3 export. All changes are tracked
+> in [CHANGELOG.md](CHANGELOG.md).
 >
-> The fork was created to address several critical and high-severity
-> vulnerabilities, runtime bugs, and build reliability issues present in the
-> upstream codebase. All changes are tracked in [CHANGELOG.md](CHANGELOG.md).
-> Upstream features and behaviour are otherwise preserved.
->
-> **Security fixes:**
->
-> - Path traversal in certificate download endpoint (Critical)
-> - Command injection in certificate and PKI management (Critical)
-> - Path traversal in the image endpoint (Critical)
-> - CSRF via hardcoded OAuth state parameter (Critical)
-> - OAuth internal error details exposed to unauthenticated users (High)
-> - LDAP injection in LDAP authentication (High)
-> - SQL query logging of sensitive data in production (High)
-> - Race condition on global configuration state (Medium)
-> - World-readable client config files containing private keys (Medium)
-> - Weak password policy — minimum length raised from 6 to 12 characters (Medium)
->
-> **Bug fixes:**
->
-> - Nil pointer panic when log file cannot be opened
-> - Unchecked database read in session user lookup (`GetLogin`)
-> - Variable shadowing causing the log package to become inaccessible
-> - Always-true condition and index-out-of-bounds panic in certificate parser
-> - Nil pointer panic in session handling (`GetLogin`, `SetParams`)
-> - Index-out-of-bounds panic on malformed OAuth email address
-> - Redundant double-assignment in user profile update
->
-> **Build:**
->
-> - All direct dependencies updated to latest releases
-> - `OZON08/openvpn-server-config` updated to v0.4.0
-> - `OZON08/qrencode` pinned to v0.2.0
-> - Dockerfiles corrupted in-place on failed builds — restored via `trap`
-> - Non-reproducible `bee` install (`@develop`) — pinned to `v2.3.0`
-> - Go updated to 1.25.0; builder images aligned across all architectures
-> - Missing `arm64v8/` prefix for arm64/aarch64 builder image
-> - Missing `.dockerignore` — `vendor/` (~40 MB) excluded from build context
-> - Placeholder OAuth credentials baked into image — replaced with empty values
->
-> Contributions and security reports are welcome. For upstream feature requests
-> and non-security bugs, please refer to the
+> For upstream feature requests and non-security bugs, please refer to the
 > [original repository](https://github.com/d3vilh/openvpn-ui).
 
 OpenVPN server web administration interface.
@@ -886,6 +848,106 @@ Required ENV variables for google login to work.
 >          ALLOWED_DOMAINS
 
 Kudos to [opsnin](https://github.com/OZON08/openvpn-ui/pull/89) for this feature.
+
+### Long-term user monitoring (traffic, IPs, sessions)
+
+Starting from version `0.9.7` OpenVPN-UI ships a long-term monitoring
+subsystem that tracks per-user transfer volume, real/virtual IP addresses
+and connect/disconnect sessions. Data is persisted locally in SQLite with
+a retention policy and can optionally be pushed to an external
+**InfluxDB v3** instance for Grafana dashboards or other analytics tools.
+
+#### What is collected
+
+- A background scraper reads `openvpn-status.log` every 60s and writes
+  each connected client's cumulative byte counters as a `TrafficSample`.
+- Connect/disconnect cycles are tracked as `VpnSession` rows (common name,
+  real IP, virtual IP, start/end, duration, bytes).
+- Samples older than the sample-retention window are aggregated into
+  `TrafficHourly` deltas; hourly rows older than the hourly-retention
+  window are aggregated into `TrafficDaily` deltas. Daily rows are kept
+  indefinitely (they stay small).
+
+The history is visible on the new **Monitor** page in the top menu and
+is also available as JSON under `/api/v1/monitor/sessions` and
+`/api/v1/monitor/traffic?cn=<common_name>&range=7d|30d|90d|365d`.
+
+#### Configuration
+
+All monitor settings live in `app.conf` and can be overridden via Docker
+environment variables. The defaults are safe — SQLite monitoring is on,
+InfluxDB export is off.
+
+| `app.conf` key | Environment variable | Default | Purpose |
+| --- | --- | --- | --- |
+| `MonitoringEnabled` | `OPENVPN_UI_MONITORING_ENABLED` | `true` | Master switch for the scraper + retention GC |
+| `MonitoringScrapeIntervalS` | `OPENVPN_UI_MONITORING_SCRAPE_INTERVAL_S` | `60` | How often `openvpn-status.log` is parsed (seconds) |
+| `MonitoringSampleRetentionDays` | `OPENVPN_UI_MONITORING_SAMPLE_RETENTION_DAYS` | `30` | After this many days, 1-min samples are rolled up to hourly and pruned |
+| `MonitoringHourlyRetentionDays` | `OPENVPN_UI_MONITORING_HOURLY_RETENTION_DAYS` | `365` | After this many days, hourly rows are rolled up to daily and pruned |
+| `MonitoringHookToken` | `OPENVPN_UI_MONITORING_HOOK_TOKEN` | *(empty)* | Shared secret for the OpenVPN `client-disconnect` webhook (see below). Must be set to a strong random string to enable the hook. |
+| `MonitoringStatusLogPath` | `OPENVPN_UI_MONITORING_STATUS_LOG_PATH` | `<OpenVpnPath>/log/openvpn-status.log` | Override status log location if it is not under the default OpenVPN path |
+| `InfluxEnabled` | `OPENVPN_UI_INFLUX_ENABLED` | `false` | Toggle the optional InfluxDB v3 backend |
+| `InfluxURL` | `OPENVPN_UI_INFLUX_URL` | `http://influxdb:8181` | InfluxDB v3 HTTP endpoint |
+| `InfluxToken` | `OPENVPN_UI_INFLUX_TOKEN` | *(empty)* | InfluxDB v3 API token |
+| `InfluxDatabase` | `OPENVPN_UI_INFLUX_DATABASE` | `openvpn` | InfluxDB v3 database / bucket name |
+| `InfluxBufferSize` | `OPENVPN_UI_INFLUX_BUFFER_SIZE` | `1000` | In-memory point buffer. Overflow drops oldest. |
+| `InfluxFlushIntervalS` | `OPENVPN_UI_INFLUX_FLUSH_INTERVAL_S` | `10` | Flush interval for the point buffer (seconds) |
+
+Example docker-compose snippet adding the monitor env vars:
+
+```yaml
+    openvpn-ui:
+      image: ozon08/openvpn-ui:latest
+      environment:
+        - OPENVPN_ADMIN_USERNAME=admin
+        - OPENVPN_ADMIN_PASSWORD=changeme
+        # Monitor (all optional — defaults are shown)
+        - OPENVPN_UI_MONITORING_ENABLED=true
+        - OPENVPN_UI_MONITORING_SCRAPE_INTERVAL_S=60
+        - OPENVPN_UI_MONITORING_SAMPLE_RETENTION_DAYS=30
+        - OPENVPN_UI_MONITORING_HOURLY_RETENTION_DAYS=365
+        - OPENVPN_UI_MONITORING_HOOK_TOKEN=change-me-to-a-long-random-string
+        # InfluxDB v3 export (optional)
+        - OPENVPN_UI_INFLUX_ENABLED=true
+        - OPENVPN_UI_INFLUX_URL=http://influxdb:8181
+        - OPENVPN_UI_INFLUX_TOKEN=your-influx-api-token
+        - OPENVPN_UI_INFLUX_DATABASE=openvpn
+```
+
+When `InfluxEnabled=true`, the UI writes two measurements:
+
+- `openvpn_traffic` — tags: `common_name`, `virtual_ip`, `real_ip`; fields:
+  `bytes_in`, `bytes_out` (cumulative counters per session).
+- `openvpn_session` — tags: `common_name`, `status=closed`; fields:
+  `bytes_in`, `bytes_out`, `duration_s`, `real_ip`, `virtual_ip`.
+
+#### OpenVPN `client-disconnect` webhook (optional, recommended)
+
+The scraper alone closes stale sessions with ~60s lag. For authoritative,
+real-time session-end data (exact final byte counts and duration), wire
+the bundled `client-disconnect.sh` hook into your OpenVPN server:
+
+1. Copy `/opt/scripts/client-disconnect.sh` from the container (or use
+   `build/assets/client-disconnect.sh` from this repo) into your OpenVPN
+   server's `scripts/` directory and ensure it is executable.
+2. In `server.conf` add:
+
+   ```conf
+   script-security 2
+   client-disconnect /etc/openvpn/scripts/client-disconnect.sh
+   ```
+
+3. Pass these env vars to the OpenVPN server container:
+
+   ```shell
+   OPENVPN_UI_URL=http://openvpn-ui:8080
+   OPENVPN_UI_HOOK_TOKEN=<same value as OPENVPN_UI_MONITORING_HOOK_TOKEN>
+   ```
+
+The hook posts the authoritative session summary to
+`/api/v1/monitor/disconnect` using the shared `X-Monitor-Token` header;
+requests without a matching token are rejected.
+
 ### User Management
 Starting from `v.0.9.2` OpenVPN UI has user management feature. 
 

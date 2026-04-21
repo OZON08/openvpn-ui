@@ -9,6 +9,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.7] - 2026-04-21
+
+### Added
+
+- **Long-term user monitoring** — new `Monitor` page and `/api/v1/monitor/*`
+  endpoints track per-user transfer volume, connect/disconnect sessions, and
+  real/virtual IP addresses.
+  - A background scraper polls `openvpn-status.log` (default every 60s) and
+    writes `TrafficSample`, `VpnSession` rows into SQLite.
+  - A retention GC aggregates 1-minute samples into `TrafficHourly`
+    (default 30-day cutover) and hourly rows into `TrafficDaily`
+    (default 365-day cutover), then prunes the source table. Daily rows
+    are kept indefinitely.
+  - Optional **InfluxDB v3** backend: when `InfluxEnabled=true`, every
+    sample and closed session is also pushed to InfluxDB (async buffer,
+    best-effort — SQLite stays the source of truth).
+  - Optional **OpenVPN client-disconnect webhook**
+    (`build/assets/client-disconnect.sh`) closes sessions with authoritative
+    byte counts; authenticated with a shared `MonitoringHookToken`.
+  - All settings can be overridden per-container via env vars, e.g.
+    `OPENVPN_UI_MONITORING_ENABLED`, `OPENVPN_UI_INFLUX_URL`,
+    `OPENVPN_UI_INFLUX_TOKEN`, `OPENVPN_UI_MONITORING_HOOK_TOKEN`.
+
+### Changed
+
+- README shortened — the verbose forked-notice (security/bug/build bullets)
+  collapsed into a one-paragraph summary pointing to this changelog.
+
+---
+
 ## [0.9.6.1] - 2026-04-14
 
 ### Fixed

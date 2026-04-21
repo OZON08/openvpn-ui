@@ -26,6 +26,7 @@ func Init(configDir string) {
 	web.Router("/ov/clientconfig", &controllers.OVClientConfigController{ConfigDir: configDir})
 	web.Router("/easyrsa/config", &controllers.EasyRSAConfigController{ConfigDir: configDir})
 	web.Router("/dangerzone", &controllers.DangerController{})
+	web.Router("/monitor", &controllers.MonitorController{})
 
 	web.Include(&controllers.CertificatesController{ConfigDir: configDir})
 	web.Include(&controllers.DangerController{})
@@ -48,6 +49,11 @@ func Init(configDir string) {
 			web.NSInclude(
 				&controllers.APISignalController{},
 			),
+		),
+		web.NSNamespace("/monitor",
+			web.NSRouter("/sessions", &controllers.APIMonitorSessionsController{}, "get:Get"),
+			web.NSRouter("/traffic", &controllers.APIMonitorTrafficController{}, "get:Get"),
+			web.NSRouter("/disconnect", &controllers.APIMonitorHookController{}, "post:Post"),
 		),
 	)
 	web.AddNamespace(ns)
