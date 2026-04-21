@@ -4,92 +4,57 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>OpenVPN UI | Log in</title>
-  <!-- Tell the browser to be responsive to screen width -->
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-  <!-- Font Awesome 5.15.3 -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <link rel="stylesheet" href="/static/css/font-awesome.min.css">
-  <!-- Ionicons 2.0.0-->
   <link rel="stylesheet" href="/static/css/ionicons.min.css">
-  <!-- Theme style 3.2.0-->
   <link rel="stylesheet" href="/static/css/AdminLTE.min.3.2.0.css">
-  <!-- iCheck 1.0.2 -->
   <link rel="stylesheet" href="/static/css/iCheck.1.0.2.css">
-
+  <!-- v0.9.7 look-layer -->
+  <link rel="stylesheet" href="/static/css/v097-custom.css">
   <link rel="icon" type="image/png" sizes="32x32" href="/static/img/favicon/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/static/img/favicon/favicon-16x16.png">
-  <link rel="icon" type="image/png" sizes="96x96" href="/static/img/favicon/favicon-96x96.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="/static/img/favicon/favicon-192x192.png">
 </head>
-<body class="hold-transition login-page">
+<body class="hold-transition login-page dark-mode">
 <div class="login-box">
   <div class="login-logo">
-    <a href="#"><b>OpenVPN</b> UI</a>
+    <a href="#"><b>OpenVPN</b> UI <span class="v097-version-badge" style="vertical-align:middle;">v0.9.7</span></a>
   </div>
-  <!-- /.login-logo -->
+
   <div class="card">
     <div class="card-body login-card-body">
       <p class="login-box-msg"><small>Sign in to start your session</small></p>
 
-      {{if .error}}
-        <div class="alert alert-danger" role="alert">
-          {{.error}}
-        </div>
-      {{end}}
+      {{if .error}}<div class="alert alert-danger" role="alert">{{.error}}</div>{{end}}
 
       <form action="{{urlfor "LoginController.Login"}}" method="post">
         <div class="input-group mb-3">
           <input type="text" class="form-control" name="login" placeholder="Login">
-          <div class="input-group-append">
-            <div class="input-group-text">
-              <span class="fas fa-user"></span>
-            </div>
-          </div>
+          <div class="input-group-append"><div class="input-group-text"><span class="fas fa-user"></span></div></div>
         </div>
-
         <div class="input-group mb-3">
           <input type="password" class="form-control" name="password" placeholder="Password">
-          <div class="input-group-append">
-            <div class="input-group-text">
-              <span class="fas fa-lock"></span>
-            </div>
-          </div>
+          <div class="input-group-append"><div class="input-group-text"><span class="fas fa-lock"></span></div></div>
         </div>
-
-        <div class="col-xs-8">
-        </div>
-        <!-- /.col -->
         {{ .xsrfdata }}
-        <div class="com-md-12">
-            <button type="submit" class="btn btn-primary btn-block">
-            <img src="/static/img/openvpn-win.svg" alt="Sign In Icon" style="height: 23px; vertical-align: middle; filter: invert(1);"> &nbsp;Sign In</button>
-          </div>
-        <!-- /.col -->
+        <button type="submit" class="btn btn-primary btn-block">
+          <i class="fa fa-sign-in-alt mr-2"></i>Sign In
+        </button>
       </form>
-      <br>
-      <a href="{{urlfor "LoginController.GoogleLogin"}}" class="btn btn-block btn-danger">
+      <hr>
+      <a href="{{urlfor "LoginController.GoogleLogin"}}" class="btn btn-block btn-default">
         <i class="fab fa-google"></i> &nbsp;Sign in with Google
       </a>
-      <p class="login-box-msg"><small><a href="https://github.com/OZON08/openvpn-ui?tab=readme-ov-file#authentication-with-google-apis-oauth-20" target="_blank">How to Sign In</a> with Google</small></p>
+      <p class="login-box-msg mt-3"><small><a href="https://github.com/OZON08/openvpn-ui?tab=readme-ov-file#authentication-with-google-apis-oauth-20" target="_blank">How to sign in</a> with Google</small></p>
     </div>
-    <!-- /.login-box-body -->
   </div>
 </div>
-<!-- /.login-box -->
 
-<!-- jQuery 3.6.1 -->
 <script src="/static/js/jquery-3.6.1.min.js"></script>
-<!-- Bootstrap 3.3.7 -->
 <script src="/static/js/bootstrap.min.4.6.1.js"></script>
-<!-- iCheck 1.0.3 -->
 <script src="/static/js/icheck.1.0.3.js"></script>
-
 <script>
   $(function () {
-    $('input').iCheck({
-      checkboxClass: 'icheckbox_square-blue',
-      radioClass: 'iradio_square-blue',
-      increaseArea: '20%' // optional
-    });
+    $('input').iCheck({ checkboxClass: 'icheckbox_square-blue', radioClass: 'iradio_square-blue', increaseArea: '20%' });
     $("input:text:visible:first").focus();
   });
 </script>

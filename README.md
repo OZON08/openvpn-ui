@@ -868,9 +868,32 @@ a retention policy and can optionally be pushed to an external
   window are aggregated into `TrafficDaily` deltas. Daily rows are kept
   indefinitely (they stay small).
 
-The history is visible on the new **Monitor** page in the top menu and
+The history is visible on the new **Monitor** page in the sidebar and
 is also available as JSON under `/api/v1/monitor/sessions` and
 `/api/v1/monitor/traffic?cn=<common_name>&range=7d|30d|90d|365d`.
+
+The Monitor page has four tabs:
+
+- **Sessions** — currently-connected clients plus the most recent 50
+  sessions (open and closed), with byte counters and a per-user history
+  drawer.
+- **Users** — one row per common name aggregating session count,
+  cumulative bytes and last-seen. Clicking *History* opens the traffic
+  JSON for the selected range (7 d / 30 d / 90 d / 365 d).
+- **Retention** — live row counts for `traffic_sample`, `traffic_hourly`
+  and `traffic_daily` alongside the configured retention windows.
+- **InfluxDB** — live writer stats (buffered points, 24 h flushed /
+  errors) and an admin form for the InfluxDB URL / database / token.
+
+#### Editing InfluxDB settings from the UI
+
+The InfluxDB tab on the Monitor page lets an administrator save the
+URL, database and token into SQLite. These DB values take precedence
+over the matching `app.conf` / `OPENVPN_UI_INFLUX_*` environment
+variables and the live writer is **hot-reconfigured without a
+container restart**. Leaving the token field blank keeps the existing
+secret untouched; clearing the URL turns the export off until it is
+set again.
 
 #### Configuration
 

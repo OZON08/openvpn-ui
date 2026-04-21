@@ -27,7 +27,8 @@ type Config struct {
 }
 
 // LoadConfig reads monitoring settings from Beego's web.AppConfig and returns
-// a fully-populated Config. Missing values fall back to sane defaults.
+// a fully-populated Config. Missing values fall back to sane defaults. DB-
+// backed InfluxDB overrides (set via the UI) are layered on top.
 func LoadConfig() Config {
 	cfg := Config{
 		Enabled:             web.AppConfig.DefaultBool("MonitoringEnabled", true),
@@ -51,6 +52,19 @@ func LoadConfig() Config {
 		Database:      web.AppConfig.DefaultString("InfluxDatabase", "openvpn"),
 		BufferSize:    web.AppConfig.DefaultInt("InfluxBufferSize", 1000),
 		FlushInterval: time.Duration(web.AppConfig.DefaultInt("InfluxFlushIntervalS", 10)) * time.Second,
+	}
+	// DB override: if the admin has saved settings via the UI, prefer them.
+	if db, err := models.GetInfluxSettings(); err == nil && db != nil {
+		if db.URL != "" {
+			cfg.Influx.URL = db.URL
+		}
+		if db.Token != "" {
+			cfg.Influx.Token = db.Token
+		}
+		if db.Database != "" {
+			cfg.Influx.Database = db.Database
+		}
+		cfg.Influx.Enabled = cfg.Influx.URL != ""
 	}
 	return cfg
 }
@@ -109,6 +123,26 @@ func (s *Scraper) Influx() *InfluxWriter { return s.influx }
 
 // HookToken returns the shared secret for the disconnect webhook.
 func (s *Scraper) HookToken() string { return s.cfg.HookToken }
+
+// ReloadInfluxSettings re-reads InfluxDB values from app.conf and the DB
+// override, then hot-swaps the live writer. Called by the UI after the
+// operator saves new connection details.
+func (s *Scraper) ReloadInfluxSettings() error {
+	if s == nil {
+		return nil
+	}
+	fresh := LoadConfig()
+	s.cfg.Influx = fresh.Influx
+	if s.influx == nil {
+		w, err := NewInfluxWriter(fresh.Influx)
+		if err != nil {
+			return err
+		}
+		s.influx = w
+		return nil
+	}
+	return s.influx.Reconfigure(fresh.Influx)
+}
 
 // scrapeLoop polls openvpn-status.log and updates SQLite + InfluxDB.
 func (s *Scraper) scrapeLoop(ctx context.Context) {

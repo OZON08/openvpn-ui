@@ -1,0 +1,103 @@
+<!-- Main Sidebar Container -->
+<aside class="main-sidebar sidebar-dark-primary elevation-0">
+  <!-- Brand Logo -->
+  <a href="{{urlfor "MainController.Get"}}" class="brand-link">
+    <img src="/static/img/openvpn-win.svg" alt="OpenVPN UI Logo" class="brand-image img-circle elevation-3" style="opacity: .85">
+    <span class="brand-text font-weight-light"><b>OpenVPN</b> UI</span>
+    <span class="v097-version-badge">v0.9.7</span>
+  </a>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <nav class="mt-2">
+      <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+
+        <li class="nav-header">Overview</li>
+
+        <li class="nav-item">
+          <a href="{{urlfor "MainController.Get"}}" class="nav-link {{if compare .RouterPattern "/"}}active{{end}}">
+            <i class="nav-icon fa fa-home"></i>
+            <p>Home</p>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href="{{urlfor "CertificatesController.Get"}}" class="nav-link {{if compare .RouterPattern "/certificates"}}active{{end}}">
+            <i class="nav-icon fa fa-certificate"></i>
+            <p>Certificates</p>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href="{{urlfor "MonitorController.Get"}}" class="nav-link {{if compare .RouterPattern "/monitor"}}active{{end}}">
+            <i class="nav-icon fa fa-chart-line"></i>
+            <p>Monitor <span class="badge">new</span></p>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href="{{urlfor "LogsController.Get"}}" class="nav-link {{if compare .RouterPattern "/logs"}}active{{end}}">
+            <i class="nav-icon fa fa-file-text-o"></i>
+            <p>Logs</p>
+          </a>
+        </li>
+
+        {{if .Userinfo.IsAdmin}}
+        <li class="nav-header">Configuration</li>
+
+        <li class="nav-item">
+          <a href="{{urlfor "SettingsController.Get"}}" class="nav-link {{if compare .RouterPattern "/settings"}}active{{end}}">
+            <i class="nav-icon fa fa-sliders"></i>
+            <p>OpenVPN UI</p>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href="{{urlfor "OVConfigController.Get"}}" class="nav-link {{if compare .RouterPattern "/ov/config"}}active{{end}}">
+            <i class="nav-icon fa fa-server"></i>
+            <p>OpenVPN Server</p>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href="{{urlfor "OVClientConfigController.Get"}}" class="nav-link {{if compare .RouterPattern "/ov/clientconfig"}}active{{end}}">
+            <i class="nav-icon fa fa-desktop"></i>
+            <p>OpenVPN Client</p>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href="{{urlfor "EasyRSAConfigController.Get"}}" class="nav-link {{if compare .RouterPattern "/easyrsa/config"}}active{{end}}">
+            <i class="nav-icon fa fa-key"></i>
+            <p>EasyRSA vars</p>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href="{{urlfor "DangerController.Get"}}" class="nav-link {{if compare .RouterPattern "/dangerzone"}}active{{end}}">
+            <i class="nav-icon fa fa-wrench"></i>
+            <p>Maintenance</p>
+          </a>
+        </li>
+        {{end}}
+
+        <li class="nav-header">Account</li>
+
+        <li class="nav-item">
+          <a href="{{urlfor "ProfileController.Get"}}" class="nav-link {{if compare .RouterPattern "/profile"}}active{{end}}">
+            <i class="nav-icon fa fa-user"></i>
+            <p>{{ .Userinfo.Name }}</p>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href="{{urlfor "LoginController.Logout"}}" class="nav-link">
+            <i class="nav-icon fa fa-sign-out"></i>
+            <p>Sign out</p>
+          </a>
+        </li>
+
+      </ul>
+    </nav>
+  </div>
+</aside>
