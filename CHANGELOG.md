@@ -32,10 +32,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `OPENVPN_UI_MONITORING_ENABLED`, `OPENVPN_UI_INFLUX_URL`,
     `OPENVPN_UI_INFLUX_TOKEN`, `OPENVPN_UI_MONITORING_HOOK_TOKEN`.
 
+- **Monitor page with four live tabs** — Sessions, Users, Retention,
+  InfluxDB. The Sessions tab lists active clients plus the last 50
+  sessions. Users aggregates per-common-name totals (session count,
+  cumulative bytes, last-seen) via a single SQL `GROUP BY` over
+  `vpn_session` and exposes a per-user history drawer backed by
+  `/api/v1/monitor/traffic`. Retention shows row counts for
+  `traffic_sample`/`traffic_hourly`/`traffic_daily` with the active
+  retention windows. InfluxDB shows live writer stats (buffered points,
+  24 h flushed/errors) alongside the connection form.
+
+- **Admin-editable InfluxDB settings** — the Monitor → InfluxDB tab now
+  persists `InfluxURL` / `InfluxDatabase` / `InfluxToken` into SQLite
+  (new singleton `InfluxSettings` model, Id=1), layered on top of the
+  `app.conf` / `OPENVPN_UI_*` defaults. Saving from the UI hot-swaps
+  the live writer via `InfluxWriter.Reconfigure()` — no restart needed.
+  An empty token field leaves the existing secret untouched. Only admins
+  can submit the form (XSRF-protected).
+
+- **Rolling 24 h writer stats** — `InfluxWriter` now tracks flushed and
+  failed point counts in a 24-slot ring buffer (bucket = `hour-of-epoch
+  % 24`) plus an atomic depth counter, surfaced in the InfluxDB tab.
+
+- **AdminLTE sidebar layout with dark-mode default** — the top navbar
+  was replaced by a collapsible left sidebar (`views/common/sidebar.html`)
+  with per-section icons and the Monitor entry pinned near the top.
+  Dark mode is on by default (`body.dark-mode` applied from an inline
+  boot script, persisted in `localStorage`). A toggle lives in the
+  topbar. New stylesheet `static/css/v097-custom.css` layers the refreshed
+  palette and tightens card/table spacing.
+
 ### Changed
 
 - README shortened — the verbose forked-notice (security/bug/build bullets)
   collapsed into a one-paragraph summary pointing to this changelog.
+
+- Login screen rewritten as a standalone page that renders outside the
+  AdminLTE chrome, matching the new dark-mode palette.
+
+### Removed
+
+- `views/common/header-top-menu.html` — dead after the sidebar redesign.
 
 ---
 

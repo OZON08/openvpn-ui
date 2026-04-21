@@ -42,6 +42,7 @@ func InitDB() {
 		new(TrafficSample),
 		new(TrafficHourly),
 		new(TrafficDaily),
+		new(InfluxSettings),
 	)
 
 	err = orm.RunSyncdb("default", false, true)
