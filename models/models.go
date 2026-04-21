@@ -38,6 +38,10 @@ func InitDB() {
 		new(OVConfig),
 		new(OVClientConfig),
 		new(EasyRSAConfig),
+		new(VpnSession),
+		new(TrafficSample),
+		new(TrafficHourly),
+		new(TrafficDaily),
 	)
 
 	err = orm.RunSyncdb("default", false, true)

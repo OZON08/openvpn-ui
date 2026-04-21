@@ -1,0 +1,168 @@
+{{ template "layout/base.html" . }}
+
+{{define "head"}}
+<title>OpenVPN - Monitor</title>
+{{end}}
+
+{{define "body"}}
+
+{{if not .MonitorEnabled}}
+<div class="alert alert-warning">
+  Monitoring is disabled. Set <code>MonitoringEnabled = true</code> in
+  <code>app.conf</code> (or <code>OPENVPN_UI_MONITORING_ENABLED=true</code>) and
+  restart the service.
+</div>
+{{end}}
+
+<div class="row">
+  <div class="col-md-12">
+    <div class="card card-default">
+      <div class="card-header with-border">
+        <h3 class="card-title">Active sessions</h3>
+      </div>
+      <div class="card-body">
+        {{if .ActiveSessions}}
+        <div class="table-responsive">
+          <table class="table no-margin">
+            <thead>
+              <tr>
+                <th>Common Name</th>
+                <th>Real IP</th>
+                <th>Virtual IP</th>
+                <th>Connected Since (UTC)</th>
+                <th>KB In</th>
+                <th>KB Out</th>
+                <th>Per-user traffic</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{range .ActiveSessions}}
+              <tr>
+                <td>{{.CommonName}}</td>
+                <td>{{.RealIP}}</td>
+                <td><span class="badge bg-success">{{.VirtualIP}}</span></td>
+                <td>{{dateformat .ConnectedAt "2006-01-02 15:04:05"}}</td>
+                <td align="right">{{printkb .BytesIn}}</td>
+                <td align="right">{{printkb .BytesOut}}</td>
+                <td>
+                  <a href="#" class="btn btn-xs btn-info btn-flat"
+                     data-cn="{{.CommonName}}"
+                     onclick="showUserTraffic(this); return false;">
+                    Show history
+                  </a>
+                </td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+        </div>
+        {{else}}
+        <p class="text-muted">No active sessions.</p>
+        {{end}}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-12">
+    <div class="card card-default">
+      <div class="card-header with-border">
+        <h3 class="card-title">Recent sessions (last 50)</h3>
+      </div>
+      <div class="card-body">
+        {{if .RecentSessions}}
+        <div class="table-responsive">
+          <table class="table no-margin">
+            <thead>
+              <tr>
+                <th>Common Name</th>
+                <th>Status</th>
+                <th>Real IP</th>
+                <th>Virtual IP</th>
+                <th>Connected</th>
+                <th>Disconnected</th>
+                <th>Duration (s)</th>
+                <th>KB In</th>
+                <th>KB Out</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{range .RecentSessions}}
+              <tr>
+                <td>{{.CommonName}}</td>
+                <td>
+                  {{if eq .Status "active"}}
+                    <span class="badge bg-success">active</span>
+                  {{else}}
+                    <span class="badge bg-secondary">closed</span>
+                  {{end}}
+                </td>
+                <td>{{.RealIP}}</td>
+                <td>{{.VirtualIP}}</td>
+                <td>{{dateformat .ConnectedAt "2006-01-02 15:04:05"}}</td>
+                <td>
+                  {{if eq .Status "active"}}—{{else}}{{dateformat .DisconnectedAt "2006-01-02 15:04:05"}}{{end}}
+                </td>
+                <td align="right">{{.DurationS}}</td>
+                <td align="right">{{printkb .BytesIn}}</td>
+                <td align="right">{{printkb .BytesOut}}</td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+        </div>
+        {{else}}
+        <p class="text-muted">No sessions recorded yet.</p>
+        {{end}}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row" id="trafficHistoryRow" style="display:none;">
+  <div class="col-md-12">
+    <div class="card card-default">
+      <div class="card-header with-border">
+        <h3 class="card-title">Traffic history — <span id="trafficCN"></span></h3>
+        <div class="card-tools">
+          <select id="trafficRange" class="form-control form-control-sm" onchange="loadTrafficHistory()">
+            <option value="7d">Last 7 days</option>
+            <option value="30d" selected>Last 30 days</option>
+            <option value="90d">Last 90 days</option>
+            <option value="365d">Last year</option>
+          </select>
+        </div>
+      </div>
+      <div class="card-body">
+        <pre id="trafficJson" style="max-height:400px; overflow:auto;"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showUserTraffic(el) {
+    var cn = el.getAttribute('data-cn');
+    document.getElementById('trafficCN').textContent = cn;
+    document.getElementById('trafficHistoryRow').style.display = '';
+    document.getElementById('trafficHistoryRow').dataset.cn = cn;
+    loadTrafficHistory();
+  }
+  function loadTrafficHistory() {
+    var row = document.getElementById('trafficHistoryRow');
+    var cn = row.dataset.cn;
+    if (!cn) return;
+    var range = document.getElementById('trafficRange').value;
+    fetch('/api/v1/monitor/traffic?cn=' + encodeURIComponent(cn) + '&range=' + range)
+      .then(function(r) { return r.json(); })
+      .then(function(j) {
+        document.getElementById('trafficJson').textContent = JSON.stringify(j.data, null, 2);
+      })
+      .catch(function(e) {
+        document.getElementById('trafficJson').textContent = 'Error: ' + e;
+      });
+  }
+</script>
+
+{{end}}
