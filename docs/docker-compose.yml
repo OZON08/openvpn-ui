@@ -11,6 +11,11 @@ services:
             TRUST_SUB: "10.0.70.0/24"
             GUEST_SUB: "10.0.71.0/24"
             HOME_SUB: "192.168.88.0/24"
+            # v0.9.7 client-disconnect hook — used by the script mounted below.
+            # Leave OPENVPN_UI_HOOK_TOKEN empty to disable; otherwise it must
+            # match OPENVPN_UI_MONITORING_HOOK_TOKEN on the openvpn-ui service.
+            OPENVPN_UI_URL: "http://openvpn-ui:8080"
+            OPENVPN_UI_HOOK_TOKEN: "${OPENVPN_UI_MONITORING_HOOK_TOKEN:-}"
         volumes:
             - ./pki:/etc/openvpn/pki
             - ./clients:/etc/openvpn/clients
@@ -20,6 +25,10 @@ services:
             - ./fw-rules.sh:/opt/app/fw-rules.sh
             - ./checkpsw.sh:/opt/app/checkpsw.sh
             - ./server.conf:/etc/openvpn/server.conf
+            # v0.9.7 client-disconnect hook. Also add these two lines to server.conf:
+            #   script-security 2
+            #   client-disconnect /etc/openvpn/scripts/client-disconnect.sh
+            - ./client-disconnect.sh:/etc/openvpn/scripts/client-disconnect.sh:ro
         cap_add:
             - NET_ADMIN
         restart: always
@@ -36,6 +45,19 @@ services:
         environment:
             - OPENVPN_ADMIN_USERNAME=${OPENVPN_ADMIN_USERNAME}
             - OPENVPN_ADMIN_PASSWORD=${OPENVPN_ADMIN_PASSWORD}
+            # v0.9.7 monitoring — all optional, defaults in app.conf apply when unset.
+            # Set a strong token to enable the client-disconnect webhook; must match
+            # OPENVPN_UI_HOOK_TOKEN on the openvpn service above.
+            - OPENVPN_UI_MONITORING_HOOK_TOKEN=${OPENVPN_UI_MONITORING_HOOK_TOKEN:-}
+            # - OPENVPN_UI_MONITORING_ENABLED=true
+            # - OPENVPN_UI_MONITORING_SCRAPE_INTERVAL_S=60
+            # - OPENVPN_UI_MONITORING_SAMPLE_RETENTION_DAYS=30
+            # - OPENVPN_UI_MONITORING_HOURLY_RETENTION_DAYS=365
+            # Optional InfluxDB v3 export for Grafana dashboards:
+            # - OPENVPN_UI_INFLUX_ENABLED=true
+            # - OPENVPN_UI_INFLUX_URL=http://influxdb3:8181
+            # - OPENVPN_UI_INFLUX_TOKEN=${INFLUX_TOKEN}
+            # - OPENVPN_UI_INFLUX_DATABASE=openvpn
         ports:
             - "8080:8080/tcp"
         volumes:
