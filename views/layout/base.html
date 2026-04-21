@@ -1,94 +1,75 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		{{template "common/header.html" .}}
-		{{template "head" .}}
-	</head>
-  <body class="hold-transition layout-top-nav">
-  <div class="wrapper">
-      <nav class="main-header navbar navbar-expand-md navbar-white navbar-light">
-        <div class="container">
-            <a href="{{urlfor "MainController.Get"}}" class="navbar-brand">
-              <img src="/static/img/openvpn-win.svg" alt="OpenVPN UI Logo" class="brand-image img-circle elevation-3"
-              style="opacity: .8">
-              <span class="brand-text font-weight-light"><b>OpenVPN</b> UI</span></a>
-              <button class="navbar-toggler order-1" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-                </button>
+  <head>
+    {{template "common/header.html" .}}
+    {{template "head" .}}
+  </head>
+  <body class="hold-transition sidebar-mini layout-fixed">
+    <div class="wrapper">
 
-          <!-- Collect the nav links, forms, and other content for toggling -->
-          <div class="collapse navbar-collapse pull-left" id="navbarCollapse">
-            {{ template "common/header-top-menu.html" . }}
-          </div>
-          <!-- /.navbar-collapse -->
-          <!-- Navbar Right Menu -->
-          <div class="navbar-custom-menu">
-            <ul class="nav navbar-nav">
-              <!--template "common/header-notifications.html" . -->
-              {{ template "common/header-account-menu.html" . }}
+      <!-- Top navbar (minimal, only right-side controls) -->
+      <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fa fa-bars"></i></a>
+          </li>
+        </ul>
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+            <div class="custom-control custom-switch" style="padding-top:14px; margin-right:14px;">
+              <input type="checkbox" class="custom-control-input" id="checkbox">
+              <label class="custom-control-label" for="checkbox" id="theme-label">Dark</label>
+            </div>
+          </li>
+          <li class="nav-item dropdown user-menu">
+            <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
+              <i class="fa fa-user-circle"></i>
+              <span class="d-none d-md-inline">{{ .Userinfo.Name }}</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-right">
+              <li><a href="{{urlfor "ProfileController.Get"}}" class="dropdown-item"><i class="fa fa-user-cog mr-2"></i>Profile</a></li>
+              <div class="dropdown-divider"></div>
+              <li><a href="{{urlfor "LoginController.Logout"}}" class="dropdown-item"><i class="fa fa-sign-out mr-2"></i>Sign out</a></li>
             </ul>
-          </div>
-          <!-- /.navbar-custom-menu -->
-      <ul class="navbar-nav ml-auto">
-        <li class="nav-item">
-          <div class="custom-control custom-switch">
-            <input type="checkbox" class="custom-control-input" id="checkbox">
-            <label class="custom-control-label" for="checkbox" id="theme-label">Light</label>
-          </div>
-        </li>
-      </ul>
-
-
-        </div>
-        <!-- /.container-fluid -->
+          </li>
+        </ul>
       </nav>
-    </header>
-    <!-- Full Width Column -->
-    <div class="content-wrapper">
-      <div class="container">
-        {{ template "common/header-top-navigation.html" . }}
 
-      <!-- Main content -->
-      <section class="content">
-        {{ template "body" . }}
-      </section>
+      {{template "common/sidebar.html" .}}
 
-	{{template "common/footer.html" .}}
-	</body>
+      <!-- Content Wrapper -->
+      <div class="content-wrapper">
+        <section class="content pt-3">
+          <div class="container-fluid">
+            {{template "body" .}}
+          </div>
+        </section>
+      </div>
+
+      {{template "common/footer.html" .}}
+    </div>
+  </body>
 </html>
 
 <script>
-  // Get a reference to the checkbox element
+  // Theme toggle — persisted in localStorage
   const checkbox = document.getElementById('checkbox');
-
-  // Get a reference to the label element
-	const themeLabel = document.getElementById('theme-label');
-
-
-  // Get a reference to the body element
+  const themeLabel = document.getElementById('theme-label');
   const body = document.body;
-
-  // Check localStorage for the user's theme preference
   const savedTheme = localStorage.getItem('theme');
-  if (savedTheme === 'dark') {
+  if (savedTheme !== 'light') {
+    // v0.9.7 is dark by default
     body.classList.add('dark-mode');
-    checkbox.checked = true;
-    themeLabel.textContent = 'Dark';
+    if (checkbox) checkbox.checked = true;
+    if (themeLabel) themeLabel.textContent = 'Dark';
+  } else {
+    if (themeLabel) themeLabel.textContent = 'Light';
   }
-
-  // Add an event listener to the checkbox for changes
-  checkbox.addEventListener('change', function () {
-    // Toggle the "dark-mode" class on the body element
-    body.classList.toggle('dark-mode', checkbox.checked);
-    
-		// Update the label text based on the checkbox state
-		themeLabel.textContent = checkbox.checked ? 'Dark' : 'Light';
-
-    // Save the user's preference in localStorage
-    if (checkbox.checked) {
-      localStorage.setItem('theme', 'dark');
-    } else {
-      localStorage.removeItem('theme');
-    }
-  });
+  if (checkbox) {
+    checkbox.addEventListener('change', function () {
+      body.classList.toggle('dark-mode', checkbox.checked);
+      if (themeLabel) themeLabel.textContent = checkbox.checked ? 'Dark' : 'Light';
+      localStorage.setItem('theme', checkbox.checked ? 'dark' : 'light');
+    });
+  }
 </script>

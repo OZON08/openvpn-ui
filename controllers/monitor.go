@@ -3,11 +3,14 @@ package controllers
 import (
 	"crypto/subtle"
 	"encoding/json"
+	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/core/logs"
+	"github.com/beego/beego/v2/server/web"
 
 	"github.com/OZON08/openvpn-ui/models"
 	"github.com/OZON08/openvpn-ui/state"
@@ -35,6 +38,150 @@ func (c *MonitorController) Get() {
 	c.Data["ActiveSessions"] = active
 	c.Data["RecentSessions"] = recent
 	c.Data["MonitorEnabled"] = state.Monitor != nil
+	c.Data["UserAggregates"], _ = loadUserAggregates()
+	c.Data["RetentionStages"] = loadRetentionStages()
+	c.Data["InfluxStatus"], c.Data["InfluxConfig"] = loadInfluxStatus()
+}
+
+// UserAggregate is one row of the Users tab — totals across all sessions
+// for a given common name.
+type UserAggregate struct {
+	CommonName   string
+	SessionCount int64
+	BytesIn      int64
+	BytesOut     int64
+	LastSeen     time.Time
+}
+
+func loadUserAggregates() ([]UserAggregate, error) {
+	var out []UserAggregate
+	_, err := orm.NewOrm().Raw(`
+		SELECT common_name,
+		       COUNT(*)                AS session_count,
+		       COALESCE(SUM(bytes_in), 0)  AS bytes_in,
+		       COALESCE(SUM(bytes_out), 0) AS bytes_out,
+		       MAX(connected_at)       AS last_seen
+		FROM vpn_session
+		GROUP BY common_name
+		ORDER BY last_seen DESC
+	`).QueryRows(&out)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// RetentionStage is one row of the Retention tab — current row count and
+// retention policy for each table in the aggregation pipeline.
+type RetentionStage struct {
+	Name        string
+	Granularity string
+	Rows        int64
+	Size        string
+	Policy      string
+}
+
+func loadRetentionStages() []RetentionStage {
+	o := orm.NewOrm()
+	countOf := func(table string) int64 {
+		var n int64
+		_ = o.Raw("SELECT COUNT(*) FROM " + table).QueryRow(&n)
+		return n
+	}
+
+	sampleDays := web.AppConfig.DefaultInt("MonitoringSampleRetentionDays", 30)
+	hourlyDays := web.AppConfig.DefaultInt("MonitoringHourlyRetentionDays", 365)
+
+	return []RetentionStage{
+		{
+			Name:        "TrafficSample",
+			Granularity: "per-scrape (~1 min)",
+			Rows:        countOf("traffic_sample"),
+			Size:        "—",
+			Policy:      fmt.Sprintf("%d d (then rolled up)", sampleDays),
+		},
+		{
+			Name:        "TrafficHourly",
+			Granularity: "hourly",
+			Rows:        countOf("traffic_hourly"),
+			Size:        "—",
+			Policy:      fmt.Sprintf("%d d (then rolled up)", hourlyDays),
+		},
+		{
+			Name:        "TrafficDaily",
+			Granularity: "daily",
+			Rows:        countOf("traffic_daily"),
+			Size:        "—",
+			Policy:      "kept indefinitely",
+		},
+	}
+}
+
+// InfluxStatusView is the info-box payload for the InfluxDB tab.
+type InfluxStatusView struct {
+	Buffered   int64
+	Flushed24h int64
+	Errors24h  int64
+	Enabled    bool
+}
+
+// InfluxConfigView is the subset of the live config we expose to the form.
+// Token is intentionally omitted — the form shows a blank password field.
+type InfluxConfigView struct {
+	URL      string
+	Database string
+	Enabled  bool
+}
+
+func loadInfluxStatus() (*InfluxStatusView, *InfluxConfigView) {
+	if state.Monitor == nil || state.Monitor.Influx() == nil {
+		return nil, nil
+	}
+	w := state.Monitor.Influx()
+	cfg := w.Config()
+	buffered, flushed, errors := w.Stats()
+	return &InfluxStatusView{
+			Buffered:   buffered,
+			Flushed24h: flushed,
+			Errors24h:  errors,
+			Enabled:    cfg.Enabled,
+		},
+		&InfluxConfigView{
+			URL:      cfg.URL,
+			Database: cfg.Database,
+			Enabled:  cfg.Enabled,
+		}
+}
+
+// SaveInflux persists new InfluxDB connection details via the UI. The saved
+// values take precedence over app.conf on the next ReloadInfluxSettings call.
+func (c *MonitorController) SaveInflux() {
+	if !c.IsLogin {
+		c.Ctx.Redirect(302, c.LoginPath())
+		return
+	}
+	if c.Userinfo == nil || !c.Userinfo.IsAdmin {
+		c.Data["error"] = "admin privileges required"
+		c.Ctx.Redirect(302, "/monitor")
+		return
+	}
+
+	url := strings.TrimSpace(c.GetString("InfluxURL"))
+	database := strings.TrimSpace(c.GetString("InfluxDatabase"))
+	token := c.GetString("InfluxToken") // leave whitespace untouched
+
+	if err := models.SaveInfluxSettings(url, token, database); err != nil {
+		logs.Error("SaveInfluxSettings failed: %v", err)
+		c.Data["error"] = "save failed: " + err.Error()
+		c.Ctx.Redirect(302, "/monitor")
+		return
+	}
+	if state.Monitor != nil {
+		if err := state.Monitor.ReloadInfluxSettings(); err != nil {
+			logs.Warn("InfluxDB reconfigure after save failed: %v", err)
+		}
+	}
+	c.Ctx.Redirect(302, "/monitor")
 }
 
 // --- API controllers (mounted under /api/v1/monitor) ---

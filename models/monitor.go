@@ -139,3 +139,49 @@ func (d *TrafficDaily) Insert() error {
 	_, err := orm.NewOrm().Insert(d)
 	return err
 }
+
+// InfluxSettings is a singleton row (Id = 1) that overrides the InfluxDB
+// values from app.conf. Present only when the operator has saved connection
+// details via the Monitor → InfluxDB tab; otherwise the scraper falls back to
+// app.conf / env vars.
+type InfluxSettings struct {
+	Id        int64
+	URL       string    `orm:"size(256)"`
+	Token     string    `orm:"size(512)"`
+	Database  string    `orm:"size(128)"`
+	UpdatedAt time.Time `orm:"type(datetime);auto_now"`
+}
+
+// GetInfluxSettings returns the singleton row, or nil if none saved.
+func GetInfluxSettings() (*InfluxSettings, error) {
+	s := &InfluxSettings{Id: 1}
+	if err := orm.NewOrm().Read(s); err != nil {
+		if err == orm.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return s, nil
+}
+
+// SaveInfluxSettings upserts the singleton row. An empty token leaves the
+// existing one untouched — lets admins update URL without re-typing secrets.
+func SaveInfluxSettings(url, token, database string) error {
+	o := orm.NewOrm()
+	existing := &InfluxSettings{Id: 1}
+	err := o.Read(existing)
+	if err == orm.ErrNoRows {
+		_, err = o.Insert(&InfluxSettings{Id: 1, URL: url, Token: token, Database: database})
+		return err
+	}
+	if err != nil {
+		return err
+	}
+	existing.URL = url
+	existing.Database = database
+	if token != "" {
+		existing.Token = token
+	}
+	_, err = o.Update(existing, "URL", "Database", "Token", "UpdatedAt")
+	return err
+}
