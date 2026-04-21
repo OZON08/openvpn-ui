@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web"
 	"github.com/OZON08/openvpn-ui/lib"
+	"github.com/OZON08/openvpn-ui/lib/monitor"
 	"github.com/OZON08/openvpn-ui/models"
 	"github.com/OZON08/openvpn-ui/routers"
 	"github.com/OZON08/openvpn-ui/state"
@@ -38,5 +40,13 @@ func main() {
 	routers.Init(*configDir)
 
 	lib.AddFuncMaps()
+
+	mon, err := monitor.Start()
+	if err != nil {
+		logs.Warn("Monitor failed to start: %v", err)
+	} else {
+		state.Monitor = mon
+	}
+
 	web.Run()
 }
