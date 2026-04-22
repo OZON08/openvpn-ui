@@ -4,7 +4,7 @@
 > maintained by [OZON08](https://github.com/OZON08).** Critical/high vulnerabilities
 > fixed, dependencies updated, build reliability improved, plus new features such as
 > long-term user monitoring with optional InfluxDB v3 export. All changes are tracked
-> in [CHANGELOG.md](CHANGELOG.md).
+> in [CHANGELOG.md](CHANGELOG.md); upcoming work is sketched in [ROADMAP.md](ROADMAP.md).
 >
 > For upstream feature requests and non-security bugs, please refer to the
 > [original repository](https://github.com/d3vilh/openvpn-ui).
