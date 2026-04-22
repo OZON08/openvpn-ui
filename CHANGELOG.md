@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Playwright screenshot automation** under `docs/screenshots/` — a small
+  Node script (`capture.mjs`) plus `package.json`, `.env.example`, and a
+  README. Logs into a running instance, walks every documented view
+  (including the four Monitor tabs), and writes refreshed full-page PNGs
+  into `docs/images/` using the same filenames the top-level README
+  already references. Run with `npm install && npm run capture` after
+  setting `UI_URL` / `UI_USER` / `UI_PASS`.
+
 ### Fixed
 
 - **Missing user icon in the top navbar.** `<i class="fa fa-user-circle">`

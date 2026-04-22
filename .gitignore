@@ -9,3 +9,7 @@ build/qrencode
 openvpn-ui.tar.gz
 qrencode
 test
+
+# Playwright screenshot tooling
+docs/screenshots/node_modules/
+docs/screenshots/.env
