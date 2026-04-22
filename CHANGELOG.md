@@ -9,6 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.7.1] - 2026-04-22
+
+### Fixed
+
+- **Certificate actions failed with `exit status 1`** in the released
+  container. The `easyrsa` helper scripts
+  (`genclient.sh`, `revoke.sh`, `rmcert.sh`, `renew.sh`, `remove.sh`,
+  `generate_ca_and_server_certs.sh`) read `EasyRsaPath` and `OpenVpnPath`
+  through a relative path (`../openvpn-ui/conf/app.conf`) that only
+  resolved when the working directory was `/opt/openvpn` — but Go invokes
+  them with `cmd.Dir = /etc/openvpn`, so the grep came up empty and
+  `sed` blew up on a zero-length path. `lib/certificates.go` now exports
+  `EASY_RSA` and `OPENVPN_DIR` into the script environment via a new
+  `buildOpenVPNEnv()` helper, and each script falls back to
+  `/opt/openvpn-ui/conf/app.conf` (absolute) only when the env vars are
+  absent (i.e. for manual CLI runs).
+
+- **`Dockerfile.ci` COPY ordering** — `build/assets/app.conf` was copied
+  *before* the builder stage's `/app/conf` tree, so the dev-time
+  `conf/app.conf` (relative `OpenVpnPath="./openvpn"`) silently overwrote
+  the container variant that uses absolute paths. Moved the `build/assets`
+  COPY to after the builder COPY.
+
+### Changed
+
+- Top-bar **light/dark toggle hidden** — the switch in
+  `views/layout/base.html` is commented out; dark mode is applied via the
+  existing boot script so the forced default stays in effect. Remove the
+  `{{/* … */}}` wrapper to restore the toggle.
+
+---
+
 ## [0.9.7] - 2026-04-21
 
 ### Added

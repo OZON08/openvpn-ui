@@ -2,7 +2,6 @@ package lib
 
 import (
 	"errors"
-	"os"
 	"os/exec"
 
 	"github.com/beego/beego/v2/core/logs"
@@ -15,7 +14,7 @@ func DeletePKI(name string) error {
 	}
 	cmd := exec.Command("/bin/bash", "/opt/scripts/remove.sh", name)
 	cmd.Dir = state.GlobalCfg.OVConfigPath
-	cmd.Env = os.Environ()
+	cmd.Env = buildOpenVPNEnv()
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		logs.Debug(string(output))
@@ -31,7 +30,7 @@ func InitPKI(name string) error {
 	}
 	cmd := exec.Command("/bin/bash", "/opt/scripts/generate_ca_and_server_certs.sh", name)
 	cmd.Dir = state.GlobalCfg.OVConfigPath
-	cmd.Env = os.Environ()
+	cmd.Env = buildOpenVPNEnv()
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		logs.Debug(string(output))
@@ -47,7 +46,7 @@ func RestartContainer(name string) error {
 	}
 	cmd := exec.Command("/bin/bash", "/opt/scripts/restart.sh", name)
 	cmd.Dir = state.GlobalCfg.OVConfigPath
-	cmd.Env = os.Environ()
+	cmd.Env = buildOpenVPNEnv()
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		logs.Debug(string(output))

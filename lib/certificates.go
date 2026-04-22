@@ -76,9 +76,22 @@ func validateCertInputs(name, staticip, expiredays, email, country, province, ci
 	return nil
 }
 
+// buildOpenVPNEnv returns the process environment plus EASY_RSA/OPENVPN_DIR
+// derived from the current runtime config, with any additional caller-supplied
+// variables appended. Shell scripts under /opt/scripts use these two vars
+// instead of reading app.conf via a relative path (which breaks because
+// cmd.Dir = /etc/openvpn, not /opt/openvpn).
+func buildOpenVPNEnv(extras ...string) []string {
+	env := append(os.Environ(),
+		"EASY_RSA="+state.GlobalCfg.EasyRSAPath,
+		"OPENVPN_DIR="+state.GlobalCfg.OVConfigPath,
+	)
+	return append(env, extras...)
+}
+
 // buildCertEnv returns the process environment extended with EasyRSA variables.
 func buildCertEnv(name, tfaname, tfaissuer, expiredays, email, country, province, city, org, orgunit string) []string {
-	return append(os.Environ(),
+	return buildOpenVPNEnv(
 		"KEY_NAME="+name,
 		"TFA_NAME="+tfaname,
 		"TFA_ISSUER="+tfaissuer,
@@ -237,7 +250,7 @@ func RevokeCertificate(name string, serial string, tfaname string) error {
 
 	cmd := exec.Command("/bin/bash", "/opt/scripts/revoke.sh", name, serial)
 	cmd.Dir = state.GlobalCfg.OVConfigPath
-	cmd.Env = append(os.Environ(),
+	cmd.Env = buildOpenVPNEnv(
 		"KEY_NAME="+name,
 		"TFA_NAME="+tfaname,
 	)
@@ -253,6 +266,7 @@ func RevokeCertificate(name string, serial string, tfaname string) error {
 func Restart() error {
 	cmd := exec.Command("/bin/bash", "/opt/scripts/restart.sh")
 	cmd.Dir = state.GlobalCfg.OVConfigPath
+	cmd.Env = buildOpenVPNEnv()
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		logs.Debug(string(output))
@@ -274,7 +288,7 @@ func BurnCertificate(CN string, serial string, tfaname string) error {
 
 	cmd := exec.Command("/bin/bash", "/opt/scripts/rmcert.sh", CN, serial)
 	cmd.Dir = state.GlobalCfg.OVConfigPath
-	cmd.Env = append(os.Environ(),
+	cmd.Env = buildOpenVPNEnv(
 		"TFA_NAME="+tfaname,
 	)
 	output, err := cmd.CombinedOutput()
@@ -296,7 +310,7 @@ func RenewCertificate(name string, localip string, serial string, tfaname string
 
 	cmd := exec.Command("/bin/bash", "/opt/scripts/renew.sh", name, localip, serial)
 	cmd.Dir = state.GlobalCfg.OVConfigPath
-	cmd.Env = append(os.Environ(),
+	cmd.Env = buildOpenVPNEnv(
 		"KEY_NAME="+name,
 		"TFA_NAME="+tfaname,
 	)
