@@ -1,3 +1,10 @@
+# ---------------------------------------------------------------------------
+# NOTE: The InfluxDB v3 export path is currently UNTESTED end-to-end. The
+# SQLite monitoring backend is in regular use, but this compose stack has
+# not yet been verified against a live InfluxDB 3 Core instance. Treat as
+# experimental — please report issues.
+# ---------------------------------------------------------------------------
+
 services:
     openvpn:
         container_name: openvpn
