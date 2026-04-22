@@ -6,8 +6,9 @@ set -e
 #Variables
 CERT_NAME=$1
 CERT_SERIAL=$2
-EASY_RSA=$(grep -E "^EasyRsaPath\s*=" ../openvpn-ui/conf/app.conf | cut -d= -f2 | tr -d '"' | tr -d '[:space:]')
-OPENVPN_DIR=$(grep -E "^OpenVpnPath\s*=" ../openvpn-ui/conf/app.conf | cut -d= -f2 | tr -d '"' | tr -d '[:space:]')
+APP_CONF="/opt/openvpn-ui/conf/app.conf"
+EASY_RSA="${EASY_RSA:-$(grep -E "^EasyRsaPath\s*=" "$APP_CONF" | cut -d= -f2 | tr -d '"' | tr -d '[:space:]')}"
+OPENVPN_DIR="${OPENVPN_DIR:-$(grep -E "^OpenVpnPath\s*=" "$APP_CONF" | cut -d= -f2 | tr -d '"' | tr -d '[:space:]')}"
 echo 'EasyRSA path: $EASY_RSA OVPN path: $OPENVPN_DIR'
 INDEX=$EASY_RSA/pki/index.txt
 PERSHIY=`cat $INDEX | grep "/CN=$CERT_NAME/" | head -1 | awk '{ print $3}'`
