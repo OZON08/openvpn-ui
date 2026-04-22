@@ -29,11 +29,14 @@ services:
             - NET_ADMIN
         restart: always
         healthcheck:
-            test: ["CMD-SHELL", "echo '' > /dev/tcp/127.0.0.1/2080 2>/dev/null || exit 1"]
+            test: ["CMD", "bash", "-c", "echo '' > /dev/tcp/127.0.0.1/2080"]
             interval: 30s
             timeout: 5s
             retries: 3
-            start_period: 60s
+            # First start generates the PKI including 4096-bit DH parameters,
+            # which can take 5-15 minutes on slower hardware. Subsequent starts
+            # complete within seconds because PKI is persisted in the volume.
+            start_period: 900s
 
     openvpn-ui:
         container_name: openvpn-ui
