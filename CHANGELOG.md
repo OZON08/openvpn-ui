@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Missing user icon in the top navbar.** `<i class="fa fa-user-circle">`
+  did not render because `font-awesome.min.4.5.0.css` is loaded after FA
+  5.15.3 and overrides `.fa` → `font-family: FontAwesome`, while the
+  codepoint emitted by FA 5 (`\f2bd`) does not exist in the FA 4 font
+  (FA 4 maps user-circle to `\f2be`). Switched the navbar glyph to
+  `fas fa-user-circle`, which uses the FA-5-only `.fas` class that isn't
+  overridden by the FA 4 stylesheet. Other FA-5-only classes across the
+  views (e.g. `fa fa-user-cog`) are likely affected by the same shadowing
+  and will be migrated incrementally.
+
 ---
 
 ## [0.9.7.1] - 2026-04-22
