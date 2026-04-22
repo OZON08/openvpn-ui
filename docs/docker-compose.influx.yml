@@ -1,0 +1,112 @@
+services:
+    openvpn:
+        container_name: openvpn
+        image: ozon08/openvpn-server:latest
+        privileged: true
+        ports:
+            - "1194:1194/udp"   # openvpn UDP port
+            # - "1194:1194/tcp"   # openvpn TCP port
+            # - "2080:2080/tcp"  # management port. uncomment if you would like to share it with the host
+        environment:
+            TRUST_SUB: "10.0.70.0/24"
+            GUEST_SUB: "10.0.71.0/24"
+            HOME_SUB: "192.168.88.0/24"
+            # v0.9.7 client-disconnect hook — bundled into openvpn-server
+            # v0.6.2+ at /opt/app/bin/client-disconnect.sh. Uncomment the
+            # `client-disconnect` line in server.conf to enable it.
+            OPENVPN_UI_URL: "http://openvpn-ui:8080"
+            OPENVPN_UI_HOOK_TOKEN: "${OPENVPN_UI_MONITORING_HOOK_TOKEN:-}"
+        volumes:
+            - ./pki:/etc/openvpn/pki
+            - ./clients:/etc/openvpn/clients
+            - ./config:/etc/openvpn/config
+            - ./staticclients:/etc/openvpn/staticclients
+            - ./log:/var/log/openvpn
+            - ./fw-rules.sh:/opt/app/fw-rules.sh
+            - ./checkpsw.sh:/opt/app/checkpsw.sh
+            - ./server.conf:/etc/openvpn/server.conf
+        cap_add:
+            - NET_ADMIN
+        restart: always
+        healthcheck:
+            test: ["CMD-SHELL", "echo '' > /dev/tcp/127.0.0.1/2080 2>/dev/null || exit 1"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 60s
+
+    openvpn-ui:
+        container_name: openvpn-ui
+        image: ozon08/openvpn-ui:latest
+        environment:
+            - OPENVPN_ADMIN_USERNAME=${OPENVPN_ADMIN_USERNAME}
+            - OPENVPN_ADMIN_PASSWORD=${OPENVPN_ADMIN_PASSWORD}
+            # v0.9.7 monitoring — client-disconnect webhook shared secret.
+            - OPENVPN_UI_MONITORING_HOOK_TOKEN=${OPENVPN_UI_MONITORING_HOOK_TOKEN:-}
+            # InfluxDB v3 export. URL/token/database can also be edited at runtime
+            # from the Monitor → InfluxDB tab in the UI — those DB values override
+            # the env vars below and are hot-reloaded without a restart.
+            - OPENVPN_UI_INFLUX_ENABLED=true
+            - OPENVPN_UI_INFLUX_URL=http://influxdb3:8181
+            - OPENVPN_UI_INFLUX_TOKEN=${INFLUX_TOKEN:-}
+            - OPENVPN_UI_INFLUX_DATABASE=openvpn
+        ports:
+            - "8080:8080/tcp"
+        volumes:
+            - ./:/etc/openvpn
+            - ./db:/opt/openvpn-ui/db
+            - ./pki:/usr/share/easy-rsa/pki
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+        restart: always
+        healthcheck:
+            test: ["CMD", "wget", "-qO/dev/null", "http://localhost:8080"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 15s
+        depends_on:
+            openvpn:
+                condition: service_healthy
+            influxdb3:
+                condition: service_healthy
+
+    influxdb3:
+        container_name: influxdb3
+        image: influxdb:3-core
+        command:
+            - influxdb3
+            - serve
+            - --node-id=openvpn-node
+            - --object-store=file
+            - --data-dir=/var/lib/influxdb3
+            - --http-bind=0.0.0.0:8181
+        ports:
+            - "8181:8181/tcp"   # query / write API
+        volumes:
+            - ./influxdb3:/var/lib/influxdb3
+        restart: always
+        healthcheck:
+            test: ["CMD-SHELL", "wget -qO- http://localhost:8181/health || exit 1"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 20s
+
+# ---------------------------------------------------------------------------
+# Bootstrap notes
+# ---------------------------------------------------------------------------
+# InfluxDB 3 Core has no initial-admin env var — create a token once after the
+# container is healthy, then put it in the .env file as INFLUX_TOKEN=...:
+#
+#   docker compose -f docker-compose.influx.yml up -d influxdb3
+#   docker exec -it influxdb3 influxdb3 create token --admin
+#   # copy the printed token, then:
+#   echo 'INFLUX_TOKEN=<paste-token-here>' >> .env
+#   docker compose -f docker-compose.influx.yml up -d
+#
+# Create the database the UI writes into (matches OPENVPN_UI_INFLUX_DATABASE):
+#
+#   docker exec -it influxdb3 influxdb3 create database openvpn --token <token>
+#
+# The token can also be saved from the Monitor → InfluxDB tab in the UI after
+# login, in which case the env var INFLUX_TOKEN can stay empty.

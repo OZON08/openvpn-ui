@@ -11,9 +11,11 @@ services:
             TRUST_SUB: "10.0.70.0/24"
             GUEST_SUB: "10.0.71.0/24"
             HOME_SUB: "192.168.88.0/24"
-            # v0.9.7 client-disconnect hook — used by the script mounted below.
+            # v0.9.7 client-disconnect hook — the script is bundled into
+            # openvpn-server v0.6.2+ at /opt/app/bin/client-disconnect.sh.
             # Leave OPENVPN_UI_HOOK_TOKEN empty to disable; otherwise it must
             # match OPENVPN_UI_MONITORING_HOOK_TOKEN on the openvpn-ui service.
+            # Also uncomment the `client-disconnect` line in server.conf.
             OPENVPN_UI_URL: "http://openvpn-ui:8080"
             OPENVPN_UI_HOOK_TOKEN: "${OPENVPN_UI_MONITORING_HOOK_TOKEN:-}"
         volumes:
@@ -25,10 +27,6 @@ services:
             - ./fw-rules.sh:/opt/app/fw-rules.sh
             - ./checkpsw.sh:/opt/app/checkpsw.sh
             - ./server.conf:/etc/openvpn/server.conf
-            # v0.9.7 client-disconnect hook. Also add these two lines to server.conf:
-            #   script-security 2
-            #   client-disconnect /etc/openvpn/scripts/client-disconnect.sh
-            - ./client-disconnect.sh:/etc/openvpn/scripts/client-disconnect.sh:ro
         cap_add:
             - NET_ADMIN
         restart: always
