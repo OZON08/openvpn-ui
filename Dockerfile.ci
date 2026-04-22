@@ -42,12 +42,15 @@ COPY build/assets/remove.sh                       /opt/scripts/remove.sh
 COPY build/assets/renew.sh                        /opt/scripts/renew.sh
 COPY build/assets/client-disconnect.sh            /opt/scripts/client-disconnect.sh
 COPY build/assets/easyrsa-tools.lib               /usr/share/easy-rsa/easyrsa-tools.lib
-COPY build/assets/app.conf                        /opt/openvpn-ui/conf/app.conf
 
 COPY --from=builder /app/openvpn-ui   /opt/openvpn-ui/openvpn-ui
 COPY --from=builder /app/views        /opt/openvpn-ui/views
 COPY --from=builder /app/static       /opt/openvpn-ui/static
 COPY --from=builder /app/conf         /opt/openvpn-ui/conf
+# Overwrite the dev-time conf/app.conf (relative paths, for `go run .`) with
+# the container variant that uses absolute paths under /etc/openvpn and
+# /usr/share/easy-rsa. Must come AFTER the builder /app/conf COPY.
+COPY build/assets/app.conf            /opt/openvpn-ui/conf/app.conf
 
 COPY --from=qrencode-builder /app/qrencode/qrencode /opt/scripts/qrencode
 

@@ -5,8 +5,9 @@ set -e
 
 # Variables
 ACTION=$1  #passed via OpenVPN-UI GUI
-EASY_RSA=$(grep -E "^EasyRsaPath\s*=" ../openvpn-ui/conf/app.conf | cut -d= -f2 | tr -d '"' | tr -d '[:space:]')
-OPENVPN_DIR=$(grep -E "^OpenVpnPath\s*=" ../openvpn-ui/conf/app.conf | cut -d= -f2 | tr -d '"' | tr -d '[:space:]')
+APP_CONF="/opt/openvpn-ui/conf/app.conf"
+EASY_RSA="${EASY_RSA:-$(grep -E "^EasyRsaPath\s*=" "$APP_CONF" | cut -d= -f2 | tr -d '"' | tr -d '[:space:]')}"
+OPENVPN_DIR="${OPENVPN_DIR:-$(grep -E "^OpenVpnPath\s*=" "$APP_CONF" | cut -d= -f2 | tr -d '"' | tr -d '[:space:]')}"
 echo 'EasyRSA path: $EASY_RSA OVPN path: $OPENVPN_DIR'
 PKI_DIR=$EASY_RSA/pki
 CERT_DIR=$OPENVPN_DIR/clients

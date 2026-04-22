@@ -28,6 +28,7 @@ OpenVPN server web administration interface — quick to deploy, easy to use.
 - Admin credentials passed via environment variables
 - Google OAuth 2.0 login support
 - Alpine Linux base, Go 1.25.0, Beego 2.3.10, EasyRSA 3.x, OpenSSL 3.x
+- **v0.9.7.1**: Bugfix — certificate create/revoke/renew/remove actions failed inside the container because the `easyrsa` helper scripts read `EasyRsaPath`/`OpenVpnPath` via a broken relative path. Paths are now injected as env vars from Go. Dockerfile COPY order also corrected so the container-variant `app.conf` is not overwritten by the dev-time copy. Light/dark toggle hidden in the topbar (dark mode forced).
 - **v0.9.7**: Long-term user monitoring — per-user transfer volume, real/virtual IPs and connect/disconnect sessions persisted in SQLite with retention policy, with optional InfluxDB v3 export for Grafana dashboards. New **Monitor** page (Sessions / Users / Retention / InfluxDB tabs, admin-editable InfluxDB settings with hot-reload) + `/api/v1/monitor/*` endpoints + optional OpenVPN `client-disconnect` webhook. UI refresh: AdminLTE sidebar layout with dark-mode default.
 - **v0.9.6.1**: CRLF line ending fix — container now starts correctly on all Linux hosts
 - AMD64 and ARM images available
