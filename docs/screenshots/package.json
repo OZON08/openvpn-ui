@@ -1,0 +1,14 @@
+{
+  "name": "openvpn-ui-screenshots",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playwright-based screenshot capture for docs/images.",
+  "type": "module",
+  "scripts": {
+    "capture": "node capture.mjs",
+    "postinstall": "playwright install chromium"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0"
+  }
+}
