@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [0.9.7.2] - 2026-05-13
+
+### Security
+
+- **Non-root container process** (defense-in-depth against CVE-2026-31431 and
+  similar local privilege escalation vectors). A dedicated `openvpn-ui` user
+  (UID/GID 1000) is now created in the image. `start.sh` performs root-level
+  provisioning (directory creation, volume permission setup) and then drops
+  to `openvpn-ui` via `su-exec` before executing the web process. All shell
+  scripts invoked by the Go binary (cert create/revoke/renew/burn/remove) run
+  as `openvpn-ui` as well; `start.sh` pre-sets group write permissions on the
+  mounted volumes (`/etc/openvpn`, `/usr/share/easy-rsa`) so the scripts
+  continue to function without root.
+
 ### Added
 
 - **Playwright screenshot automation** under `docs/screenshots/` — a small

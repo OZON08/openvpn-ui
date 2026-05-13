@@ -5,7 +5,7 @@
 
 FROM DEFINE-YOUR-ARCH
 LABEL maintainer="OZON08 <65833863+OZON08@users.noreply.github.com>"
-LABEL version="0.9.6"
+LABEL version="0.9.7.2"
 WORKDIR /opt
 EXPOSE 8080/tcp
 
