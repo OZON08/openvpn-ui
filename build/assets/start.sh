@@ -11,13 +11,11 @@ cd /opt/
 
 # If the provisioned file does not exist in the OpenVPN directory, prepare the certificates and create the provisioned file
 if [ ! -f $OPENVPN_DIR/.provisioned ]; then
-  #echo "Preparing certificates"
   mkdir -p $OPENVPN_DIR
 
   # Uncomment line below to generate CA and server certificates (should be done on the side of OpenVPN container or server however)
   #./scripts/generate_ca_and_server_certs.sh
 
-  # Create the provisioned file
   touch $OPENVPN_DIR/.provisioned
   echo "First OpenVPN UI start."
 fi
@@ -28,6 +26,14 @@ cd /opt/openvpn-ui
 # Create the database directory if it does not exist
 mkdir -p db
 
-# Start the OpenVPN GUI
+# Grant the openvpn-ui group write access to mounted volumes so that the
+# non-root process can manage certificates and configs.
+chown -R openvpn-ui:openvpn-ui db
+chgrp -R openvpn-ui "$OPENVPN_DIR" 2>/dev/null || true
+chmod -R g+w "$OPENVPN_DIR" 2>/dev/null || true
+chgrp -R openvpn-ui /usr/share/easy-rsa 2>/dev/null || true
+chmod -R g+w /usr/share/easy-rsa 2>/dev/null || true
+
+# Drop from root to unprivileged openvpn-ui user for the web process
 echo "Starting OpenVPN UI!"
-./openvpn-ui
+exec su-exec openvpn-ui ./openvpn-ui

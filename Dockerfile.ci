@@ -29,8 +29,11 @@ RUN apk update \
        curl \
        jq \
        oath-toolkit-oathtool \
+       su-exec \
     && rm -rf /var/cache/apk/* \
-    && chmod 755 /usr/share/easy-rsa/*
+    && chmod 755 /usr/share/easy-rsa/* \
+    && addgroup -g 1000 openvpn-ui \
+    && adduser -D -u 1000 -G openvpn-ui openvpn-ui
 
 COPY build/assets/start.sh                        /opt/start.sh
 COPY build/assets/generate_ca_and_server_certs.sh /opt/scripts/generate_ca_and_server_certs.sh
@@ -58,7 +61,10 @@ RUN chmod +x /opt/start.sh \
              /opt/scripts/qrencode \
              /opt/scripts/client-disconnect.sh \
              /opt/openvpn-ui/openvpn-ui \
-    && rm -f /opt/openvpn-ui/data.db
+    && rm -f /opt/openvpn-ui/data.db \
+    && chown -R openvpn-ui:openvpn-ui /opt/openvpn-ui \
+    && chown -R openvpn-ui:openvpn-ui /opt/scripts \
+    && chmod -R g+w /usr/share/easy-rsa
 
 EXPOSE 8080/tcp
 CMD ["/opt/start.sh"]
