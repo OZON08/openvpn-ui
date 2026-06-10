@@ -41,6 +41,7 @@ func (c *BaseController) Prepare() {
 
 	c.Data["IsLogin"] = c.IsLogin
 	c.Data["Userinfo"] = c.Userinfo
+	c.Data["GrafanaEnabled"] = web.AppConfig.DefaultString("GrafanaURL", "") != ""
 
 	if app, ok := c.AppController.(NestPreparer); ok {
 		app.NestPrepare()

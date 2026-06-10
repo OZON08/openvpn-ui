@@ -35,6 +35,15 @@
           </a>
         </li>
 
+        {{if .GrafanaEnabled}}
+        <li class="nav-item">
+          <a href="/grafana/" class="nav-link {{if compare .RouterPattern "/grafana/*"}}active{{end}}">
+            <i class="nav-icon fa fa-chart-bar"></i>
+            <p>Grafana</p>
+          </a>
+        </li>
+        {{end}}
+
         <li class="nav-item">
           <a href="{{urlfor "LogsController.Get"}}" class="nav-link {{if compare .RouterPattern "/logs"}}active{{end}}">
             <i class="nav-icon fa fa-file-text-o"></i>

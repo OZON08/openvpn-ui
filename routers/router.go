@@ -28,6 +28,8 @@ func Init(configDir string) {
 	web.Router("/dangerzone", &controllers.DangerController{})
 	web.Router("/monitor", &controllers.MonitorController{})
 	web.Router("/monitor/influx", &controllers.MonitorController{}, "post:SaveInflux")
+	web.Router("/grafana", &controllers.GrafanaController{}, "*:Proxy")
+	web.Router("/grafana/*", &controllers.GrafanaController{}, "*:Proxy")
 
 	web.Include(&controllers.CertificatesController{ConfigDir: configDir})
 	web.Include(&controllers.DangerController{})
