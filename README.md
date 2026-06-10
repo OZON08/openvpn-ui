@@ -857,11 +857,9 @@ and connect/disconnect sessions. Data is persisted locally in SQLite with
 a retention policy and can optionally be pushed to an external
 **InfluxDB v3** instance for Grafana dashboards or other analytics tools.
 
-> [!WARNING]
-> **InfluxDB export is currently untested end-to-end.** The SQLite side of the
-> monitoring subsystem is in regular use, but the InfluxDB v3 writer has not
-> yet been verified against a live InfluxDB 3 Core / Enterprise instance.
-> Treat it as experimental and please report any issues you hit.
+> [!NOTE]
+> The InfluxDB v3 writer has been verified against **InfluxDB 3 Core** (`influxdb:3-core`).
+> SQLite remains the source of truth; InfluxDB is a best-effort export channel for Grafana.
 
 #### What is collected
 
