@@ -6,11 +6,9 @@ accelerate something or propose an alternative.
 
 ## Near term (v0.9.x)
 
-- [ ] **Verify InfluxDB v3 export end-to-end** against a live InfluxDB 3 Core
-      instance. Currently flagged untested — see the warning in
-      [README.md](README.md) and [docs/docker-compose.influx.yml](docs/docker-compose.influx.yml).
-      Covers the full path: scraper → `InfluxWriter` buffer → HTTP write →
-      query of `traffic` / `session` measurements.
+- [x] **Verify InfluxDB v3 export end-to-end** against a live InfluxDB 3 Core
+      instance. Verified: scraper → `InfluxWriter` buffer → HTTP write →
+      `openvpn_traffic` / `openvpn_session` measurements confirmed in InfluxDB.
 - [ ] **Grafana dashboard JSON** for the `traffic` and `session` measurements
       (per-user bandwidth, connected-clients gauge, session history panel).
       Shipped under `docs/grafana/` so users can import and tweak.
