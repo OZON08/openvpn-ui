@@ -24,11 +24,17 @@ func (c *GrafanaController) Prepare() {
 func (c *GrafanaController) NestPrepare() {
 	if !c.IsLogin {
 		c.Ctx.Redirect(302, c.LoginPath())
+		c.StopRun()
 		return
 	}
 }
 
 func (c *GrafanaController) Proxy() {
+	if !c.IsLogin || c.Userinfo == nil {
+		c.Ctx.Redirect(302, c.LoginPath())
+		return
+	}
+
 	rawURL := web.AppConfig.DefaultString("GrafanaURL", "")
 	if rawURL == "" {
 		c.Ctx.Output.SetStatus(http.StatusNotFound)
@@ -40,10 +46,7 @@ func (c *GrafanaController) Proxy() {
 		return
 	}
 
-	username := ""
-	if c.Userinfo != nil {
-		username = c.Userinfo.Name
-	}
+	username := c.Userinfo.Name
 
 	originalHost := c.Ctx.Request.Host
 	proxy := &httputil.ReverseProxy{
