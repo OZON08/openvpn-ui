@@ -4,7 +4,7 @@ datasources:
     uid: influxdb-openvpn
     type: influxdb
     access: proxy
-    url: http://openvpn-influxdb3:8181
+    url: http://openvpn-influxdb3:8082
     basicAuth: false
     jsonData:
       version: "SQL"
