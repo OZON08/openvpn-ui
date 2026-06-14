@@ -1,0 +1,150 @@
+{
+  "annotations": {"list": []},
+  "editable": false,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {"title": "Aktive Verbindungen", "url": "/grafana/d/openvpn-live", "type": "link", "targetBlank": false},
+    {"title": "Traffic-Verlauf", "url": "/grafana/d/openvpn-traffic", "type": "link", "targetBlank": false}
+  ],
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "Gesamt-Traffic — Allzeit",
+      "description": "Kein Zeitraum-Filter — gesamter Traffic dieses Nutzers seit Aufzeichnungsbeginn.",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
+      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "rawQuery": true, "refId": "A",
+        "query": "SELECT SUM(bytes_in + bytes_out) AS value FROM openvpn_session WHERE common_name = '$cn'"
+      }],
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "none", "graphMode": "none"},
+      "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []}
+    },
+    {
+      "id": 2, "type": "stat", "title": "Sessions — Allzeit",
+      "gridPos": {"h": 4, "w": 4, "x": 6, "y": 0},
+      "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
+      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "rawQuery": true, "refId": "A",
+        "query": "SELECT COUNT(*) AS value FROM openvpn_session WHERE common_name = '$cn'"
+      }],
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "none", "graphMode": "none"},
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}
+    },
+    {
+      "id": 3, "type": "stat", "title": "Ø Sitzungsdauer — Allzeit",
+      "gridPos": {"h": 4, "w": 4, "x": 10, "y": 0},
+      "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
+      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "rawQuery": true, "refId": "A",
+        "query": "SELECT AVG(duration_s) AS value FROM openvpn_session WHERE common_name = '$cn'"
+      }],
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "none", "graphMode": "none"},
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []}
+    },
+    {
+      "id": 4, "type": "stat", "title": "Erste Verbindung",
+      "gridPos": {"h": 4, "w": 5, "x": 14, "y": 0},
+      "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
+      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "rawQuery": true, "refId": "A",
+        "query": "SELECT MIN(time) AS value FROM openvpn_session WHERE common_name = '$cn'"
+      }],
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "none", "graphMode": "none"},
+      "fieldConfig": {"defaults": {"unit": "dateTimeAsIso"}, "overrides": []}
+    },
+    {
+      "id": 5, "type": "stat", "title": "Letzte Verbindung",
+      "gridPos": {"h": 4, "w": 5, "x": 19, "y": 0},
+      "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
+      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "rawQuery": true, "refId": "A",
+        "query": "SELECT MAX(time) AS value FROM openvpn_session WHERE common_name = '$cn'"
+      }],
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "none", "graphMode": "none"},
+      "fieldConfig": {"defaults": {"unit": "dateTimeAsIso"}, "overrides": []}
+    },
+    {
+      "id": 6, "type": "barchart", "title": "Monatlicher Traffic — Gesamte Historie",
+      "description": "Kein Zeitraum-Filter — alle Monate seit Aufzeichnungsbeginn für diesen Nutzer.",
+      "gridPos": {"h": 9, "w": 24, "x": 0, "y": 4},
+      "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
+      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "rawQuery": true, "refId": "A",
+        "query": "SELECT DATE_TRUNC('month', time) AS time, SUM(bytes_in) AS \"Bytes In\", SUM(bytes_out) AS \"Bytes Out\" FROM openvpn_session WHERE common_name = '$cn' GROUP BY DATE_TRUNC('month', time) ORDER BY time"
+      }],
+      "options": {"xField": "time", "stacking": {"mode": "normal"}, "tooltip": {"mode": "multi"}, "legend": {"displayMode": "list", "placement": "bottom"}},
+      "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": [
+        {"matcher": {"id": "byName", "options": "Bytes In"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "blue"}}]},
+        {"matcher": {"id": "byName", "options": "Bytes Out"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "orange"}}]}
+      ]}
+    },
+    {
+      "id": 7, "type": "timeseries", "title": "Durchsatz im Zeitraum",
+      "description": "Delta aus kumulativen bytes_in/bytes_out. Negative Deltas (Reconnect) werden ausgeblendet.",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 13},
+      "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
+      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "rawQuery": true, "refId": "A",
+        "query": "WITH ordered AS (SELECT time, bytes_in, bytes_out, LAG(bytes_in) OVER (ORDER BY time) AS prev_in, LAG(bytes_out) OVER (ORDER BY time) AS prev_out FROM openvpn_traffic WHERE common_name = '$cn' AND $__timeFilter(time)) SELECT time, CASE WHEN bytes_in >= prev_in THEN bytes_in - prev_in ELSE 0 END AS \"Bytes In\", CASE WHEN bytes_out >= prev_out THEN bytes_out - prev_out ELSE 0 END AS \"Bytes Out\" FROM ordered WHERE prev_in IS NOT NULL ORDER BY time"
+      }],
+      "options": {"tooltip": {"mode": "multi", "sort": "desc"}, "legend": {"displayMode": "list", "placement": "bottom"}},
+      "fieldConfig": {"defaults": {"unit": "bytes", "custom": {"lineWidth": 2, "fillOpacity": 10, "spanNulls": false}}, "overrides": [
+        {"matcher": {"id": "byName", "options": "Bytes In"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "blue"}}]},
+        {"matcher": {"id": "byName", "options": "Bytes Out"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "orange"}}]}
+      ]}
+    },
+    {
+      "id": 8, "type": "table", "title": "Verwendete Real-IPs — Allzeit",
+      "gridPos": {"h": 8, "w": 10, "x": 0, "y": 21},
+      "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
+      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "rawQuery": true, "refId": "A",
+        "query": "SELECT real_ip AS \"Real IP\", COUNT(*) AS \"Sessions\", SUM(duration_s) AS \"Gesamtdauer (s)\", MAX(time) AS \"Zuletzt gesehen\" FROM openvpn_session WHERE common_name = '$cn' GROUP BY real_ip ORDER BY COUNT(*) DESC"
+      }],
+      "options": {"showHeader": true, "footer": {"show": false}},
+      "fieldConfig": {
+        "defaults": {"custom": {"align": "auto", "displayMode": "auto"}},
+        "overrides": [
+          {"matcher": {"id": "byName", "options": "Gesamtdauer (s)"}, "properties": [{"id": "unit", "value": "s"}]},
+          {"matcher": {"id": "byName", "options": "Zuletzt gesehen"}, "properties": [{"id": "unit", "value": "dateTimeAsIso"}]}
+        ]
+      }
+    },
+    {
+      "id": 9, "type": "table", "title": "Sitzungsverlauf — Zeitraum",
+      "gridPos": {"h": 8, "w": 14, "x": 10, "y": 21},
+      "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
+      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "rawQuery": true, "refId": "A",
+        "query": "SELECT time AS \"Disconnect\", real_ip AS \"Real IP\", virtual_ip AS \"VPN IP\", duration_s AS \"Dauer (s)\", bytes_in AS \"Bytes In\", bytes_out AS \"Bytes Out\" FROM openvpn_session WHERE common_name = '$cn' AND $__timeFilter(time) ORDER BY time DESC LIMIT 100"
+      }],
+      "options": {"showHeader": true, "footer": {"show": false}},
+      "fieldConfig": {
+        "defaults": {"custom": {"align": "auto", "displayMode": "auto"}},
+        "overrides": [
+          {"matcher": {"id": "byName", "options": "Bytes In"}, "properties": [{"id": "unit", "value": "bytes"}]},
+          {"matcher": {"id": "byName", "options": "Bytes Out"}, "properties": [{"id": "unit", "value": "bytes"}]},
+          {"matcher": {"id": "byName", "options": "Dauer (s)"}, "properties": [{"id": "unit", "value": "s"}]},
+          {"matcher": {"id": "byName", "options": "Disconnect"}, "properties": [{"id": "unit", "value": "dateTimeAsIso"}]}
+        ]
+      }
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": ["openvpn"],
+  "templating": {
+    "list": [
+      {
+        "name": "cn",
+        "label": "Nutzer",
+        "type": "query",
+        "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
+        "definition": "SELECT DISTINCT common_name FROM openvpn_session ORDER BY common_name",
+        "query": {"query": "SELECT DISTINCT common_name FROM openvpn_session ORDER BY common_name", "rawQuery": true},
+        "includeAll": false,
+        "multi": false,
+        "refresh": 2,
+        "sort": 1,
+        "current": {}
+      }
+    ]
+  },
+  "time": {"from": "now-30d", "to": "now"},
+  "timezone": "browser",
+  "title": "OpenVPN — Nutzer-Detail",
+  "uid": "openvpn-user",
+  "version": 1
+}
