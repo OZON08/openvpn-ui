@@ -6,15 +6,18 @@
     position: fixed;
     top: 57px;
     left: 250px;
-    right: 0;
-    bottom: 0;
+    width: calc(100% - 250px);
+    height: calc(100vh - 57px);
     border: none;
     z-index: 100;
   }
-  .sidebar-collapse #grafana-frame { left: 60px; }
+  .sidebar-collapse #grafana-frame {
+    left: 60px;
+    width: calc(100% - 60px);
+  }
 </style>
 {{end}}
 
 {{define "body"}}
-<iframe id="grafana-frame" src="/grafana/"></iframe>
+<iframe id="grafana-frame" src="/grafana/dashboards"></iframe>
 {{end}}
