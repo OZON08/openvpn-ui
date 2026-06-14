@@ -975,6 +975,59 @@ The hook posts the authoritative session summary to
 `/api/v1/monitor/disconnect` using the shared `X-Monitor-Token` header;
 requests without a matching token are rejected.
 
+#### Grafana integration (optional)
+
+openvpn-ui can reverse-proxy an internal Grafana instance and embed it
+directly in the sidebar. Authentication is handled by openvpn-ui —
+Grafana never needs to be exposed to the internet.
+
+**Docker Compose setup**
+
+Add a Grafana service to your compose stack and point openvpn-ui at it:
+
+```yaml
+openvpn-ui:
+  environment:
+    - OPENVPN_UI_GRAFANA_URL=http://grafana:3000   # internal Docker address
+
+grafana:
+  image: grafana/grafana:latest
+  environment:
+    - GF_SECURITY_ADMIN_PASSWORD=changeme
+    - GF_AUTH_PROXY_ENABLED=true
+    - GF_AUTH_PROXY_HEADER_NAME=X-WEBAUTH-USER
+    - GF_AUTH_PROXY_AUTO_SIGN_UP=true
+    - GF_AUTH_PROXY_WHITELIST=172.16.0.0/12    # restrict to Docker network
+    - GF_USERS_AUTO_ASSIGN_ORG_ROLE=Admin
+    - GF_SECURITY_ALLOW_EMBEDDING=true
+    - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/grafana
+    - GF_SERVER_SERVE_FROM_SUB_PATH=true
+  volumes:
+    - grafana-data:/var/lib/grafana
+```
+
+Once running, a **Grafana** entry appears in the openvpn-ui sidebar.
+
+**Adding the InfluxDB data source**
+
+1. Open **Grafana → Connections → Data sources → Add new data source**
+2. Select **InfluxDB**
+3. Fill in the fields:
+
+| Field | Value |
+| --- | --- |
+| Query language | SQL |
+| URL | `http://<influxdb-container>:8181` |
+| Token | your InfluxDB v3 admin token |
+| Database | `openvpn` |
+| Insecure Connection | ✓ enabled (required for plain HTTP within Docker) |
+
+4. Click **Save & test** — the connection should succeed.
+
+The two measurements available for dashboards are `openvpn_traffic`
+(per-scrape byte counters per client) and `openvpn_session` (closed
+sessions with final byte counts and duration).
+
 ### User Management
 Starting from `v.0.9.2` OpenVPN UI has user management feature. 
 
