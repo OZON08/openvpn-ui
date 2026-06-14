@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"os"
+
 	"github.com/beego/beego/v2/server/web"
 	"github.com/OZON08/openvpn-ui/models"
 )
@@ -41,7 +43,8 @@ func (c *BaseController) Prepare() {
 
 	c.Data["IsLogin"] = c.IsLogin
 	c.Data["Userinfo"] = c.Userinfo
-	c.Data["GrafanaEnabled"] = web.AppConfig.DefaultString("GrafanaURL", "") != ""
+	grafanaURL := web.AppConfig.DefaultString("GrafanaURL", os.Getenv("OPENVPN_UI_GRAFANA_URL"))
+	c.Data["GrafanaEnabled"] = grafanaURL != ""
 
 	if app, ok := c.AppController.(NestPreparer); ok {
 		app.NestPrepare()

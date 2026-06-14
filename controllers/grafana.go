@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 
 	"github.com/beego/beego/v2/server/web"
 )
@@ -35,7 +36,7 @@ func (c *GrafanaController) Proxy() {
 		return
 	}
 
-	rawURL := web.AppConfig.DefaultString("GrafanaURL", "")
+	rawURL := web.AppConfig.DefaultString("GrafanaURL", os.Getenv("OPENVPN_UI_GRAFANA_URL"))
 	if rawURL == "" {
 		c.Ctx.Output.SetStatus(http.StatusNotFound)
 		return
