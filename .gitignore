@@ -13,3 +13,9 @@ test
 # Playwright screenshot tooling
 docs/screenshots/node_modules/
 docs/screenshots/.env
+
+# Personal server deployment config (contains credentials)
+server/
+
+# Claude Code local settings
+.claude/
