@@ -28,6 +28,11 @@ func (c *GrafanaController) NestPrepare() {
 		c.StopRun()
 		return
 	}
+	if !c.Userinfo.IsAdmin {
+		c.Ctx.Redirect(302, c.URLFor("MainController.Get"))
+		c.StopRun()
+		return
+	}
 }
 
 func (c *GrafanaController) Get() {

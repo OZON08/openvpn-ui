@@ -26,6 +26,10 @@ func (c *MonitorController) NestPrepare() {
 		c.Ctx.Redirect(302, c.LoginPath())
 		return
 	}
+	if !c.Userinfo.IsAdmin {
+		c.Ctx.Redirect(302, c.URLFor("MainController.Get"))
+		return
+	}
 }
 
 func (c *MonitorController) Get() {

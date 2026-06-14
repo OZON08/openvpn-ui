@@ -29,22 +29,6 @@
         </li>
 
         <li class="nav-item">
-          <a href="{{urlfor "MonitorController.Get"}}" class="nav-link {{if compare .RouterPattern "/monitor"}}active{{end}}">
-            <i class="nav-icon fa fa-chart-line"></i>
-            <p>Monitor <span class="badge">new</span></p>
-          </a>
-        </li>
-
-        {{if .GrafanaEnabled}}
-        <li class="nav-item">
-          <a href="/grafana/" class="nav-link {{if compare .RouterPattern "/grafana/*"}}active{{end}}">
-            <i class="nav-icon fa fa-chart-bar"></i>
-            <p>Grafana</p>
-          </a>
-        </li>
-        {{end}}
-
-        <li class="nav-item">
           <a href="{{urlfor "LogsController.Get"}}" class="nav-link {{if compare .RouterPattern "/logs"}}active{{end}}">
             <i class="nav-icon fa fa-file-text-o"></i>
             <p>Logs</p>
@@ -52,6 +36,22 @@
         </li>
 
         {{if .Userinfo.IsAdmin}}
+        <li class="nav-item">
+          <a href="{{urlfor "MonitorController.Get"}}" class="nav-link {{if compare .RouterPattern "/monitor"}}active{{end}}">
+            <i class="nav-icon fa fa-chart-line"></i>
+            <p>Monitor</p>
+          </a>
+        </li>
+
+        {{if .GrafanaEnabled}}
+        <li class="nav-item">
+          <a href="/grafana" class="nav-link {{if compare .RouterPattern "/grafana/*"}}active{{end}}">
+            <i class="nav-icon fa fa-chart-bar"></i>
+            <p>Grafana</p>
+          </a>
+        </li>
+        {{end}}
+
         <li class="nav-header">Configuration</li>
 
         <li class="nav-item">
