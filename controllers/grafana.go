@@ -30,6 +30,11 @@ func (c *GrafanaController) NestPrepare() {
 	}
 }
 
+func (c *GrafanaController) Get() {
+	c.TplName = "grafana.html"
+	c.Data["breadcrumbs"] = &BreadCrumbs{Title: "Grafana"}
+}
+
 func (c *GrafanaController) Proxy() {
 	if !c.IsLogin || c.Userinfo == nil {
 		c.Ctx.Redirect(302, c.LoginPath())
