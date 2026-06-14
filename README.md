@@ -919,6 +919,7 @@ InfluxDB export is off.
 | `InfluxDatabase` | `OPENVPN_UI_INFLUX_DATABASE` | `openvpn` | InfluxDB v3 database / bucket name |
 | `InfluxBufferSize` | `OPENVPN_UI_INFLUX_BUFFER_SIZE` | `1000` | In-memory point buffer. Overflow drops oldest. |
 | `InfluxFlushIntervalS` | `OPENVPN_UI_INFLUX_FLUSH_INTERVAL_S` | `10` | Flush interval for the point buffer (seconds) |
+| `GrafanaURL` | `OPENVPN_UI_GRAFANA_URL` | *(empty)* | Internal URL of a Grafana instance to proxy and embed in the sidebar. Leave empty to hide Grafana from the UI. |
 
 Example docker-compose snippet adding the monitor env vars:
 
