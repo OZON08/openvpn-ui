@@ -13,6 +13,27 @@ accelerate something or propose an alternative.
       in the sidebar via iframe. InfluxDB v3 data source verified against
       `openvpn_traffic` and `openvpn_session` measurements. Setup documented
       in README. Dashboard JSON examples still open as a separate future item.
+- [ ] **Per-user certificate and log scoping** — non-admin users currently
+      see all certificates and all server logs. The goal is to show each
+      user only what belongs to them.
+
+      **Design decision (open):** there is currently no link between an
+      openvpn-ui `User` account and a certificate common name (CN). Two
+      approaches:
+      - *Convention-based*: assume `user.Login == cert.CN`. Zero schema
+        changes; breaks when they differ.
+      - *Explicit mapping*: add a `user_certificates` join table in SQLite
+        (`user_id`, `cert_name`). Admin assigns certs to users via the UI.
+        Handles many-to-one (shared account) and one-to-many (user has
+        several certs).
+
+      The explicit mapping is recommended. Once in place:
+      - **Certificates page**: non-admins see only their mapped certs and
+        can download/revoke only those. Create is admin-only.
+      - **Logs page**: the raw `openvpn.log` is replaced for non-admins
+        with a filtered view — only lines whose `CN=<name>` matches one
+        of the user's mapped cert names are shown.
+
 - [ ] **Light/dark toggle polish + re-enable.** The switch is commented out
       in [views/layout/base.html](views/layout/base.html); the underlying
       boot script already handles both modes. Needs styling review in light
