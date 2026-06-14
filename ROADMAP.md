@@ -9,9 +9,10 @@ accelerate something or propose an alternative.
 - [x] **Verify InfluxDB v3 export end-to-end** against a live InfluxDB 3 Core
       instance. Verified: scraper → `InfluxWriter` buffer → HTTP write →
       `openvpn_traffic` / `openvpn_session` measurements confirmed in InfluxDB.
-- [ ] **Grafana dashboard JSON** for the `traffic` and `session` measurements
-      (per-user bandwidth, connected-clients gauge, session history panel).
-      Shipped under `docs/grafana/` so users can import and tweak.
+- [x] **Grafana integration** — reverse proxy behind openvpn-ui auth, embedded
+      in the sidebar via iframe. InfluxDB v3 data source verified against
+      `openvpn_traffic` and `openvpn_session` measurements. Setup documented
+      in README. Dashboard JSON examples still open as a separate future item.
 - [ ] **Light/dark toggle polish + re-enable.** The switch is commented out
       in [views/layout/base.html](views/layout/base.html); the underlying
       boot script already handles both modes. Needs styling review in light
