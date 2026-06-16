@@ -66,15 +66,16 @@ func (c *ProfileController) Get() {
 
 		pkiIndex := filepath.Join(state.GlobalCfg.OVConfigPath, "pki/index.txt")
 		allCerts, err := lib.ReadCerts(pkiIndex)
-		if err == nil {
-			var certNames []string
-			for _, cert := range allCerts {
-				if cert.Details != nil && cert.Details.Name != "server" && cert.EntryType == "V" {
-					certNames = append(certNames, cert.Details.Name)
-				}
-			}
-			c.Data["allCertNames"] = certNames
+		if err != nil {
+			logs.Error("Profile: ReadCerts error:", err)
 		}
+		var certNames []string
+		for _, cert := range allCerts {
+			if cert.Details != nil && cert.Details.Name != "server" && cert.EntryType == "V" {
+				certNames = append(certNames, cert.Details.Name)
+			}
+		}
+		c.Data["allCertNames"] = certNames
 	}
 }
 
