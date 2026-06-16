@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"html/template"
+	"path/filepath"
 
 	passlib "gopkg.in/hlandau/passlib.v1"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/beego/beego/v2/server/web"
 	"github.com/OZON08/openvpn-ui/lib"
 	"github.com/OZON08/openvpn-ui/models"
+	"github.com/OZON08/openvpn-ui/state"
 )
 
 type NewUser struct {
@@ -20,6 +22,11 @@ type NewUser struct {
 	NewEmail      string `orm:"size(64)" form:"NewEmail" valid:"Required;Email"`
 	NewPassword   string `orm:"size(32)" form:"NewPassword" valid:"Required;MinSize(6)"`
 	NewRepassword string `orm:"-" form:"NewRepassword" valid:"Required"`
+}
+
+type UserCertRow struct {
+	User  *models.User
+	Certs []string
 }
 
 type ProfileController struct {
@@ -41,7 +48,6 @@ func (c *ProfileController) Get() {
 	c.Data["profile"] = c.Userinfo
 	c.TplName = "profile.html"
 
-	// Get all users if user has admin flag - show all users
 	if c.Userinfo.IsAdmin {
 		o := orm.NewOrm()
 		var users []*models.User
@@ -49,8 +55,26 @@ func (c *ProfileController) Get() {
 			logs.Error("Failed to retrieve user profiles:", err)
 			return
 		}
-		//logs.Info("Retrieved", len(users), "user profiles")
 		c.Data["users"] = users
+
+		var assignments []UserCertRow
+		for _, u := range users {
+			certs, _ := models.CertsForUser(u.Id)
+			assignments = append(assignments, UserCertRow{User: u, Certs: certs})
+		}
+		c.Data["userCertAssignments"] = assignments
+
+		pkiIndex := filepath.Join(state.GlobalCfg.OVConfigPath, "pki/index.txt")
+		allCerts, err := lib.ReadCerts(pkiIndex)
+		if err == nil {
+			var certNames []string
+			for _, cert := range allCerts {
+				if cert.Details != nil && cert.Details.Name != "server" && cert.EntryType == "V" {
+					certNames = append(certNames, cert.Details.Name)
+				}
+			}
+			c.Data["allCertNames"] = certNames
+		}
 	}
 }
 
@@ -250,6 +274,134 @@ func (c *ProfileController) DeleteUser() {
 	flash.Success("User \"%s\" deleted successfully.", user.Login)
 	flash.Store(&c.Controller)
 	c.List()
+}
+
+func (c *ProfileController) AssignCert() {
+	if !c.Userinfo.IsAdmin {
+		c.Ctx.Redirect(302, c.URLFor("MainController.Get"))
+		return
+	}
+	flash := web.NewFlash()
+	userID, err := c.GetInt64("userID")
+	if err != nil {
+		flash.Error("Invalid user ID")
+		flash.Store(&c.Controller)
+		c.Redirect(c.URLFor("ProfileController.Get"), 302)
+		return
+	}
+	certName := c.GetString("certName")
+	if !lib.SafeNameRegex.MatchString(certName) {
+		flash.Error("Invalid certificate name")
+		flash.Store(&c.Controller)
+		c.Redirect(c.URLFor("ProfileController.Get"), 302)
+		return
+	}
+	if err := models.AssignCert(userID, certName); err != nil {
+		logs.Error("AssignCert failed:", err)
+		flash.Error("Failed to assign certificate: %s", err.Error())
+	} else {
+		flash.Success("Certificate \"%s\" assigned successfully", certName)
+	}
+	flash.Store(&c.Controller)
+	c.Redirect(c.URLFor("ProfileController.Get"), 302)
+}
+
+func (c *ProfileController) RemoveCert() {
+	if !c.Userinfo.IsAdmin {
+		c.Ctx.Redirect(302, c.URLFor("MainController.Get"))
+		return
+	}
+	flash := web.NewFlash()
+	userID, err := c.GetInt64(":userID")
+	if err != nil {
+		flash.Error("Invalid user ID")
+		flash.Store(&c.Controller)
+		c.Redirect(c.URLFor("ProfileController.Get"), 302)
+		return
+	}
+	certName := c.GetString(":certName")
+	if !lib.SafeNameRegex.MatchString(certName) {
+		flash.Error("Invalid certificate name")
+		flash.Store(&c.Controller)
+		c.Redirect(c.URLFor("ProfileController.Get"), 302)
+		return
+	}
+	if err := models.RemoveCert(userID, certName); err != nil {
+		logs.Error("RemoveCert failed:", err)
+		flash.Error("Failed to remove certificate: %s", err.Error())
+	} else {
+		flash.Success("Certificate \"%s\" removed", certName)
+	}
+	flash.Store(&c.Controller)
+	c.Redirect(c.URLFor("ProfileController.Get"), 302)
+}
+
+func (c *ProfileController) TransferCert() {
+	if !c.Userinfo.IsAdmin {
+		c.Ctx.Redirect(302, c.URLFor("MainController.Get"))
+		return
+	}
+	flash := web.NewFlash()
+	fromUserID, err := c.GetInt64("fromUserID")
+	if err != nil {
+		flash.Error("Invalid source user ID")
+		flash.Store(&c.Controller)
+		c.Redirect(c.URLFor("ProfileController.Get"), 302)
+		return
+	}
+	toUserID, err := c.GetInt64("toUserID")
+	if err != nil {
+		flash.Error("Invalid target user ID")
+		flash.Store(&c.Controller)
+		c.Redirect(c.URLFor("ProfileController.Get"), 302)
+		return
+	}
+	certName := c.GetString("certName")
+	if !lib.SafeNameRegex.MatchString(certName) {
+		flash.Error("Invalid certificate name")
+		flash.Store(&c.Controller)
+		c.Redirect(c.URLFor("ProfileController.Get"), 302)
+		return
+	}
+	if err := models.TransferCert(fromUserID, toUserID, certName); err != nil {
+		logs.Error("TransferCert failed:", err)
+		flash.Error("Transfer failed: %s", err.Error())
+	} else {
+		flash.Success("Certificate \"%s\" transferred successfully", certName)
+	}
+	flash.Store(&c.Controller)
+	c.Redirect(c.URLFor("ProfileController.Get"), 302)
+}
+
+func (c *ProfileController) SeedCerts() {
+	if !c.Userinfo.IsAdmin {
+		c.Ctx.Redirect(302, c.URLFor("MainController.Get"))
+		return
+	}
+	flash := web.NewFlash()
+	pkiIndex := filepath.Join(state.GlobalCfg.OVConfigPath, "pki/index.txt")
+	allCerts, err := lib.ReadCerts(pkiIndex)
+	if err != nil {
+		flash.Error("Could not read PKI: %s", err.Error())
+		flash.Store(&c.Controller)
+		c.Redirect(c.URLFor("ProfileController.Get"), 302)
+		return
+	}
+	var certNames []string
+	for _, cert := range allCerts {
+		if cert.Details != nil && cert.EntryType == "V" {
+			certNames = append(certNames, cert.Details.Name)
+		}
+	}
+	n, err := models.SeedAssignmentsFromLogin(certNames)
+	if err != nil {
+		logs.Error("SeedCerts failed:", err)
+		flash.Error("Seed failed: %s", err.Error())
+	} else {
+		flash.Success("Seeded %d assignment(s) from login names", n)
+	}
+	flash.Store(&c.Controller)
+	c.Redirect(c.URLFor("ProfileController.Get"), 302)
 }
 
 // @router /profile/edit/:key [post]

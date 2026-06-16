@@ -13,6 +13,7 @@
       <li class="nav-item"><a class="nav-link active" href="#tab_1" data-toggle="tab">Edit own Profile</a></li>
       {{ if .Userinfo.IsAdmin }} <li class="nav-item"><a class="nav-link" href="#tab_2" data-toggle="tab">Creating new Profiles</a></li> {{ else }}{{ end }}
       {{ if .Userinfo.IsAdmin }} <li class="nav-item"><a class="nav-link" href="#tab_3" data-toggle="tab">Managing Profiles</a></li> {{ else }}{{ end }}
+      {{ if .Userinfo.IsAdmin }} <li class="nav-item"><a class="nav-link" href="#tab_4" data-toggle="tab">Certificate Assignments</a></li> {{ end }}
     </ul>
   </div>
   <div class="card-body">
@@ -254,6 +255,119 @@
           
         </div>
       </div>
+
+      {{ if .Userinfo.IsAdmin }}
+      <!--TAB4-->
+      <div class="tab-pane" id="tab_4">
+        {{template "common/alert.html" .}}
+
+        <div class="d-flex align-items-center mb-4">
+          <h3 class="mr-4 mb-0">Certificate Assignments</h3>
+          <form method="post" action="/profile/cert/seed">
+            {{.xsrfdata}}
+            <button type="submit" class="btn btn-secondary btn-sm"
+                    onclick="return confirm('Auto-assign certs to users whose login name matches a cert CN?\nExisting assignments are kept.')">
+              <i class="fa fa-magic mr-1"></i>Seed from Login Names
+            </button>
+          </form>
+        </div>
+        <p class="text-muted">
+          "Seed from Login Names" auto-assigns each cert to the user whose login matches the cert CN.
+          Use this once after upgrading from a version without cert scoping.
+        </p>
+
+        <h4>Assign Certificate</h4>
+        <form method="post" action="/profile/cert/assign">
+          {{.xsrfdata}}
+          <div class="form-row align-items-end mb-3">
+            <div class="form-group col-md-4">
+              <label>User</label>
+              <select name="userID" class="form-control">
+                {{range .users}}
+                <option value="{{.Id}}">{{.Name}} ({{.Login}})</option>
+                {{end}}
+              </select>
+            </div>
+            <div class="form-group col-md-4">
+              <label>Certificate</label>
+              <select name="certName" class="form-control">
+                {{range .allCertNames}}
+                <option value="{{.}}">{{.}}</option>
+                {{end}}
+              </select>
+            </div>
+            <div class="form-group col-md-2">
+              <button type="submit" class="btn btn-primary">Assign</button>
+            </div>
+          </div>
+        </form>
+
+        <h4>Current Assignments</h4>
+        <table class="table table-bordered">
+          <thead>
+            <tr><th>User</th><th>Login</th><th>Assigned Certificates</th></tr>
+          </thead>
+          <tbody>
+            {{range .userCertAssignments}}
+            {{$row := .}}
+            <tr>
+              <td>{{$row.User.Name}}</td>
+              <td>{{$row.User.Login}}</td>
+              <td>
+                {{range $row.Certs}}
+                <span class="badge badge-secondary mr-1">{{.}}</span>
+                <a href="/profile/cert/remove/{{$row.User.Id}}/{{.}}"
+                   class="text-danger mr-2"
+                   title="Remove"
+                   onclick="return confirm('Remove {{.}} from {{$row.User.Name}}?')">
+                  <i class="fa fa-times"></i>
+                </a>
+                {{else}}
+                <span class="text-muted">none</span>
+                {{end}}
+              </td>
+            </tr>
+            {{end}}
+          </tbody>
+        </table>
+
+        <h4 class="mt-4">Transfer Certificate</h4>
+        <p class="text-muted">Moves a cert from one user to another in one atomic step.</p>
+        <form method="post" action="/profile/cert/transfer">
+          {{.xsrfdata}}
+          <div class="form-row align-items-end mb-3">
+            <div class="form-group col-md-3">
+              <label>From User</label>
+              <select name="fromUserID" class="form-control">
+                {{range .users}}
+                <option value="{{.Id}}">{{.Name}} ({{.Login}})</option>
+                {{end}}
+              </select>
+            </div>
+            <div class="form-group col-md-3">
+              <label>Certificate</label>
+              <select name="certName" class="form-control">
+                {{range .allCertNames}}
+                <option value="{{.}}">{{.}}</option>
+                {{end}}
+              </select>
+            </div>
+            <div class="form-group col-md-3">
+              <label>To User</label>
+              <select name="toUserID" class="form-control">
+                {{range .users}}
+                <option value="{{.Id}}">{{.Name}} ({{.Login}})</option>
+                {{end}}
+              </select>
+            </div>
+            <div class="form-group col-md-2">
+              <button type="submit" class="btn btn-warning">Transfer</button>
+            </div>
+          </div>
+        </form>
+
+      </div>
+      {{ end }}
 
     </div>
   </div>
