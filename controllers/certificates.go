@@ -54,6 +54,10 @@ func (c *CertificatesController) Download() {
 		c.Ctx.Output.SetStatus(400)
 		return
 	}
+	if !c.canAccessCert(name) {
+		c.Ctx.Output.SetStatus(403)
+		return
+	}
 	filename := fmt.Sprintf("%s.ovpn", name)
 
 	c.Ctx.Output.Header("Content-Type", "application/octet-stream")
@@ -131,13 +135,46 @@ func (c *CertificatesController) showCerts() {
 		logs.Error(err)
 	}
 	lib.Dump(certs)
+
+	if !c.Userinfo.IsAdmin {
+		allowed, _ := models.CertsForUser(c.Userinfo.Id)
+		allowSet := make(map[string]bool, len(allowed))
+		for _, n := range allowed {
+			allowSet[n] = true
+		}
+		filtered := certs[:0]
+		for _, cert := range certs {
+			if cert.Details != nil && allowSet[cert.Details.Name] {
+				filtered = append(filtered, cert)
+			}
+		}
+		certs = filtered
+	}
+
 	c.Data["certificates"] = &certs
+	c.Data["IsAdmin"] = c.Userinfo.IsAdmin
 	cfg := models.EasyRSAConfig{Profile: "default"}
 	_ = cfg.Read("Profile")
 	c.Data["EasyRSA"] = &cfg
 	cfg1 := models.OVClientConfig{Profile: "default"}
 	_ = cfg1.Read("Profile")
 	c.Data["SettingsC"] = &cfg1
+}
+
+func (c *CertificatesController) canAccessCert(name string) bool {
+	if c.Userinfo.IsAdmin {
+		return true
+	}
+	allowed, err := models.CertsForUser(c.Userinfo.Id)
+	if err != nil {
+		return false
+	}
+	for _, n := range allowed {
+		if n == name {
+			return true
+		}
+	}
+	return false
 }
 
 // @router /certificates [post]
@@ -176,6 +213,10 @@ func (c *CertificatesController) Post() {
 func (c *CertificatesController) Revoke() {
 	c.TplName = "certificates.html"
 	flash := web.NewFlash()
+	if !c.Userinfo.IsAdmin {
+		c.Redirect(c.URLFor("CertificatesController.Get"), 302)
+		return
+	}
 	name := c.GetString(":key")
 	serial := c.GetString(":serial")
 	tfaname := c.GetString(":tfaname")
@@ -201,6 +242,10 @@ func (c *CertificatesController) Restart() {
 func (c *CertificatesController) Burn() {
 	c.TplName = "certificates.html"
 	flash := web.NewFlash()
+	if !c.Userinfo.IsAdmin {
+		c.Redirect(c.URLFor("CertificatesController.Get"), 302)
+		return
+	}
 	CN := c.GetString(":key")
 	serial := c.GetString(":serial")
 	tfaname := c.GetString(":tfaname")
@@ -220,6 +265,10 @@ func (c *CertificatesController) Burn() {
 func (c *CertificatesController) Renew() {
 	c.TplName = "certificates.html"
 	flash := web.NewFlash()
+	if !c.Userinfo.IsAdmin {
+		c.Redirect(c.URLFor("CertificatesController.Get"), 302)
+		return
+	}
 	name := c.GetString(":key")
 	localip := c.GetString(":localip")
 	serial := c.GetString(":serial")
