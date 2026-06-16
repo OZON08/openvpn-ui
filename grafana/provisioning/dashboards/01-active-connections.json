@@ -30,7 +30,7 @@
         "rawSql": "SELECT COALESCE(SUM(bytes_in + bytes_out), 0) AS value FROM openvpn_session WHERE time >= DATE_TRUNC('day', NOW())"
       }],
       "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "none", "graphMode": "none"},
-      "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []}
+      "fieldConfig": {"defaults": {"unit": "bytes", "noValue": "0"}, "overrides": []}
     },
     {
       "id": 3, "type": "stat", "title": "Sessions Heute",
@@ -42,7 +42,7 @@
         "rawSql": "SELECT COALESCE(COUNT(*), 0) AS value FROM openvpn_session WHERE time >= DATE_TRUNC('day', NOW())"
       }],
       "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "none", "graphMode": "none"},
-      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}
+      "fieldConfig": {"defaults": {"unit": "short", "noValue": "0"}, "overrides": []}
     },
     {
       "id": 4, "type": "stat", "title": "Sessions — Dieser Monat",
