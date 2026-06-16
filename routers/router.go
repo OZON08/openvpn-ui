@@ -21,7 +21,7 @@ func Init(configDir string) {
 	web.Router("/auth/google/callback", &controllers.LoginController{}, "get:GoogleCallback")	
 	web.Router("/profile", &controllers.ProfileController{})
 	web.Router("/profile/cert/assign", &controllers.ProfileController{}, "post:AssignCert")
-	web.Router("/profile/cert/remove/:userID/:certName", &controllers.ProfileController{}, "get:RemoveCert")
+	web.Router("/profile/cert/remove", &controllers.ProfileController{}, "post:RemoveCert")
 	web.Router("/profile/cert/transfer", &controllers.ProfileController{}, "post:TransferCert")
 	web.Router("/profile/cert/seed", &controllers.ProfileController{}, "post:SeedCerts")
 	web.Router("/settings", &controllers.SettingsController{})

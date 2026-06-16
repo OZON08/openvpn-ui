@@ -316,12 +316,15 @@
               <td>
                 {{range $row.Certs}}
                 <span class="badge badge-secondary mr-1">{{.}}</span>
-                <a href="/profile/cert/remove/{{$row.User.Id}}/{{.}}"
-                   class="text-danger mr-2"
-                   title="Remove"
-                   onclick="return confirm('Remove {{.}} from {{$row.User.Name}}?')">
-                  <i class="fa fa-times"></i>
-                </a>
+                <form method="post" action="/profile/cert/remove" class="d-inline mr-2">
+                  {{$.xsrfdata}}
+                  <input type="hidden" name="userID" value="{{$row.User.Id}}">
+                  <input type="hidden" name="certName" value="{{.}}">
+                  <button type="submit" class="btn btn-link text-danger p-0" title="Remove"
+                          onclick="return confirm('Remove {{.}} from {{$row.User.Name}}?')">
+                    <i class="fa fa-times"></i>
+                  </button>
+                </form>
                 {{else}}
                 <span class="text-muted">none</span>
                 {{end}}

@@ -312,14 +312,14 @@ func (c *ProfileController) RemoveCert() {
 		return
 	}
 	flash := web.NewFlash()
-	userID, err := c.GetInt64(":userID")
+	userID, err := c.GetInt64("userID")
 	if err != nil {
 		flash.Error("Invalid user ID")
 		flash.Store(&c.Controller)
 		c.Redirect(c.URLFor("ProfileController.Get"), 302)
 		return
 	}
-	certName := c.GetString(":certName")
+	certName := c.GetString("certName")
 	if !lib.SafeNameRegex.MatchString(certName) {
 		flash.Error("Invalid certificate name")
 		flash.Store(&c.Controller)
