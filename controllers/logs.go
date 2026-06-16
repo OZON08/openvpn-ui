@@ -41,20 +41,44 @@ func (c *LogsController) Get() {
 		return
 	}
 	defer file.Close()
+
+	var allowedCerts []string
+	if !c.Userinfo.IsAdmin {
+		allowedCerts, _ = models.CertsForUser(c.Userinfo.Id)
+	}
+
 	scanner := bufio.NewScanner(file)
 	var logLines []string
 	for scanner.Scan() {
 		line := scanner.Text()
-		if !strings.Contains(line, " MANAGEMENT: ") {
-			logLines = append(logLines, strings.Trim(line, "\t"))
+		if strings.Contains(line, " MANAGEMENT: ") {
+			continue
 		}
+		if !c.Userinfo.IsAdmin && !lineMatchesCert(line, allowedCerts) {
+			continue
+		}
+		logLines = append(logLines, strings.Trim(line, "\t"))
 	}
 	start := len(logLines) - 300
 	if start < 0 {
 		start = 0
 	}
 	c.Data["logs"] = logLines[start:]
-	//c.Data["logs"] = reverse(logs[start:])
+}
+
+// lineMatchesCert reports whether a log line concerns one of the given cert names.
+func lineMatchesCert(line string, names []string) bool {
+	for _, n := range names {
+		if strings.Contains(line, "CN="+n+",") ||
+			strings.Contains(line, "CN="+n+" ") ||
+			strings.HasSuffix(line, "CN="+n) ||
+			strings.Contains(line, "["+n+"]") ||
+			strings.HasPrefix(line, n+"/") ||
+			strings.Contains(line, " "+n+"/") {
+			return true
+		}
+	}
+	return false
 }
 
 //func reverse(lines []string) []string {
