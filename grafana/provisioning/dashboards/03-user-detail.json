@@ -51,8 +51,8 @@
       "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
       "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "refId": "A",
         "rawQuery": true, "editorMode": "code", "format": "table", "dataset": "iox",
-        "query": "SELECT MIN(time) AS value FROM openvpn_session WHERE common_name = '$cn'",
-        "rawSql": "SELECT MIN(time) AS value FROM openvpn_session WHERE common_name = '$cn'"
+        "query": "SELECT CAST(MIN(time) AS BIGINT) / 1000000 AS value FROM openvpn_session WHERE common_name = '$cn'",
+        "rawSql": "SELECT CAST(MIN(time) AS BIGINT) / 1000000 AS value FROM openvpn_session WHERE common_name = '$cn'"
       }],
       "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "none", "graphMode": "none"},
       "fieldConfig": {"defaults": {"unit": "dateTimeAsIso"}, "overrides": []}
@@ -63,8 +63,8 @@
       "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
       "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "refId": "A",
         "rawQuery": true, "editorMode": "code", "format": "table", "dataset": "iox",
-        "query": "SELECT MAX(time) AS value FROM openvpn_session WHERE common_name = '$cn'",
-        "rawSql": "SELECT MAX(time) AS value FROM openvpn_session WHERE common_name = '$cn'"
+        "query": "SELECT CAST(MAX(time) AS BIGINT) / 1000000 AS value FROM openvpn_session WHERE common_name = '$cn'",
+        "rawSql": "SELECT CAST(MAX(time) AS BIGINT) / 1000000 AS value FROM openvpn_session WHERE common_name = '$cn'"
       }],
       "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "none", "graphMode": "none"},
       "fieldConfig": {"defaults": {"unit": "dateTimeAsIso"}, "overrides": []}

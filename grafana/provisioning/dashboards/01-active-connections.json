@@ -26,8 +26,8 @@
       "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
       "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "refId": "A",
         "rawQuery": true, "editorMode": "code", "format": "table", "dataset": "iox",
-        "query": "SELECT SUM(bytes_in + bytes_out) AS value FROM openvpn_session WHERE time >= DATE_TRUNC('day', NOW())",
-        "rawSql": "SELECT SUM(bytes_in + bytes_out) AS value FROM openvpn_session WHERE time >= DATE_TRUNC('day', NOW())"
+        "query": "SELECT COALESCE(SUM(bytes_in + bytes_out), 0) AS value FROM openvpn_session WHERE time >= DATE_TRUNC('day', NOW())",
+        "rawSql": "SELECT COALESCE(SUM(bytes_in + bytes_out), 0) AS value FROM openvpn_session WHERE time >= DATE_TRUNC('day', NOW())"
       }],
       "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "none", "graphMode": "none"},
       "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []}
@@ -38,8 +38,8 @@
       "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
       "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "refId": "A",
         "rawQuery": true, "editorMode": "code", "format": "table", "dataset": "iox",
-        "query": "SELECT COUNT(*) AS value FROM openvpn_session WHERE time >= DATE_TRUNC('day', NOW())",
-        "rawSql": "SELECT COUNT(*) AS value FROM openvpn_session WHERE time >= DATE_TRUNC('day', NOW())"
+        "query": "SELECT COALESCE(COUNT(*), 0) AS value FROM openvpn_session WHERE time >= DATE_TRUNC('day', NOW())",
+        "rawSql": "SELECT COALESCE(COUNT(*), 0) AS value FROM openvpn_session WHERE time >= DATE_TRUNC('day', NOW())"
       }],
       "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "none", "graphMode": "none"},
       "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}
@@ -74,8 +74,8 @@
       "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
       "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "refId": "A",
         "rawQuery": true, "editorMode": "code", "format": "table", "dataset": "iox",
-        "query": "SELECT DATEDIFF('second', MIN(time), NOW()) AS value FROM openvpn_traffic WHERE time >= NOW() - INTERVAL '24 hours' GROUP BY common_name ORDER BY value DESC LIMIT 1",
-        "rawSql": "SELECT DATEDIFF('second', MIN(time), NOW()) AS value FROM openvpn_traffic WHERE time >= NOW() - INTERVAL '24 hours' GROUP BY common_name ORDER BY value DESC LIMIT 1"
+        "query": "SELECT CAST((CAST(NOW() AS BIGINT) - CAST(MIN(time) AS BIGINT)) / 1000000000 AS BIGINT) AS value FROM openvpn_traffic WHERE time >= NOW() - INTERVAL '24 hours' GROUP BY common_name ORDER BY value DESC LIMIT 1",
+        "rawSql": "SELECT CAST((CAST(NOW() AS BIGINT) - CAST(MIN(time) AS BIGINT)) / 1000000000 AS BIGINT) AS value FROM openvpn_traffic WHERE time >= NOW() - INTERVAL '24 hours' GROUP BY common_name ORDER BY value DESC LIMIT 1"
       }],
       "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "none", "graphMode": "none"},
       "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []}
