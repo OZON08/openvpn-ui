@@ -160,7 +160,7 @@
       }
     ]
   },
-  "time": {"from": "now-30d", "to": "now"},
+  "time": {"from": "now-7d", "to": "now"},
   "timezone": "browser",
   "title": "OpenVPN — Nutzer-Detail",
   "uid": "openvpn-user",
