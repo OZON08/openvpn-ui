@@ -12,8 +12,10 @@
       "id": 1, "type": "stat", "title": "Aktive Nutzer",
       "gridPos": {"h": 4, "w": 4, "x": 0, "y": 0},
       "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
-      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "rawQuery": true, "refId": "A",
-        "query": "SELECT COUNT(DISTINCT common_name) AS value FROM openvpn_traffic WHERE time >= NOW() - INTERVAL '2 minutes'"
+      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "refId": "A",
+        "rawQuery": true, "editorMode": "code", "format": "table", "dataset": "iox",
+        "query": "SELECT COUNT(DISTINCT common_name) AS value FROM openvpn_traffic WHERE time >= NOW() - INTERVAL '2 minutes'",
+        "rawSql": "SELECT COUNT(DISTINCT common_name) AS value FROM openvpn_traffic WHERE time >= NOW() - INTERVAL '2 minutes'"
       }],
       "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "none", "textMode": "auto"},
       "fieldConfig": {"defaults": {"unit": "short", "color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]}}, "overrides": []}
@@ -22,8 +24,10 @@
       "id": 2, "type": "stat", "title": "Traffic Heute",
       "gridPos": {"h": 4, "w": 4, "x": 4, "y": 0},
       "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
-      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "rawQuery": true, "refId": "A",
-        "query": "SELECT SUM(bytes_in + bytes_out) AS value FROM openvpn_session WHERE time >= DATE_TRUNC('day', NOW())"
+      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "refId": "A",
+        "rawQuery": true, "editorMode": "code", "format": "table", "dataset": "iox",
+        "query": "SELECT SUM(bytes_in + bytes_out) AS value FROM openvpn_session WHERE time >= DATE_TRUNC('day', NOW())",
+        "rawSql": "SELECT SUM(bytes_in + bytes_out) AS value FROM openvpn_session WHERE time >= DATE_TRUNC('day', NOW())"
       }],
       "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "none", "graphMode": "none"},
       "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []}
@@ -32,8 +36,10 @@
       "id": 3, "type": "stat", "title": "Sessions Heute",
       "gridPos": {"h": 4, "w": 4, "x": 8, "y": 0},
       "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
-      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "rawQuery": true, "refId": "A",
-        "query": "SELECT COUNT(*) AS value FROM openvpn_session WHERE time >= DATE_TRUNC('day', NOW())"
+      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "refId": "A",
+        "rawQuery": true, "editorMode": "code", "format": "table", "dataset": "iox",
+        "query": "SELECT COUNT(*) AS value FROM openvpn_session WHERE time >= DATE_TRUNC('day', NOW())",
+        "rawSql": "SELECT COUNT(*) AS value FROM openvpn_session WHERE time >= DATE_TRUNC('day', NOW())"
       }],
       "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "none", "graphMode": "none"},
       "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}
@@ -42,8 +48,10 @@
       "id": 4, "type": "stat", "title": "Sessions — Dieser Monat",
       "gridPos": {"h": 4, "w": 4, "x": 12, "y": 0},
       "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
-      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "rawQuery": true, "refId": "A",
-        "query": "SELECT COUNT(*) AS value FROM openvpn_session WHERE time >= DATE_TRUNC('month', NOW())"
+      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "refId": "A",
+        "rawQuery": true, "editorMode": "code", "format": "table", "dataset": "iox",
+        "query": "SELECT COUNT(*) AS value FROM openvpn_session WHERE time >= DATE_TRUNC('month', NOW())",
+        "rawSql": "SELECT COUNT(*) AS value FROM openvpn_session WHERE time >= DATE_TRUNC('month', NOW())"
       }],
       "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "none", "graphMode": "none"},
       "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}
@@ -52,8 +60,10 @@
       "id": 5, "type": "stat", "title": "Sessions — Letzter Monat",
       "gridPos": {"h": 4, "w": 4, "x": 16, "y": 0},
       "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
-      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "rawQuery": true, "refId": "A",
-        "query": "SELECT COUNT(*) AS value FROM openvpn_session WHERE time >= DATE_TRUNC('month', NOW()) - INTERVAL '1 month' AND time < DATE_TRUNC('month', NOW())"
+      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "refId": "A",
+        "rawQuery": true, "editorMode": "code", "format": "table", "dataset": "iox",
+        "query": "SELECT COUNT(*) AS value FROM openvpn_session WHERE time >= DATE_TRUNC('month', NOW()) - INTERVAL '1 month' AND time < DATE_TRUNC('month', NOW())",
+        "rawSql": "SELECT COUNT(*) AS value FROM openvpn_session WHERE time >= DATE_TRUNC('month', NOW()) - INTERVAL '1 month' AND time < DATE_TRUNC('month', NOW())"
       }],
       "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "none", "graphMode": "none"},
       "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}
@@ -62,8 +72,10 @@
       "id": 6, "type": "stat", "title": "Längste aktive Session",
       "gridPos": {"h": 4, "w": 4, "x": 20, "y": 0},
       "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
-      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "rawQuery": true, "refId": "A",
-        "query": "SELECT DATEDIFF('second', MIN(time), NOW()) AS value FROM openvpn_traffic WHERE time >= NOW() - INTERVAL '24 hours' GROUP BY common_name ORDER BY value DESC LIMIT 1"
+      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "refId": "A",
+        "rawQuery": true, "editorMode": "code", "format": "table", "dataset": "iox",
+        "query": "SELECT DATEDIFF('second', MIN(time), NOW()) AS value FROM openvpn_traffic WHERE time >= NOW() - INTERVAL '24 hours' GROUP BY common_name ORDER BY value DESC LIMIT 1",
+        "rawSql": "SELECT DATEDIFF('second', MIN(time), NOW()) AS value FROM openvpn_traffic WHERE time >= NOW() - INTERVAL '24 hours' GROUP BY common_name ORDER BY value DESC LIMIT 1"
       }],
       "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "none", "graphMode": "none"},
       "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []}
@@ -72,8 +84,10 @@
       "id": 7, "type": "timeseries", "title": "Verbindungen über Zeit",
       "gridPos": {"h": 8, "w": 24, "x": 0, "y": 4},
       "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
-      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "rawQuery": true, "refId": "A",
-        "query": "SELECT DATE_TRUNC('minute', time) AS time, COUNT(DISTINCT common_name) AS \"Aktive Verbindungen\" FROM openvpn_traffic WHERE $__timeFilter(time) GROUP BY DATE_TRUNC('minute', time) ORDER BY time"
+      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "refId": "A",
+        "rawQuery": true, "editorMode": "code", "format": "time_series", "dataset": "iox",
+        "query": "SELECT DATE_TRUNC('minute', time) AS time, COUNT(DISTINCT common_name) AS \"Aktive Verbindungen\" FROM openvpn_traffic WHERE $__timeFilter(time) GROUP BY DATE_TRUNC('minute', time) ORDER BY time",
+        "rawSql": "SELECT DATE_TRUNC('minute', time) AS time, COUNT(DISTINCT common_name) AS \"Aktive Verbindungen\" FROM openvpn_traffic WHERE $__timeFilter(time) GROUP BY DATE_TRUNC('minute', time) ORDER BY time"
       }],
       "options": {"tooltip": {"mode": "single"}, "legend": {"displayMode": "list", "placement": "bottom"}},
       "fieldConfig": {"defaults": {"unit": "short", "color": {"mode": "fixed", "fixedColor": "green"}, "custom": {"lineWidth": 2, "fillOpacity": 15, "spanNulls": true}}, "overrides": []}
@@ -82,8 +96,10 @@
       "id": 8, "type": "table", "title": "Aktive Verbindungen",
       "gridPos": {"h": 9, "w": 24, "x": 0, "y": 12},
       "datasource": {"type": "influxdb", "uid": "influxdb-openvpn"},
-      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "rawQuery": true, "refId": "A",
-        "query": "SELECT common_name AS \"Nutzer\", virtual_ip AS \"VPN IP\", real_ip AS \"Real IP\", MAX(bytes_in) AS \"Bytes In\", MAX(bytes_out) AS \"Bytes Out\", MIN(time) AS \"Verbunden seit\" FROM openvpn_traffic WHERE time >= NOW() - INTERVAL '2 minutes' GROUP BY common_name, virtual_ip, real_ip ORDER BY common_name"
+      "targets": [{"datasource": {"type": "influxdb", "uid": "influxdb-openvpn"}, "refId": "A",
+        "rawQuery": true, "editorMode": "code", "format": "table", "dataset": "iox",
+        "query": "SELECT common_name AS \"Nutzer\", virtual_ip AS \"VPN IP\", real_ip AS \"Real IP\", MAX(bytes_in) AS \"Bytes In\", MAX(bytes_out) AS \"Bytes Out\", MIN(time) AS \"Verbunden seit\" FROM openvpn_traffic WHERE time >= NOW() - INTERVAL '2 minutes' GROUP BY common_name, virtual_ip, real_ip ORDER BY common_name",
+        "rawSql": "SELECT common_name AS \"Nutzer\", virtual_ip AS \"VPN IP\", real_ip AS \"Real IP\", MAX(bytes_in) AS \"Bytes In\", MAX(bytes_out) AS \"Bytes Out\", MIN(time) AS \"Verbunden seit\" FROM openvpn_traffic WHERE time >= NOW() - INTERVAL '2 minutes' GROUP BY common_name, virtual_ip, real_ip ORDER BY common_name"
       }],
       "options": {"showHeader": true, "footer": {"show": false}},
       "fieldConfig": {
