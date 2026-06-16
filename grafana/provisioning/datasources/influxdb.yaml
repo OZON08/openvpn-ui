@@ -4,13 +4,14 @@ datasources:
     uid: influxdb-openvpn
     type: influxdb
     access: proxy
-    url: http://openvpn-influxdb3:8082
+    url: http://openvpn-influxdb3:8181
     basicAuth: false
     jsonData:
       version: "SQL"
       dbName: openvpn
       httpMode: POST
-      insecureSkipVerify: true
+      insecureGrpc: true
+      tlsSkipVerify: false
     secureJsonData:
       token: "${INFLUX_TOKEN}"
     editable: false
