@@ -17,26 +17,13 @@ accelerate something or propose an alternative.
       history, monthly long-term chart), *Nutzer-Detail* (per-CN drill-down
       with LAG-based throughput chart). Auto-loaded via
       `grafana/provisioning/` at container start.
-- [ ] **Per-user certificate and log scoping** — non-admin users currently
-      see all certificates and all server logs. The goal is to show each
-      user only what belongs to them.
-
-      **Design decision (open):** there is currently no link between an
-      openvpn-ui `User` account and a certificate common name (CN). Two
-      approaches:
-      - *Convention-based*: assume `user.Login == cert.CN`. Zero schema
-        changes; breaks when they differ.
-      - *Explicit mapping*: add a `user_certificates` join table in SQLite
-        (`user_id`, `cert_name`). Admin assigns certs to users via the UI.
-        Handles many-to-one (shared account) and one-to-many (user has
-        several certs).
-
-      The explicit mapping is recommended. Once in place:
-      - **Certificates page**: non-admins see only their mapped certs and
-        can download/revoke only those. Create is admin-only.
-      - **Logs page**: the raw `openvpn.log` is replaced for non-admins
-        with a filtered view — only lines whose `CN=<name>` matches one
-        of the user's mapped cert names are shown.
+- [x] **Per-user certificate and log scoping** — non-admin users see only
+      their assigned certificates and matching log lines. Cert names are
+      mapped explicitly via the admin Profile → Certificate Assignments tab
+      (`user_certificates` SQLite table, auto-migrated at startup). Admins
+      retain full access to all certs and actions. Migration: use the
+      "Seed from Login Names" button to pre-fill assignments from existing
+      `user.Login == cert.CN` pairs.
 
 - [ ] **Light/dark toggle polish + re-enable.** The switch is commented out
       in [views/layout/base.html](views/layout/base.html); the underlying
