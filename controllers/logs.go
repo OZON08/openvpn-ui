@@ -3,11 +3,14 @@ package controllers
 import (
 	"bufio"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/OZON08/openvpn-ui/models"
 )
+
+var logCNRegex = regexp.MustCompile(`\bCN=([^,\s\]]+)`)
 
 type LogsController struct {
 	BaseController
@@ -42,9 +45,15 @@ func (c *LogsController) Get() {
 	}
 	defer file.Close()
 
-	var allowedCerts []string
+	var allowedSet map[string]bool
 	if !c.Userinfo.IsAdmin {
-		allowedCerts, _ = models.CertsForUser(c.Userinfo.Id)
+		certs, _ := models.CertsForUser(c.Userinfo.Id)
+		allowedSet = make(map[string]bool, len(certs))
+		for _, n := range certs {
+			if n != "" {
+				allowedSet[n] = true
+			}
+		}
 	}
 
 	scanner := bufio.NewScanner(file)
@@ -54,7 +63,7 @@ func (c *LogsController) Get() {
 		if strings.Contains(line, " MANAGEMENT: ") {
 			continue
 		}
-		if !c.Userinfo.IsAdmin && !lineMatchesCert(line, allowedCerts) {
+		if !c.Userinfo.IsAdmin && !lineMatchesCert(line, allowedSet) {
 			continue
 		}
 		logLines = append(logLines, strings.Trim(line, "\t"))
@@ -66,15 +75,21 @@ func (c *LogsController) Get() {
 	c.Data["logs"] = logLines[start:]
 }
 
-// lineMatchesCert reports whether a log line concerns one of the given cert names.
-func lineMatchesCert(line string, names []string) bool {
-	for _, n := range names {
-		if strings.Contains(line, "CN="+n+",") ||
-			strings.Contains(line, "CN="+n+" ") ||
-			strings.HasSuffix(line, "CN="+n) ||
-			strings.Contains(line, "["+n+"]") ||
-			strings.HasPrefix(line, n+"/") ||
-			strings.Contains(line, " "+n+"/") {
+// lineMatchesCert reports whether a log line concerns one of the allowed cert names.
+// Uses a regex to extract the CN field precisely; [name] and name/ patterns are
+// inherently bounded. Empty allowed map → no match.
+func lineMatchesCert(line string, allowed map[string]bool) bool {
+	if len(allowed) == 0 {
+		return false
+	}
+	if m := logCNRegex.FindStringSubmatch(line); m != nil && allowed[m[1]] {
+		return true
+	}
+	for n := range allowed {
+		if strings.Contains(line, "["+n+"]") {
+			return true
+		}
+		if strings.HasPrefix(line, n+"/") || strings.Contains(line, " "+n+"/") {
 			return true
 		}
 	}
