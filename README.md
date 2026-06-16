@@ -982,14 +982,33 @@ openvpn-ui can reverse-proxy an internal Grafana instance and embed it
 directly in the sidebar. Authentication is handled by openvpn-ui —
 Grafana never needs to be exposed to the internet.
 
+The repository ships a ready-made provisioning directory under
+`grafana/provisioning/` that auto-loads the InfluxDB datasource and
+three dashboards at container start:
+
+| Dashboard | UID | Description |
+| --- | --- | --- |
+| OpenVPN — Aktive Verbindungen | `openvpn-live` | Live connections, today's traffic & sessions, 1 min refresh |
+| OpenVPN — Traffic-Verlauf | `openvpn-traffic` | 30-day history, top users, full monthly bar chart |
+| OpenVPN — Nutzer-Detail | `openvpn-user` | Per-CN drill-down with LAG-based throughput chart |
+
 **Docker Compose setup**
 
-Add a Grafana service to your compose stack and point openvpn-ui at it:
+Add a Grafana service and InfluxDB 3 Core to your compose stack:
 
 ```yaml
 openvpn-ui:
   environment:
     - OPENVPN_UI_GRAFANA_URL=http://grafana:3000   # internal Docker address
+    - OPENVPN_UI_INFLUX_URL=http://influxdb:8181
+    - OPENVPN_UI_INFLUX_TOKEN=${INFLUX_TOKEN}
+    - OPENVPN_UI_INFLUX_DATABASE=openvpn
+
+influxdb:
+  image: influxdb:3-core
+  command: serve --node-id influxdb --query-file-limit 1000
+  volumes:
+    - influxdb-data:/home/influxdb3/.influxdb
 
 grafana:
   image: grafana/grafana:latest
@@ -1003,27 +1022,24 @@ grafana:
     - GF_SECURITY_ALLOW_EMBEDDING=true
     - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/grafana
     - GF_SERVER_SERVE_FROM_SUB_PATH=true
+    - INFLUX_TOKEN=${INFLUX_TOKEN}             # passed through for datasource provisioning
   volumes:
     - grafana-data:/var/lib/grafana
+    - ./grafana/provisioning:/etc/grafana/provisioning:ro
 ```
 
+The `INFLUX_TOKEN` environment variable must be set in your shell or a
+`.env` file. The provisioning directory configures the datasource
+automatically — no manual setup in the Grafana UI is required.
+
+> **InfluxDB 3 Core note:** The Grafana InfluxDB SQL plugin connects via
+> insecure gRPC (h2c) on port 8181. The `--query-file-limit 1000` flag
+> is recommended because `openvpn_traffic` accumulates many small Parquet
+> files over time. Without it, queries over long time ranges will fail
+> once the default limit (250) is exceeded. InfluxDB 3 Enterprise
+> compacts files automatically and does not require this workaround.
+
 Once running, a **Grafana** entry appears in the openvpn-ui sidebar.
-
-**Adding the InfluxDB data source**
-
-1. Open **Grafana → Connections → Data sources → Add new data source**
-2. Select **InfluxDB**
-3. Fill in the fields:
-
-| Field | Value |
-| --- | --- |
-| Query language | SQL |
-| URL | `http://<influxdb-container>:8181` |
-| Token | your InfluxDB v3 admin token |
-| Database | `openvpn` |
-| Insecure Connection | ✓ enabled (required for plain HTTP within Docker) |
-
-4. Click **Save & test** — the connection should succeed.
 
 The two measurements available for dashboards are `openvpn_traffic`
 (per-scrape byte counters per client) and `openvpn_session` (closed
