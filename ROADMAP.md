@@ -12,7 +12,11 @@ accelerate something or propose an alternative.
 - [x] **Grafana integration** — reverse proxy behind openvpn-ui auth, embedded
       in the sidebar via iframe. InfluxDB v3 data source verified against
       `openvpn_traffic` and `openvpn_session` measurements. Setup documented
-      in README. Dashboard JSON examples still open as a separate future item.
+      in README. Three provisioned dashboards ship with the repo:
+      *Aktive Verbindungen* (live, 1 min refresh), *Traffic-Verlauf* (30d
+      history, monthly long-term chart), *Nutzer-Detail* (per-CN drill-down
+      with LAG-based throughput chart). Auto-loaded via
+      `grafana/provisioning/` at container start.
 - [ ] **Per-user certificate and log scoping** — non-admin users currently
       see all certificates and all server logs. The goal is to show each
       user only what belongs to them.
