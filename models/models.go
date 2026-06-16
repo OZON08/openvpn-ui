@@ -43,6 +43,7 @@ func InitDB() {
 		new(TrafficHourly),
 		new(TrafficDaily),
 		new(InfluxSettings),
+		new(UserCertificate),
 	)
 
 	err = orm.RunSyncdb("default", false, true)
