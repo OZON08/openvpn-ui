@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Grafana monitoring dashboards** — three pre-configured dashboards ship with the
+  repository under `grafana/provisioning/` and are auto-loaded at Grafana container
+  start via a volume mount (no manual UI setup required):
+  - *Aktive Verbindungen* (`openvpn-live`) — live view, 1 min auto-refresh: active
+    connection count, traffic and session stats for today / this month / last month,
+    longest active session, connections-over-time chart, active connection table.
+  - *Traffic-Verlauf* (`openvpn-traffic`) — 30-day history: daily and monthly traffic
+    charts, top-10 users by traffic, top-10 sessions by duration and bytes.
+  - *Nutzer-Detail* (`openvpn-user`) — per-user drill-down with `$cn` template
+    variable: all-time totals, monthly bar chart, LAG-based throughput time-series,
+    IP history table, session log (last 100 sessions).
+  All dashboards target the provisioned InfluxDB 3 Core datasource (`influxdb-openvpn`)
+  using DataFusion SQL.
+
+- **Grafana datasource provisioning** — `grafana/provisioning/datasources/influxdb.yaml`
+  configures the InfluxDB 3 Core datasource automatically on container start. Uses SQL
+  mode with `insecureGrpc: true` (h2c / HTTP/2 cleartext on port 8181). The InfluxDB
+  token is injected via `${INFLUX_TOKEN}` environment variable substitution in Grafana.
+
 ---
 
 ## [0.9.7.2] - 2026-05-13
