@@ -376,4 +376,16 @@
   </div>
 </div>
 
+<script>
+$(function() {
+  var saved = localStorage.getItem('profileTab');
+  if (saved && document.querySelector('a[href="' + saved + '"]')) {
+    $('a[href="' + saved + '"]').tab('show');
+  }
+  $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
+    localStorage.setItem('profileTab', $(e.target).attr('href'));
+  });
+});
+</script>
+
 {{end}}

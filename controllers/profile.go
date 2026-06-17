@@ -175,6 +175,14 @@ func (c *ProfileController) Create() {
 		return
 	}
 
+	var existingEmailUser models.User
+	if emailErr := o.QueryTable("user").Filter("Email", user.Email).One(&existingEmailUser); emailErr == nil {
+		flash.Warning("A user with email \"%s\" already exists!", user.Email)
+		flash.Store(&c.Controller)
+		c.List()
+		return
+	}
+
 	var lastUser models.User
 	err1 := o.QueryTable("user").OrderBy("-id").One(&lastUser)
 	if err1 == orm.ErrNoRows {
