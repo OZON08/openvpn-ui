@@ -377,13 +377,15 @@
 </div>
 
 <script>
-$(function() {
+window.addEventListener('load', function() {
   var saved = localStorage.getItem('profileTab');
   if (saved && document.querySelector('a[href="' + saved + '"]')) {
-    $('a[href="' + saved + '"]').tab('show');
+    $(document.querySelector('a[href="' + saved + '"]')).tab('show');
   }
-  $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
-    localStorage.setItem('profileTab', $(e.target).attr('href'));
+  document.querySelectorAll('a[data-toggle="tab"]').forEach(function(el) {
+    el.addEventListener('click', function() {
+      localStorage.setItem('profileTab', this.getAttribute('href'));
+    });
   });
 });
 </script>
