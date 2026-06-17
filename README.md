@@ -1081,7 +1081,14 @@ The openvpn-ui container must be able to read `pki/index.txt`. In **rootless Doc
 the container process maps to a non-root host UID and the PKI files created by the OpenVPN
 container (host root) are not world-readable by default.
 
-The recommended fix is a one-shot privileged init service in your `docker-compose.yml`:
+The PKI files are owned by `root` with group `karsten` (or whatever user runs your Docker
+daemon). The group has write but **no read** by default (`-w-`). Because the openvpn-ui
+container process runs in the same group, Linux applies the group permission — and "others"
+read access (added by a naive `chmod o+r`) is ignored whenever the process matches the
+file's group.
+
+The correct fix is to add **group read** (`g+r`) to the PKI files. The recommended approach
+is a one-shot privileged init service in your `docker-compose.yml`:
 
 ```yaml
 pki-chmod:
@@ -1089,7 +1096,7 @@ pki-chmod:
   privileged: true
   volumes:
     - /your/openvpn/data/pki:/pki
-  command: sh -c "chmod o+rx /pki && chmod o+r /pki/index.txt && echo 'PKI permissions fixed'"
+  command: sh -c "chmod -R g+rX /pki && echo 'PKI permissions fixed'"
   restart: "no"
 
 openvpn-ui:
@@ -1100,17 +1107,19 @@ openvpn-ui:
     # other existing depends_on entries ...
 ```
 
-The service runs once at stack startup with actual root privileges, fixes the permissions,
-and exits. Because EasyRSA appends to `index.txt` rather than recreating it, the permissions
-survive normal cert operations (generate, revoke, renew). Only a full `easyrsa init-pki`
-reset would require another stack restart.
+`chmod -R g+rX /pki` adds group read to all files and group execute to all directories
+inside the PKI, covering `index.txt`, issued certs, CA cert, ta.key and private keys.
 
-If you see `permission denied` in the container logs for `pki/index.txt`, this is the
-cause — run the fix above or apply it once manually on the host:
+The service runs once at stack startup with actual root privileges and exits. Because
+EasyRSA appends to `index.txt` rather than recreating it, the permissions survive normal
+cert operations (generate, revoke, renew). Only a full `easyrsa init-pki` reset would
+require another stack restart.
+
+If you see `permission denied` in the container logs for `pki/index.txt`, apply it once
+manually on the host:
 
 ```bash
-sudo chmod o+rx /your/openvpn/data/pki
-sudo chmod o+r  /your/openvpn/data/pki/index.txt
+sudo chmod -R g+rX /your/openvpn/data/pki
 ```
 
 #### EasyRSA 3 compatibility note
