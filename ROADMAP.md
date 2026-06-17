@@ -25,6 +25,12 @@ accelerate something or propose an alternative.
       "Seed from Login Names" button to pre-fill assignments from existing
       `user.Login == cert.CN` pairs.
 
+- [ ] **Hide server stat boxes on home page for non-admin users** — the four info boxes
+      (Connected clients, Bytes in/out, Load stats) on the status page are populated from
+      the OpenVPN management interface and currently shown to all users regardless of role.
+      Non-admin users should see only the connections table (already scoped to their certs)
+      without the global server statistics, which are not meaningful to a single user.
+
 - [ ] **Light/dark toggle polish + re-enable.** The switch is commented out
       in [views/layout/base.html](views/layout/base.html); the underlying
       boot script already handles both modes. Needs styling review in light

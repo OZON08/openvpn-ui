@@ -9,6 +9,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Per-user device visibility on home page** — non-admin users now only see connected
+  devices (from the OpenVPN management interface `status.ClientList`) whose `CommonName`
+  matches one of their assigned certificates. Admin users continue to see all connections.
+
+- **Certificate renewal for own certs** — `CertificatesController.Renew()` previously
+  rejected non-admin users unconditionally. The guard is now `canAccessCert(name)`, which
+  permits renewal of any cert the requesting user owns. The Renew button in
+  `certificates.html` is rendered for all authenticated users (ownership is enforced
+  server-side); Revoke and Delete remain inside `{{if $.IsAdmin}}`.
+
+### Fixed
+
+- **Navbar user icon rendered as a solid rectangle** — `<i class="fa fa-user-circle">`
+  failed because FontAwesome 4.5.0 (loaded after FA 5.15.3) overrides the `.fa` class to
+  `font-family: FontAwesome`, and the codepoint `\f2bd` emitted by FA 5 for `user-circle`
+  is absent from the FA 4 font. Replaced with an inline Bootstrap Icons SVG
+  (`person-circle`, two paths with `fill-rule="evenodd"` to correctly punch the hole in
+  the head silhouette).
+
+- **FA-5-only icons rendered as blank rectangles** — `fa fa-user-cog` (profile dropdown)
+  and `fa fa-sign-in-alt` (login button) are not in the FA 4 glyph set; the FA 4
+  stylesheet shadowed `.fa` and mapped their codepoints to empty glyphs. Changed to
+  `fas fa-user-cog` and `fas fa-sign-in-alt` (FA-5-only `.fas` class, not shadowed by
+  the FA 4 override).
+
+- **Duplicate email allowed on user creation** — `ProfileController.Create()` only
+  checked for a duplicate login, not a duplicate email address. A second account created
+  with an already-used email silently reloaded the page with no feedback. Added an ORM
+  query for an existing email before insert; duplicates now produce a flash warning and
+  re-render the form on the "Creating new Profiles" tab.
+
+- **Profile page always reset to the first tab after any action** — the tab-persistence
+  script used `$(function(){...})`, which ran before jQuery was loaded (jQuery loads in
+  the shared footer). Changed to `window.addEventListener('load', ...)` so the script
+  executes after the full page, including jQuery, is available. The active tab is saved to
+  `localStorage` on every tab click and restored on load.
+
+- **"Assign Certificate" dropdown showed already-assigned certs** — `populateAdminCertData()`
+  sent all valid certs to `allCertNames`, making it possible to assign the same cert to
+  multiple users. Now `allCertNames` contains only certs not currently assigned to any
+  user; `assignedCertNames` contains already-assigned certs (fed to the Transfer form).
+
+- **"Assign Certificate" allowed duplicate cross-user assignments** — `AssignCert()` in
+  `models/user_certificate.go` did not check for cross-user duplicates. A cert could be
+  assigned to multiple users simultaneously. Added a `Filter("CertName", …).Exist()`
+  guard; `AssignCert()` now returns an error if the cert is already owned by any user.
+
+- **"Transfer Certificate" dropdown was empty** — the Transfer form's `<select>` iterated
+  over `allCertNames` (unassigned certs) instead of `assignedCertNames`. Changed the
+  template to `{{range .assignedCertNames}}`.
+
+---
+
+### Added (Grafana dashboards)
+
 - **Grafana monitoring dashboards** — three pre-configured dashboards ship with the
   repository under `grafana/provisioning/` and are auto-loaded at Grafana container
   start via a volume mount (no manual UI setup required):
