@@ -249,9 +249,18 @@ func (c *ProfileController) populateAdminCertData(users []*models.User) {
 	if err != nil {
 		logs.Error("Profile: ReadCerts error:", err)
 	}
+	assigned, _ := models.AllAssignedCerts()
+	assignedSet := make(map[string]struct{}, len(assigned))
+	for _, n := range assigned {
+		assignedSet[n] = struct{}{}
+	}
+
 	var certNames []string
 	for _, cert := range allCerts {
-		if cert.Details != nil && cert.Details.Name != "server" && cert.EntryType == "V" {
+		if cert.Details == nil || cert.Details.Name == "server" || cert.EntryType != "V" {
+			continue
+		}
+		if _, taken := assignedSet[cert.Details.Name]; !taken {
 			certNames = append(certNames, cert.Details.Name)
 		}
 	}

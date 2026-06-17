@@ -1,6 +1,10 @@
 package models
 
-import "github.com/beego/beego/v2/client/orm"
+import (
+	"fmt"
+
+	"github.com/beego/beego/v2/client/orm"
+)
 
 type UserCertificate struct {
 	Id       int64  `orm:"auto"`
@@ -22,13 +26,29 @@ func CertsForUser(userID int64) ([]string, error) {
 	return names, nil
 }
 
-func AssignCert(userID int64, certName string) error {
-	exists := orm.NewOrm().QueryTable(new(UserCertificate)).
-		Filter("UserId", userID).Filter("CertName", certName).Exist()
-	if exists {
-		return nil
+// AllAssignedCerts returns every cert name that is assigned to any user.
+func AllAssignedCerts() ([]string, error) {
+	var rows []UserCertificate
+	if _, err := orm.NewOrm().QueryTable(new(UserCertificate)).All(&rows); err != nil {
+		return nil, err
 	}
-	_, err := orm.NewOrm().Insert(&UserCertificate{UserId: userID, CertName: certName})
+	seen := make(map[string]struct{}, len(rows))
+	names := make([]string, 0, len(rows))
+	for _, r := range rows {
+		if _, dup := seen[r.CertName]; !dup {
+			seen[r.CertName] = struct{}{}
+			names = append(names, r.CertName)
+		}
+	}
+	return names, nil
+}
+
+func AssignCert(userID int64, certName string) error {
+	o := orm.NewOrm()
+	if o.QueryTable(new(UserCertificate)).Filter("CertName", certName).Exist() {
+		return fmt.Errorf("certificate %q is already assigned to a user", certName)
+	}
+	_, err := o.Insert(&UserCertificate{UserId: userID, CertName: certName})
 	return err
 }
 
