@@ -56,26 +56,7 @@ func (c *ProfileController) Get() {
 			return
 		}
 		c.Data["users"] = users
-
-		var assignments []UserCertRow
-		for _, u := range users {
-			certs, _ := models.CertsForUser(u.Id)
-			assignments = append(assignments, UserCertRow{User: u, Certs: certs})
-		}
-		c.Data["userCertAssignments"] = assignments
-
-		pkiIndex := filepath.Join(state.GlobalCfg.OVConfigPath, "pki/index.txt")
-		allCerts, err := lib.ReadCerts(pkiIndex)
-		if err != nil {
-			logs.Error("Profile: ReadCerts error:", err)
-		}
-		var certNames []string
-		for _, cert := range allCerts {
-			if cert.Details != nil && cert.Details.Name != "server" && cert.EntryType == "V" {
-				certNames = append(certNames, cert.Details.Name)
-			}
-		}
-		c.Data["allCertNames"] = certNames
+		c.populateAdminCertData(users)
 	}
 }
 
@@ -240,9 +221,33 @@ func (c *ProfileController) List() {
 		logs.Error("Failed to retrieve user profiles:", err)
 		return
 	}
-	//logs.Info("Retrieved", len(users), "user profiles")
 	c.Data["users"] = users
 	c.TplName = "profile.html"
+	if c.Userinfo != nil && c.Userinfo.IsAdmin {
+		c.populateAdminCertData(users)
+	}
+}
+
+func (c *ProfileController) populateAdminCertData(users []*models.User) {
+	var assignments []UserCertRow
+	for _, u := range users {
+		certs, _ := models.CertsForUser(u.Id)
+		assignments = append(assignments, UserCertRow{User: u, Certs: certs})
+	}
+	c.Data["userCertAssignments"] = assignments
+
+	pkiIndex := filepath.Join(state.GlobalCfg.OVConfigPath, "pki/index.txt")
+	allCerts, err := lib.ReadCerts(pkiIndex)
+	if err != nil {
+		logs.Error("Profile: ReadCerts error:", err)
+	}
+	var certNames []string
+	for _, cert := range allCerts {
+		if cert.Details != nil && cert.Details.Name != "server" && cert.EntryType == "V" {
+			certNames = append(certNames, cert.Details.Name)
+		}
+	}
+	c.Data["allCertNames"] = certNames
 }
 
 // @router /profile/delete/:key [get]
