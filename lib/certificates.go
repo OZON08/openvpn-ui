@@ -177,6 +177,9 @@ func parseDetails(d string) *Details {
 			}
 		}
 	}
+	if details.Name == "" {
+		details.Name = details.CN
+	}
 	return details
 }
 
