@@ -265,11 +265,11 @@ func (c *CertificatesController) Burn() {
 func (c *CertificatesController) Renew() {
 	c.TplName = "certificates.html"
 	flash := web.NewFlash()
-	if !c.Userinfo.IsAdmin {
+	name := c.GetString(":key")
+	if !c.canAccessCert(name) {
 		c.Redirect(c.URLFor("CertificatesController.Get"), 302)
 		return
 	}
-	name := c.GetString(":key")
 	localip := c.GetString(":localip")
 	serial := c.GetString(":serial")
 	tfaname := c.GetString(":tfaname")

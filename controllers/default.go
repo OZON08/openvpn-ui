@@ -6,6 +6,7 @@ import (
 	"github.com/beego/beego/v2/core/logs"
 	mi "github.com/OZON08/openvpn-server-config/server/mi"
 	"github.com/OZON08/openvpn-ui/lib"
+	"github.com/OZON08/openvpn-ui/models"
 	"github.com/OZON08/openvpn-ui/state"
 )
 
@@ -33,6 +34,20 @@ func (c *MainController) Get() {
 		logs.Warn(fmt.Sprintf("passed client line: %s", client))
 		logs.Warn(fmt.Sprintf("error: %s", err))
 	} else {
+		if !c.Userinfo.IsAdmin {
+			allowed, _ := models.CertsForUser(c.Userinfo.Id)
+			allowSet := make(map[string]bool, len(allowed))
+			for _, n := range allowed {
+				allowSet[n] = true
+			}
+			filtered := make([]*mi.OVClient, 0)
+			for _, cl := range status.ClientList {
+				if allowSet[cl.CommonName] {
+					filtered = append(filtered, cl)
+				}
+			}
+			status.ClientList = filtered
+		}
 		c.Data["ovstatus"] = status
 	}
 	lib.Dump(status)

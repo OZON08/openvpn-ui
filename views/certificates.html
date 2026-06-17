@@ -102,13 +102,13 @@
                       <a class="btn btn-danger btn-xs" style="font-size: 80%;" data-toggle="modal" data-target="#{{ .Details.CN }}-modal"><b style="font-size: 80%;">{{ .Details.Email }}</b></a>
                     </td>
                   {{end}}
-                  {{if $.IsAdmin}}
-                    <td class="align-middle">
+                  <td class="align-middle">
                   {{ if and (eq .Revocation "") (ne .Details.Name "") }}
                       <a href="{{urlfor "CertificatesController.Renew" ":key" .Details.Name ":localip" .Details.LocalIP ":serial" .Serial ":tfaname" .Details.TFAName}}" class="btn btn-primary btn-xs" title="Renew" style="font-size: 80%;">Renew</a>
                   {{else}}
                       <a class="btn btn-default btn-xs" disabled>Renew</a>
                   {{end}}
+                  {{if $.IsAdmin}}
                   {{ if and (eq .Revocation "") (ne .Details.Name "") }}
                       <a href="{{urlfor "CertificatesController.Revoke" ":key" .Details.Name ":serial" .Serial ":tfaname" .Details.TFAName}}" class="btn btn-warning btn-xs" title="Revoke" style="font-size: 80%;">Revoke</a>
                   {{else}}
@@ -119,10 +119,8 @@
                   {{else}}
                       <a href="{{urlfor "CertificatesController.Burn" ":key" .Details.CN ":serial" .Serial ":tfaname" .Details.TFAName}}" class="btn btn-danger btn-xs" title="Burn" style="font-size: 80%;">Delete</a>
                   {{end}}
-                    </td>
-                  {{else}}
-                    <td></td>
                   {{end}}
+                  </td>
               </tr>
               <div id="{{ .Details.CN }}-modal" class="modal fade">
                 <div class="modal-dialog">
