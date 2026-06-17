@@ -31,7 +31,8 @@ Quick to deploy and easy to use, makes work with small OpenVPN environments a br
 * Change OpenVPN Server configuration via web interface
 * Easy to preview OpenVPN Server logs
 * Restart OpenVPN Server and OpenVPN UI from web interface
-* **OpenVPN-UI users management**. Administrators has full access, regular users to Certificates management, logs and status page only.
+* **OpenVPN-UI users management**. Administrators have full access; regular users see only their own assigned certificates and log lines.
+* **Per-user certificate scoping**. Administrators assign certificates to users via the Profile page. Non-admin users can only download and see their own assigned certificates. Log output is filtered to lines matching their assigned certificate CNs only.
 * OpenVPN-UI Admin user and password can be passed via environment variables to container
 * Updated infrastructure:
   * Alpine Linux as fastest and secure base image
@@ -509,7 +510,8 @@ And you are done with the upgrade process.
   | **0.9.3** | o_v_client_config | custom_conf_two             | Configuration > OpenVPN Client  |
   | **0.9.3** | o_v_client_config | custom_conf_three           | Configuration > OpenVPN Client  |
   | **0.9.4** | **no schema changes** | **no schema changes**     | **no schema changes**           |
-  | **0.9.5** | **no schema changes** | **no schema changes**     | **no schema changes**           |  
+  | **0.9.5** | **no schema changes** | **no schema changes**     | **no schema changes**           |
+  | **0.9.7** | user_certificate      | new table                     | Profile > Certificate Assignments |
 
   </details>
 
@@ -1045,12 +1047,86 @@ The two measurements available for dashboards are `openvpn_traffic`
 (per-scrape byte counters per client) and `openvpn_session` (closed
 sessions with final byte counts and duration).
 
+### Per-user Certificate Scoping
+
+Starting from `v0.9.7` administrators can restrict which certificates each user may access.
+Without an explicit assignment every non-admin user sees an empty Certificates page and
+an empty log — no client data leaks between accounts.
+
+#### How it works
+
+| Role | Certificates | Logs |
+|------|-------------|------|
+| Admin | All certificates | Full log |
+| Regular user | Assigned certificates only | Lines matching assigned CN(s) only |
+
+Certificate access is controlled by a `user_certificate` mapping table in the SQLite DB.
+The PKI index (`pki/index.txt`) is still the authoritative source of truth for certificate
+validity; the mapping only controls visibility and download access in the UI.
+
+#### Assigning certificates (admin)
+
+1. Open **Username → Profile** and switch to the **Certificate Assignments** tab.
+2. **Assign Certificate**: pick a user and a certificate from the dropdowns, press *Assign*.
+3. **Current Assignments**: shows every user with their assigned certs; individual certs can
+   be removed with the × button.
+4. **Transfer Certificate**: atomically moves a cert from one user to another in one step.
+5. **Seed from Login Names**: one-click migration — auto-assigns each valid cert to the user
+   whose login matches the certificate CN. Use this once when upgrading from a version without
+   cert scoping.
+
+#### PKI index permissions
+
+The openvpn-ui container must be able to read `pki/index.txt`. In **rootless Docker** setups
+the container process maps to a non-root host UID and the PKI files created by the OpenVPN
+container (host root) are not world-readable by default.
+
+The recommended fix is a one-shot privileged init service in your `docker-compose.yml`:
+
+```yaml
+pki-chmod:
+  image: busybox
+  privileged: true
+  volumes:
+    - /your/openvpn/data/pki:/pki
+  command: sh -c "chmod o+rx /pki && chmod o+r /pki/index.txt && echo 'PKI permissions fixed'"
+  restart: "no"
+
+openvpn-ui:
+  # ...
+  depends_on:
+    pki-chmod:
+      condition: service_completed_successfully
+    # other existing depends_on entries ...
+```
+
+The service runs once at stack startup with actual root privileges, fixes the permissions,
+and exits. Because EasyRSA appends to `index.txt` rather than recreating it, the permissions
+survive normal cert operations (generate, revoke, renew). Only a full `easyrsa init-pki`
+reset would require another stack restart.
+
+If you see `permission denied` in the container logs for `pki/index.txt`, this is the
+cause — run the fix above or apply it once manually on the host:
+
+```bash
+sudo chmod o+rx /your/openvpn/data/pki
+sudo chmod o+r  /your/openvpn/data/pki/index.txt
+```
+
+#### EasyRSA 3 compatibility note
+
+EasyRSA 3 does not write a `name=` field into certificate DNs — only a `CN=` field.
+OpenVPN-UI automatically falls back to the CN when the `name` field is absent, so
+all cert names display and function correctly with both EasyRSA 2 and EasyRSA 3 PKIs.
+
+---
+
 ### User Management
-Starting from `v.0.9.2` OpenVPN UI has user management feature. 
+Starting from `v.0.9.2` OpenVPN UI has user management feature.
 
 You can create and delete users with different privileges - Administrators or regular users:
-* Administrators has full access
-* Regular users has access to Home page, Certificates and Logs pages only. This users can create, renew, revoke and delete all the certificates.
+* Administrators have full access to all pages and all certificates.
+* Regular users see the Home page, their own assigned Certificates, and their own log lines only. All destructive certificate operations (revoke, delete, renew) are admin-only.
 
 
 <details>
