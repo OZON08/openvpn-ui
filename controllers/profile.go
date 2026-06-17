@@ -256,15 +256,19 @@ func (c *ProfileController) populateAdminCertData(users []*models.User) {
 	}
 
 	var certNames []string
+	var assignedCertNames []string
 	for _, cert := range allCerts {
 		if cert.Details == nil || cert.Details.Name == "server" || cert.EntryType != "V" {
 			continue
 		}
-		if _, taken := assignedSet[cert.Details.Name]; !taken {
+		if _, taken := assignedSet[cert.Details.Name]; taken {
+			assignedCertNames = append(assignedCertNames, cert.Details.Name)
+		} else {
 			certNames = append(certNames, cert.Details.Name)
 		}
 	}
 	c.Data["allCertNames"] = certNames
+	c.Data["assignedCertNames"] = assignedCertNames
 }
 
 // @router /profile/delete/:key [get]
