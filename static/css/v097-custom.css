@@ -5,14 +5,15 @@
    ========================================================= */
 
 :root {
-  --v097-bg: #0b0d12;
-  --v097-surface: #14171f;
-  --v097-surface-2: #1a1e28;
-  --v097-border: #262b38;
-  --v097-border-soft: #1e232d;
-  --v097-text: #e5e7eb;
-  --v097-text-soft: #9ca3af;
-  --v097-text-mute: #6b7280;
+  /* Light mode — default */
+  --v097-bg: #f4f6f9;
+  --v097-surface: #ffffff;
+  --v097-surface-2: #f8f9fa;
+  --v097-border: #dee2e6;
+  --v097-border-soft: #e9ecef;
+  --v097-text: #212529;
+  --v097-text-soft: #495057;
+  --v097-text-mute: #6c757d;
   --v097-accent: #6366f1;
   --v097-accent-hover: #818cf8;
   --v097-accent-soft: rgba(99,102,241,.15);
@@ -22,6 +23,17 @@
   --v097-info: #06b6d4;
   --v097-radius: 10px;
   --v097-radius-sm: 6px;
+}
+
+body.dark-mode {
+  --v097-bg: #0b0d12;
+  --v097-surface: #14171f;
+  --v097-surface-2: #1a1e28;
+  --v097-border: #262b38;
+  --v097-border-soft: #1e232d;
+  --v097-text: #e5e7eb;
+  --v097-text-soft: #9ca3af;
+  --v097-text-mute: #6b7280;
 }
 
 /* ---------- Page background & typography ---------- */
