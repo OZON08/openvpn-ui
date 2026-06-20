@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `certificates.html` is rendered for all authenticated users (ownership is enforced
   server-side); Revoke and Delete remain inside `{{if $.IsAdmin}}`.
 
+- **Light/dark toggle re-enabled** — the navbar toggle switches between light
+  and dark mode. Dark mode remains the default; the chosen theme is persisted
+  in `localStorage`. CSS custom properties are now split into `:root` (light
+  defaults) and `body.dark-mode` (dark overrides), so all components respect
+  the active theme without JavaScript.
+
 ### Fixed
 
 - **Server stat boxes hidden for non-admin users** — the four info boxes (Connected

@@ -30,10 +30,10 @@ accelerate something or propose an alternative.
       Memory usage section are now wrapped in an admin-only guard. Non-admin users see
       only the Connected clients table (already scoped to their assigned certs).
 
-- [ ] **Light/dark toggle polish + re-enable.** The switch is commented out
-      in [views/layout/base.html](views/layout/base.html); the underlying
-      boot script already handles both modes. Needs styling review in light
-      mode before the toggle comes back.
+- [x] **Light/dark toggle** — The toggle is re-enabled in the top navbar.
+      Dark mode is the default; preference is persisted in `localStorage`.
+      CSS variables split into `:root` (light defaults) and `body.dark-mode`
+      (dark overrides) in `v097-custom.css`.
 
 ## Toward v1.0 (stability)
 
