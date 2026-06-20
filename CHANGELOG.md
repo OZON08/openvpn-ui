@@ -25,6 +25,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   defaults) and `body.dark-mode` (dark overrides), so all components respect
   the active theme without JavaScript.
 
+### Changed
+
+- **Theme switcher upgraded to 3-state segment control** — the binary
+  dark/light checkbox is replaced by a compact icon button group
+  (☀ Light | ⊙ Auto | ☾ Dark). Auto mode follows the OS
+  `prefers-color-scheme` media query and updates live when the OS
+  setting changes. Auto is the new default for users with no stored
+  preference; existing `'light'` and `'dark'` stored values are unchanged.
+
 ### Fixed
 
 - **Server stat boxes hidden for non-admin users** — the four info boxes (Connected
