@@ -166,3 +166,74 @@ func TestParseStatusLog_IPv6Real(t *testing.T) {
 		t.Errorf("VirtualIP: want %q, got %q", "10.8.0.5", c.VirtualIP)
 	}
 }
+
+// ---------------------------------------------------------------------------
+// parseConnectedSince — table test
+// ---------------------------------------------------------------------------
+
+func TestParseConnectedSince(t *testing.T) {
+	cases := []struct {
+		input    string
+		wantZero bool
+	}{
+		// All five layouts the function recognises
+		{"Thu Jun 20 10:00:00 2026", false},           // time.ANSIC
+		{"Thu Jun  5 10:00:00 2026", false},            // double-space day variant
+		{"Thu, 20 Jun 2026 10:00:00 UTC", false},       // time.RFC1123
+		{"2026-06-20T10:00:00Z", false},                // time.RFC3339
+		// Fallback cases
+		{"", true},              // empty → zero time
+		{"not a timestamp", true}, // garbage → zero time
+	}
+	for _, tc := range cases {
+		got := parseConnectedSince(tc.input)
+		if tc.wantZero && !got.IsZero() {
+			t.Errorf("parseConnectedSince(%q): want zero time, got %v", tc.input, got)
+		}
+		if !tc.wantZero && got.IsZero() {
+			t.Errorf("parseConnectedSince(%q): want non-zero time, got zero", tc.input)
+		}
+	}
+}
+
+// ---------------------------------------------------------------------------
+// splitHostPort — table test
+// ---------------------------------------------------------------------------
+
+func TestSplitHostPort(t *testing.T) {
+	cases := []struct {
+		input, wantHost, wantPort string
+	}{
+		{"192.168.1.1:51234", "192.168.1.1", "51234"}, // IPv4 with port
+		{"[::1]:54321", "::1", "54321"},                // IPv6 bracketed with port
+		{"hostname", "hostname", ""},                   // bare host, no port
+		{"", "", ""},                                   // empty string
+	}
+	for _, tc := range cases {
+		host, port := splitHostPort(tc.input)
+		if host != tc.wantHost || port != tc.wantPort {
+			t.Errorf("splitHostPort(%q): want (%q, %q), got (%q, %q)",
+				tc.input, tc.wantHost, tc.wantPort, host, port)
+		}
+	}
+}
+
+// ---------------------------------------------------------------------------
+// FormatAddr — table test
+// ---------------------------------------------------------------------------
+
+func TestFormatAddr(t *testing.T) {
+	cases := []struct {
+		host, port, want string
+	}{
+		{"192.168.1.1", "51234", "192.168.1.1:51234"}, // host + port
+		{"192.168.1.1", "", "192.168.1.1"},             // host only
+		{"", "", ""},                                   // both empty
+	}
+	for _, tc := range cases {
+		got := FormatAddr(tc.host, tc.port)
+		if got != tc.want {
+			t.Errorf("FormatAddr(%q, %q): want %q, got %q", tc.host, tc.port, tc.want, got)
+		}
+	}
+}
