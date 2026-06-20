@@ -1,0 +1,8 @@
+TITLE,OpenVPN 2.6.0 x86_64-pc-linux-gnu
+TIME,2026-06-20 12:00:00,1750420000
+HEADER,CLIENT_LIST,Common Name,Real Address,Virtual Address,Virtual IPv6 Address,Bytes Received,Bytes Sent,Connected Since,Connected Since (time_t),Username,Client ID,Peer ID,Data Channel Cipher
+CLIENT_LIST,carol,172.16.0.1:60000,,,307200,614400,2026-06-20 09:00:00,1750412400,carol,3,3,AES-256-GCM
+HEADER,ROUTING_TABLE,Virtual Address,Common Name,Real Address,Last Ref,Last Ref (time_t)
+ROUTING_TABLE,10.8.0.4,carol,172.16.0.1:60000,2026-06-20 12:00:00,1750420000
+GLOBAL_STATS,Max bcast/mcast queue length,0
+END

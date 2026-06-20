@@ -101,3 +101,68 @@ func TestParseStatusLog_V2(t *testing.T) {
 		t.Errorf("bob.ConnectedAt: want %v, got %v", wantBob, bob.ConnectedAt)
 	}
 }
+
+// ---------------------------------------------------------------------------
+// ParseStatusLog — v3 format
+// ---------------------------------------------------------------------------
+
+func TestParseStatusLog_V3(t *testing.T) {
+	clients, err := ParseStatusLog(testdata("v3-basic.log"))
+	if err != nil {
+		t.Fatalf("ParseStatusLog: %v", err)
+	}
+	if len(clients) != 1 {
+		t.Fatalf("expected 1 client, got %d: %+v", len(clients), clients)
+	}
+	c := clients[0]
+	if c.CommonName != "carol" {
+		t.Errorf("CommonName: want %q, got %q", "carol", c.CommonName)
+	}
+	if c.RealIP != "172.16.0.1" {
+		t.Errorf("RealIP: want %q, got %q", "172.16.0.1", c.RealIP)
+	}
+	if c.RealPort != "60000" {
+		t.Errorf("RealPort: want %q, got %q", "60000", c.RealPort)
+	}
+	if c.BytesReceived != 307200 {
+		t.Errorf("BytesReceived: want 307200, got %d", c.BytesReceived)
+	}
+	if c.BytesSent != 614400 {
+		t.Errorf("BytesSent: want 614400, got %d", c.BytesSent)
+	}
+	// VirtualIP comes from the ROUTING_TABLE line (CLIENT_LIST field[3] is empty).
+	if c.VirtualIP != "10.8.0.4" {
+		t.Errorf("VirtualIP: want %q, got %q", "10.8.0.4", c.VirtualIP)
+	}
+	want := time.Unix(1750412400, 0).UTC()
+	if !c.ConnectedAt.Equal(want) {
+		t.Errorf("ConnectedAt: want %v, got %v", want, c.ConnectedAt)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// ParseStatusLog — IPv6 real address
+// ---------------------------------------------------------------------------
+
+func TestParseStatusLog_IPv6Real(t *testing.T) {
+	clients, err := ParseStatusLog(testdata("v2-ipv6.log"))
+	if err != nil {
+		t.Fatalf("ParseStatusLog: %v", err)
+	}
+	if len(clients) != 1 {
+		t.Fatalf("expected 1 client, got %d: %+v", len(clients), clients)
+	}
+	c := clients[0]
+	if c.CommonName != "dave" {
+		t.Errorf("CommonName: want %q, got %q", "dave", c.CommonName)
+	}
+	if c.RealIP != "::1" {
+		t.Errorf("RealIP: want %q, got %q", "::1", c.RealIP)
+	}
+	if c.RealPort != "54321" {
+		t.Errorf("RealPort: want %q, got %q", "54321", c.RealPort)
+	}
+	if c.VirtualIP != "10.8.0.5" {
+		t.Errorf("VirtualIP: want %q, got %q", "10.8.0.5", c.VirtualIP)
+	}
+}
