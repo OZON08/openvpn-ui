@@ -2,6 +2,7 @@ package lib
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -207,4 +208,79 @@ func TestReadCerts_MalformedLine(t *testing.T) {
 // writeFile is a small helper to write a string to a file in tests.
 func writeFile(path, content string) error {
 	return os.WriteFile(path, []byte(content), 0600)
+}
+
+// ---------------------------------------------------------------------------
+// ReadCerts — happy path
+// ---------------------------------------------------------------------------
+
+func TestReadCerts_ValidFile(t *testing.T) {
+	path := filepath.Join("testdata", "index-valid.txt")
+	certs, err := ReadCerts(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(certs) != 2 {
+		t.Fatalf("expected 2 certs, got %d", len(certs))
+	}
+
+	// Active certificate
+	a := certs[0]
+	if a.EntryType != "V" {
+		t.Errorf("EntryType: want %q, got %q", "V", a.EntryType)
+	}
+	if a.ExpirationT.IsZero() {
+		t.Error("ExpirationT must not be zero for valid cert")
+	}
+	if a.Details.CN != "alice" {
+		t.Errorf("CN: want %q, got %q", "alice", a.Details.CN)
+	}
+	if a.Details.Name != "alice" {
+		t.Errorf("Name: want %q, got %q", "alice", a.Details.Name)
+	}
+	if a.Details.LocalIP != "10.8.0.2" {
+		t.Errorf("LocalIP: want %q, got %q", "10.8.0.2", a.Details.LocalIP)
+	}
+	if a.Details.TFAName != "none" {
+		t.Errorf("TFAName: want %q, got %q", "none", a.Details.TFAName)
+	}
+
+	// Revoked certificate
+	r := certs[1]
+	if r.EntryType != "R" {
+		t.Errorf("EntryType: want %q, got %q", "R", r.EntryType)
+	}
+	if r.RevocationT.IsZero() {
+		t.Error("RevocationT must not be zero for revoked cert")
+	}
+	if r.Details.CN != "bob" {
+		t.Errorf("CN: want %q, got %q", "bob", r.Details.CN)
+	}
+	// No /name= in bob's DN — Name must fall back to CN
+	if r.Details.Name != "bob" {
+		t.Errorf("Name (CN fallback): want %q, got %q", "bob", r.Details.Name)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// parseDetails — missing field coverage
+// ---------------------------------------------------------------------------
+
+func TestParseDetails_LocalIPAndTFAName(t *testing.T) {
+	dn := "/CN=carol/name=carol/LocalIP=10.8.0.5/2FAName=mytoken"
+	d := parseDetails(dn)
+	if d.LocalIP != "10.8.0.5" {
+		t.Errorf("LocalIP: want %q, got %q", "10.8.0.5", d.LocalIP)
+	}
+	if d.TFAName != "mytoken" {
+		t.Errorf("TFAName: want %q, got %q", "mytoken", d.TFAName)
+	}
+}
+
+func TestParseDetails_NameFallbackToCN(t *testing.T) {
+	dn := "/CN=charlie"
+	d := parseDetails(dn)
+	if d.Name != "charlie" {
+		t.Errorf("Name (CN fallback): want %q, got %q", "charlie", d.Name)
+	}
 }

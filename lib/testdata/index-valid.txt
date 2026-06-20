@@ -1,0 +1,2 @@
+V	301215000000Z		A1B2C3D4	unknown	/CN=alice/name=alice/LocalIP=10.8.0.2/2FAName=none
+R	291215000000Z	240601000000Z	A1B2C3D5	unknown	/CN=bob
