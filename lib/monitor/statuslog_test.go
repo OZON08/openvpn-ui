@@ -29,6 +29,9 @@ func TestParseStatusLog_EmptyFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected no error for empty file, got: %v", err)
 	}
+	if clients == nil {
+		t.Error("expected non-nil slice for empty file, got nil")
+	}
 	if len(clients) != 0 {
 		t.Errorf("expected 0 clients, got %d", len(clients))
 	}
@@ -179,6 +182,7 @@ func TestParseConnectedSince(t *testing.T) {
 		// All five layouts the function recognises
 		{"Thu Jun 20 10:00:00 2026", false},           // time.ANSIC
 		{"Thu Jun  5 10:00:00 2026", false},            // double-space day variant
+		{"Mon Jan 2 10:00:00 2026", false},            // single-space day variant
 		{"Thu, 20 Jun 2026 10:00:00 UTC", false},       // time.RFC1123
 		{"2026-06-20T10:00:00Z", false},                // time.RFC3339
 		// Fallback cases
