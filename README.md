@@ -1135,7 +1135,7 @@ Starting from `v.0.9.2` OpenVPN UI has user management feature.
 
 You can create and delete users with different privileges - Administrators or regular users:
 * Administrators have full access to all pages and all certificates.
-* Regular users see the Home page, their own assigned Certificates, and their own log lines only. All destructive certificate operations (revoke, delete, renew) are admin-only.
+* Regular users see the Home page (connected clients table only — server statistics and system info are hidden), their own assigned Certificates, and their own log lines only. All destructive certificate operations (revoke, delete, renew) are admin-only.
 
 
 <details>

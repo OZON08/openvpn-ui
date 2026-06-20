@@ -21,6 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Server stat boxes hidden for non-admin users** — the four info boxes (Connected
+  clients, Bytes in/out, Load Average, OS Uptime, Server Time) and the Memory usage
+  section on the home page are now wrapped in an admin-only guard. Non-admin users
+  see only the Connected clients table (already scoped to their assigned certificates).
+
 - **Navbar user icon rendered as a solid rectangle** — `<i class="fa fa-user-circle">`
   failed because FontAwesome 4.5.0 (loaded after FA 5.15.3) overrides the `.fa` class to
   `font-family: FontAwesome`, and the codepoint `\f2bd` emitted by FA 5 for `user-circle`
