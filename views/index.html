@@ -6,6 +6,7 @@
 
 {{define "body"}}
 
+{{ if .Userinfo.IsAdmin }}
 <div class="row">
   <div class="col-lg-3 col-6">
     <div class="small-box bg-info shadow">
@@ -107,7 +108,9 @@
     </div>
   </div>
 </div>
+{{ end }}
 
+{{ if .Userinfo.IsAdmin }}
 <h3 class="mt-4 mb-2">Memory usage</h3>
 <div class="row">
   <div class="col-md-6">
@@ -150,6 +153,7 @@
     </div>
   </div>
 </div>
+{{ end }}
 
 <div class="row">
   <div class="col-md-12">
@@ -229,6 +233,7 @@
 
 <!--h3 class="mt-4 mb-2">Info Section</h3-->
 
+{{ if .Userinfo.IsAdmin }}
   <div class="row">
     <div class="col-md-6 col-sm-12 col-12">
       <div class="info-box">
@@ -256,6 +261,7 @@
     </div>
 
 </div>
+{{ end }}
 
   <!-- fix for small devices only -->
   <div class="clearfix visible-sm-block"></div>
