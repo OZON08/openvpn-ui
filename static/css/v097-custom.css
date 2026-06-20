@@ -337,3 +337,33 @@ body.login-page { background: var(--v097-bg) !important; }
 /* ---------- Utility ---------- */
 pre, code { background: var(--v097-surface-2) !important; color: var(--v097-text) !important; border-radius: var(--v097-radius-sm); border: 1px solid var(--v097-border-soft); }
 hr { border-color: var(--v097-border-soft) !important; }
+
+/* ---------- Theme switcher segment control ---------- */
+.theme-switcher {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--v097-surface-2);
+  border-radius: var(--v097-radius-sm);
+  padding: 3px;
+  margin: 8px 10px;
+}
+.theme-btn {
+  background: transparent;
+  border: none;
+  color: var(--v097-text-mute);
+  border-radius: 4px;
+  padding: 5px 9px;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  transition: all .15s ease;
+}
+.theme-btn:hover {
+  color: var(--v097-text);
+  background: var(--v097-border);
+}
+.theme-btn.active {
+  background: var(--v097-accent) !important;
+  color: #fff !important;
+}
