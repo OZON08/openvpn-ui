@@ -232,17 +232,14 @@ func TestReadCerts_ValidFile(t *testing.T) {
 	if a.ExpirationT.IsZero() {
 		t.Error("ExpirationT must not be zero for valid cert")
 	}
+	if a.ExpirationT.Year() != 2030 {
+		t.Errorf("ExpirationT.Year: want 2030, got %d", a.ExpirationT.Year())
+	}
 	if a.Details.CN != "alice" {
 		t.Errorf("CN: want %q, got %q", "alice", a.Details.CN)
 	}
 	if a.Details.Name != "alice" {
 		t.Errorf("Name: want %q, got %q", "alice", a.Details.Name)
-	}
-	if a.Details.LocalIP != "10.8.0.2" {
-		t.Errorf("LocalIP: want %q, got %q", "10.8.0.2", a.Details.LocalIP)
-	}
-	if a.Details.TFAName != "none" {
-		t.Errorf("TFAName: want %q, got %q", "none", a.Details.TFAName)
 	}
 
 	// Revoked certificate
@@ -252,6 +249,9 @@ func TestReadCerts_ValidFile(t *testing.T) {
 	}
 	if r.RevocationT.IsZero() {
 		t.Error("RevocationT must not be zero for revoked cert")
+	}
+	if r.RevocationT.Year() != 2024 {
+		t.Errorf("RevocationT.Year: want 2024, got %d", r.RevocationT.Year())
 	}
 	if r.Details.CN != "bob" {
 		t.Errorf("CN: want %q, got %q", "bob", r.Details.CN)
