@@ -38,10 +38,13 @@ accelerate something or propose an alternative.
 
 ## Toward v1.0 (stability)
 
-- [ ] **Test coverage for `lib/monitor` and the cert helper scripts** —
-      integration tests in CI against a real `easyrsa` binary and a
-      fixture `openvpn-status.log`. The cert-action bug that shipped in
-      v0.9.7 would have been caught by even a smoke test.
+- [x] **Test coverage for `lib/monitor` and `lib/certificates`** —
+      table-driven unit tests for the OpenVPN status-log parser
+      (`ParseStatusLog`, `parseConnectedSince`, `splitHostPort`, `FormatAddr`)
+      with fixture files in `lib/monitor/testdata/`, and unit tests for
+      the certificate layer (`ReadCerts` happy path, `parseDetails` field
+      coverage, `validateCertInputs`, `SafeNameRegex`, `trim`) with a
+      fixture in `lib/testdata/`. 28 tests total; no external dependencies.
 - [ ] **OpenAPI spec for `/api/v1/monitor/*`** — schema + examples for the
       sessions / traffic / retention / influx endpoints, rendered under
       `/api/docs` (Swagger UI or similar).

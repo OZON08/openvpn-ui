@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Unit test coverage for `lib/monitor` and `lib/certificates`** — 28
+  table-driven tests covering the OpenVPN status-log parser (`ParseStatusLog`
+  v2/v3 formats, IPv6 real addresses, `parseConnectedSince` with 5 timestamp
+  layouts, `splitHostPort`, `FormatAddr`) and the certificate layer
+  (`ReadCerts` happy path with valid + revoked fixture entries, `parseDetails`
+  field coverage including `LocalIP`, `TFAName`, and Name-fallback-to-CN,
+  `validateCertInputs` injection-prevention, `SafeNameRegex`, `trim`). All
+  tests run via `go test ./...` with no external dependencies.
+
 - **Per-user device visibility on home page** — non-admin users now only see connected
   devices (from the OpenVPN management interface `status.ClientList`) whose `CommonName`
   matches one of their assigned certificates. Admin users continue to see all connections.
