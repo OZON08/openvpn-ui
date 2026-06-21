@@ -214,6 +214,27 @@ func (c *APIMonitorSessionsController) Get() {
 		c.ServeJSONError(err.Error())
 		return
 	}
+	if !c.Userinfo.IsAdmin {
+		allowed, _ := models.CertsForUser(c.Userinfo.Id)
+		allowSet := make(map[string]bool, len(allowed))
+		for _, n := range allowed {
+			allowSet[n] = true
+		}
+		filtered := make([]*models.VpnSession, 0)
+		for _, s := range active {
+			if allowSet[s.CommonName] {
+				filtered = append(filtered, s)
+			}
+		}
+		active = filtered
+		filteredRecent := make([]*models.VpnSession, 0)
+		for _, s := range recent {
+			if allowSet[s.CommonName] {
+				filteredRecent = append(filteredRecent, s)
+			}
+		}
+		recent = filteredRecent
+	}
 	c.ServeJSONData(map[string]interface{}{
 		"active": active,
 		"recent": recent,
@@ -233,6 +254,20 @@ func (c *APIMonitorTrafficController) Get() {
 	if cn == "" {
 		c.ServeJSONError("missing cn parameter")
 		return
+	}
+	if !c.Userinfo.IsAdmin {
+		allowed, _ := models.CertsForUser(c.Userinfo.Id)
+		found := false
+		for _, n := range allowed {
+			if n == cn {
+				found = true
+				break
+			}
+		}
+		if !found {
+			c.ServeJSONError("access denied")
+			return
+		}
 	}
 	rng := c.GetString("range")
 	if rng == "" {
