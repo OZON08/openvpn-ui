@@ -5,9 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0.0-dev]
 
 ### Added
+
+- **Centralized app version** — single source of truth at `lib/version.go`
+  (`const Version`). `BaseController.Prepare()` injects `AppVersion` into
+  every template; footer, sidebar, and login page use `{{ .AppVersion }}`
+  instead of hardcoded strings. `routers/router.go` annotation and
+  `swagger/` files updated to match.
 
 - **Unit test coverage for `lib/monitor` and `lib/certificates`** — 28
   table-driven tests covering the OpenVPN status-log parser (`ParseStatusLog`

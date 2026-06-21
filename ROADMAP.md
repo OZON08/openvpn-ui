@@ -4,7 +4,7 @@ Priority-ordered, no dates. Items closer to the top are more likely to land
 sooner. Nothing here is a commitment — open an issue or PR if you want to
 accelerate something or propose an alternative.
 
-## Near term (v0.9.x)
+## Released (v0.9.x)
 
 - [x] **Verify InfluxDB v3 export end-to-end** against a live InfluxDB 3 Core
       instance. Verified: scraper → `InfluxWriter` buffer → HTTP write →
@@ -36,7 +36,7 @@ accelerate something or propose an alternative.
       `:root` (light defaults) and `body.dark-mode` (dark overrides) in
       `v097-custom.css`; OS changes in Auto mode are applied live.
 
-## Toward v1.0 (stability)
+## Near term (v1.0.0)
 
 - [x] **Test coverage for `lib/monitor` and `lib/certificates`** —
       table-driven unit tests for the OpenVPN status-log parser
