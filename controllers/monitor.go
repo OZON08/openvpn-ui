@@ -198,6 +198,10 @@ type APIMonitorSessionsController struct {
 // Get returns active and recent sessions.
 // @router / [get]
 func (c *APIMonitorSessionsController) Get() {
+	if c.Userinfo == nil {
+		c.ServeJSONError("You are not authorized")
+		return
+	}
 	active, err := models.ListActiveSessions()
 	if err != nil {
 		c.ServeJSONError(err.Error())
@@ -255,6 +259,10 @@ type APIMonitorTrafficController struct {
 //   ?cn=<common_name>&range=7d|30d|365d
 // @router / [get]
 func (c *APIMonitorTrafficController) Get() {
+	if c.Userinfo == nil {
+		c.ServeJSONError("You are not authorized")
+		return
+	}
 	cn := c.GetString("cn")
 	if cn == "" {
 		c.ServeJSONError("missing cn parameter")
