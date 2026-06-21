@@ -54,6 +54,7 @@ func (c *SettingsController) Post() {
 		state.GlobalCfgMu.Lock()
 		state.GlobalCfg = settings
 		state.GlobalCfgMu.Unlock()
+		models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "settings.save", "", "", c.Ctx.Input.IP())
 	}
 	flash.Store(&c.Controller)
 }

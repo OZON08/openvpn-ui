@@ -185,6 +185,7 @@ func (c *MonitorController) SaveInflux() {
 			logs.Warn("InfluxDB reconfigure after save failed: %v", err)
 		}
 	}
+	models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "influx.save", "", "", c.Ctx.Input.IP())
 	c.Ctx.Redirect(302, "/monitor")
 }
 

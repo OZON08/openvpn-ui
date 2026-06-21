@@ -96,6 +96,7 @@ func (c *OVConfigController) Post() {
 		if err := client.Signal("SIGTERM"); err != nil {
 			flash.Warning("Config has been updated but OpenVPN server was NOT reloaded: %s", err.Error())
 		}
+		models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "ovconfig.save", "", "", c.Ctx.Input.IP())
 	}
 
 	logs.Info("Post: Reading updated server configuration from file")

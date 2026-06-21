@@ -4,6 +4,7 @@ import (
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web"
 	"github.com/OZON08/openvpn-ui/lib"
+	"github.com/OZON08/openvpn-ui/models"
 )
 
 type DangerController struct {
@@ -37,6 +38,7 @@ func (c *DangerController) DeletePKI() {
 	} else {
 		flash.Success("Success! The \"%s\" has been deleted", name)
 		flash.Store(&c.Controller)
+		models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "pki.delete", name, "", c.Ctx.Input.IP())
 	}
 	c.Data["Flash"] = flash.Data
 	//logs.Info("Flash message stored:", flash.Data)

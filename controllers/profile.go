@@ -96,6 +96,7 @@ func (c *ProfileController) Post() {
 		flash.Error("%s", err.Error())
 	} else {
 		flash.Success("Profile has been updated!")
+		models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "user.update", c.Userinfo.Login, "", c.Ctx.Input.IP())
 	}
 	flash.Store(&c.Controller)
 	c.List()
@@ -210,6 +211,7 @@ func (c *ProfileController) Create() {
 			logs.Info("New user with login \"" + user.Login + "\" created successfully.")
 			flash.Success("New user with login \"%s\" created successfully.", user.Login)
 			flash.Store(&c.Controller)
+			models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "user.create", user.Login, "", c.Ctx.Input.IP())
 		} else {
 			logs.Debug(newUser)
 		}
@@ -300,6 +302,7 @@ func (c *ProfileController) DeleteUser() {
 	logs.Info("New user with login \""+user.Login+"\" deleted successfully. It had user ID: ", id)
 	flash.Success("User \"%s\" deleted successfully.", user.Login)
 	flash.Store(&c.Controller)
+	models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "user.delete", user.Login, "", c.Ctx.Input.IP())
 	c.List()
 }
 
@@ -328,6 +331,7 @@ func (c *ProfileController) AssignCert() {
 		flash.Error("Failed to assign certificate: %s", err.Error())
 	} else {
 		flash.Success("Certificate \"%s\" assigned successfully", certName)
+		models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "cert.assign", certName, "", c.Ctx.Input.IP())
 	}
 	flash.Store(&c.Controller)
 	c.Redirect(c.URLFor("ProfileController.Get"), 302)
@@ -358,6 +362,7 @@ func (c *ProfileController) RemoveCert() {
 		flash.Error("Failed to remove certificate: %s", err.Error())
 	} else {
 		flash.Success("Certificate \"%s\" removed", certName)
+		models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "cert.unassign", certName, "", c.Ctx.Input.IP())
 	}
 	flash.Store(&c.Controller)
 	c.Redirect(c.URLFor("ProfileController.Get"), 302)
