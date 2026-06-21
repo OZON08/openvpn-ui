@@ -61,6 +61,8 @@ func Init(configDir string) {
 			web.NSRouter("/sessions", &controllers.APIMonitorSessionsController{}, "get:Get"),
 			web.NSRouter("/traffic", &controllers.APIMonitorTrafficController{}, "get:Get"),
 			web.NSRouter("/disconnect", &controllers.APIMonitorHookController{}, "post:Post"),
+			web.NSRouter("/retention", &controllers.APIMonitorRetentionController{}, "get:Get"),
+			web.NSRouter("/influx", &controllers.APIMonitorInfluxController{}, "get:Get"),
 		),
 	)
 	web.AddNamespace(ns)

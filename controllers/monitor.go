@@ -410,3 +410,73 @@ func (c *APIMonitorHookController) Post() {
 
 	c.ServeJSONMessage("ok")
 }
+
+// APIMonitorRetentionController exposes retention pipeline stats as JSON.
+// Admin-only.
+type APIMonitorRetentionController struct {
+	APIBaseController
+}
+
+func (c *APIMonitorRetentionController) NestPrepare() {
+	if !c.IsLogin {
+		c.ServeJSONError("You are not authorized")
+		c.StopRun()
+		return
+	}
+	if c.Userinfo == nil || !c.Userinfo.IsAdmin {
+		c.Ctx.Output.SetStatus(403)
+		c.Data["json"] = &JSONResponse{Status: "error", Message: "admin privileges required"}
+		c.ServeJSON()
+		c.StopRun()
+	}
+}
+
+// Get returns retention stage stats for TrafficSample, TrafficHourly, and TrafficDaily.
+func (c *APIMonitorRetentionController) Get() {
+	c.ServeJSONData(loadRetentionStages())
+}
+
+// APIMonitorInfluxController exposes InfluxDB writer status as JSON.
+// Admin-only.
+type APIMonitorInfluxController struct {
+	APIBaseController
+}
+
+func (c *APIMonitorInfluxController) NestPrepare() {
+	if !c.IsLogin {
+		c.ServeJSONError("You are not authorized")
+		c.StopRun()
+		return
+	}
+	if c.Userinfo == nil || !c.Userinfo.IsAdmin {
+		c.Ctx.Output.SetStatus(403)
+		c.Data["json"] = &JSONResponse{Status: "error", Message: "admin privileges required"}
+		c.ServeJSON()
+		c.StopRun()
+	}
+}
+
+// Get returns InfluxDB writer status and config. Returns enabled=false with zero
+// counters when InfluxDB is disabled or monitoring is not running.
+func (c *APIMonitorInfluxController) Get() {
+	status, config := loadInfluxStatus()
+	if status == nil || config == nil {
+		c.ServeJSONData(map[string]interface{}{
+			"enabled":     false,
+			"url":         "",
+			"database":    "",
+			"buffered":    0,
+			"flushed_24h": 0,
+			"errors_24h":  0,
+		})
+		return
+	}
+	c.ServeJSONData(map[string]interface{}{
+		"enabled":     config.Enabled,
+		"url":         config.URL,
+		"database":    config.Database,
+		"buffered":    status.Buffered,
+		"flushed_24h": status.Flushed24h,
+		"errors_24h":  status.Errors24h,
+	})
+}
