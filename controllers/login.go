@@ -113,11 +113,14 @@ func (c *LoginController) Login() {
 	flash.Store(&c.Controller)
 
 	c.SetLogin(user)
-
+	models.WriteAuditLog(user.Id, user.Login, "login", "", "", c.Ctx.Input.IP())
 	c.Redirect(c.URLFor("MainController.Get"), 303)
 }
 
 func (c *LoginController) Logout() {
+	if c.Userinfo != nil {
+		models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "logout", "", "", c.Ctx.Input.IP())
+	}
 	c.DelLogin()
 	flash := web.NewFlash()
 	flash.Success("Successfully logged out")
@@ -237,6 +240,7 @@ func (c *LoginController) GoogleCallback() {
 	}
 
 	c.SetLogin(user)
+	models.WriteAuditLog(user.Id, user.Login, "login", "", "", c.Ctx.Input.IP())
 
 	flash := web.NewFlash()
 	flash.Success("Successfully logged in with Google")

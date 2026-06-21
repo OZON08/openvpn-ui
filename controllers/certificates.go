@@ -199,6 +199,7 @@ func (c *CertificatesController) Post() {
 			} else {
 				flash.Success("Success! Certificate for the name \"%s\" has been created", cParams.Name)
 				flash.Store(&c.Controller)
+				models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "cert.create", cParams.Name, "", c.Ctx.Input.IP())
 			}
 		}
 	}
@@ -227,6 +228,7 @@ func (c *CertificatesController) Revoke() {
 	} else {
 		flash.Success("Success! Certificate for the name \"%s\" and serial \"%s\" has been revoked", name, serial)
 		flash.Store(&c.Controller)
+		models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "cert.revoke", name, "", c.Ctx.Input.IP())
 	}
 	c.showCerts()
 }
@@ -257,6 +259,7 @@ func (c *CertificatesController) Burn() {
 	} else {
 		flash.Success("Success! Certificate for the name \"%s\" and serial \"%s\" has been removed", CN, serial)
 		flash.Store(&c.Controller)
+		models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "cert.burn", CN, "", c.Ctx.Input.IP())
 	}
 	c.showCerts()
 }
@@ -280,6 +283,7 @@ func (c *CertificatesController) Renew() {
 	} else {
 		flash.Success("Success! Certificate for the name \"%s\" and IP \"%s\" and Serial \"%s\" has been renewed", name, localip, serial)
 		flash.Store(&c.Controller)
+		models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "cert.renew", name, "", c.Ctx.Input.IP())
 	}
 	c.showCerts()
 }
