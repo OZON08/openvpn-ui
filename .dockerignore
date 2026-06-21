@@ -4,7 +4,6 @@ build/Dockerfile*
 docs/
 .github/
 *.md
-swagger/
 
 # Development artefacts
 *.db
