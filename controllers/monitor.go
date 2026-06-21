@@ -214,8 +214,13 @@ func (c *APIMonitorSessionsController) Get() {
 		c.ServeJSONError(err.Error())
 		return
 	}
-	if !c.Userinfo.IsAdmin {
-		allowed, _ := models.CertsForUser(c.Userinfo.Id)
+	if c.Userinfo != nil && !c.Userinfo.IsAdmin {
+		var allowed []string
+		allowed, err = models.CertsForUser(c.Userinfo.Id)
+		if err != nil {
+			c.ServeJSONError(err.Error())
+			return
+		}
 		allowSet := make(map[string]bool, len(allowed))
 		for _, n := range allowed {
 			allowSet[n] = true
@@ -255,8 +260,12 @@ func (c *APIMonitorTrafficController) Get() {
 		c.ServeJSONError("missing cn parameter")
 		return
 	}
-	if !c.Userinfo.IsAdmin {
-		allowed, _ := models.CertsForUser(c.Userinfo.Id)
+	if c.Userinfo != nil && !c.Userinfo.IsAdmin {
+		allowed, err := models.CertsForUser(c.Userinfo.Id)
+		if err != nil {
+			c.ServeJSONError(err.Error())
+			return
+		}
 		found := false
 		for _, n := range allowed {
 			if n == cn {

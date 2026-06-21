@@ -8,6 +8,7 @@ type APIDocsController struct {
 func (c *APIDocsController) NestPrepare() {
 	if !c.IsLogin {
 		c.Ctx.Redirect(302, c.LoginPath())
+		c.StopRun()
 		return
 	}
 	c.Data["breadcrumbs"] = &BreadCrumbs{Title: "API Docs"}
