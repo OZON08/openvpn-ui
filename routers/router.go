@@ -35,6 +35,7 @@ func Init(configDir string) {
 	web.Router("/grafana", &controllers.GrafanaController{}, "get:Get;*:Proxy")
 	web.Router("/grafana/*", &controllers.GrafanaController{}, "*:Proxy")
 	web.Router("/api-docs", &controllers.APIDocsController{})
+	web.Router("/auditlog", &controllers.AuditLogController{})
 
 	web.Include(&controllers.CertificatesController{ConfigDir: configDir})
 	web.Include(&controllers.DangerController{})

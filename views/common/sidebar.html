@@ -59,6 +59,13 @@
         </li>
         {{end}}
 
+        <li class="nav-item">
+          <a href="{{urlfor "AuditLogController.Get"}}" class="nav-link {{if compare .RouterPattern "/auditlog"}}active{{end}}">
+            <i class="nav-icon fa fa-list-alt"></i>
+            <p>Audit Log</p>
+          </a>
+        </li>
+
         <li class="nav-header">Configuration</li>
 
         <li class="nav-item">

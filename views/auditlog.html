@@ -1,0 +1,62 @@
+{{ template "layout/base.html" . }}
+
+{{define "head"}}
+<title>OpenVPN UI — Audit Log</title>
+{{end}}
+
+{{define "body"}}
+<div class="row">
+  <div class="col-12">
+    <div class="card card-default">
+      <div class="card-header">
+        <h3 class="card-title">Audit Log</h3>
+        <div class="card-tools">
+          <span class="text-muted">Page {{.Page}} of {{.TotalPages}}</span>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        {{if .Entries}}
+        <div class="table-responsive">
+          <table class="table table-sm table-hover no-margin">
+            <thead>
+              <tr>
+                <th>Time (UTC)</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Target</th>
+                <th>Detail</th>
+                <th>IP</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{range .Entries}}
+              <tr>
+                <td class="text-nowrap">{{.CreatedAt.Format "2006-01-02 15:04"}}</td>
+                <td>{{.UserLogin}}</td>
+                <td><code>{{.Action}}</code></td>
+                <td>{{.Target}}</td>
+                <td>{{.Detail}}</td>
+                <td>{{.IPAddr}}</td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+        </div>
+        {{else}}
+        <p class="p-3 text-muted">No audit log entries yet.</p>
+        {{end}}
+      </div>
+      {{if gt .TotalPages 1}}
+      <div class="card-footer clearfix">
+        {{if .HasPrev}}
+        <a href="?page={{.PrevPage}}" class="btn btn-sm btn-default float-left">&larr; Previous</a>
+        {{end}}
+        {{if .HasNext}}
+        <a href="?page={{.NextPage}}" class="btn btn-sm btn-default float-right">Next &rarr;</a>
+        {{end}}
+      </div>
+      {{end}}
+    </div>
+  </div>
+</div>
+{{end}}
