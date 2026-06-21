@@ -1,5 +1,5 @@
 // Package routers defines application routes
-// @APIVersion 1.0.0
+// @APIVersion 1.0.0.0-dev
 // @Title OpenVPN API
 // @Description REST API allows you to control and monitor your OpenVPN server
 // @Contact adam.walach@gmail.com

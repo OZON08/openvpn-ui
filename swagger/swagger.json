@@ -3,7 +3,7 @@
     "info": {
         "title": "OpenVPN API",
         "description": "REST API allows you to control and monitor your OpenVPN server",
-        "version": "1.0.0",
+        "version": "1.0.0.0-dev",
         "contact": {
             "email": "adam.walach@gmail.com"
         }

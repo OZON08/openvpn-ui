@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/beego/beego/v2/server/web"
+	"github.com/OZON08/openvpn-ui/lib"
 	"github.com/OZON08/openvpn-ui/models"
 )
 
@@ -43,6 +44,7 @@ func (c *BaseController) Prepare() {
 
 	c.Data["IsLogin"] = c.IsLogin
 	c.Data["Userinfo"] = c.Userinfo
+	c.Data["AppVersion"] = lib.Version
 	grafanaURL := web.AppConfig.DefaultString("GrafanaURL", os.Getenv("OPENVPN_UI_GRAFANA_URL"))
 	c.Data["GrafanaEnabled"] = grafanaURL != ""
 
