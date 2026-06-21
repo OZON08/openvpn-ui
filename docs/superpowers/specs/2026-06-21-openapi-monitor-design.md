@@ -4,7 +4,8 @@
 
 Add two missing API endpoints (`/api/v1/monitor/retention`, `/api/v1/monitor/influx`), apply
 per-user scoping to the three existing monitor endpoints, move the Swagger UI from `/swagger`
-to `/api/docs`, and document all five monitor endpoints in `swagger.yml` and `swagger.json`.
+to `/api/docs`, document all five monitor endpoints in `swagger.yml` and `swagger.json`, and
+expose the Swagger UI as a full-screen iframe page in the sidebar under the menu item "API".
 
 ## Scope
 
@@ -27,6 +28,13 @@ to `/api/docs`, and document all five monitor endpoints in `swagger.yml` and `sw
 
 `web.SetStaticPath("/swagger", "swagger")` → `web.SetStaticPath("/api/docs", "swagger")` in
 `routers/router.go`. Static files in `swagger/` are unchanged.
+
+### API docs page (new)
+
+A new page at `/api-docs` renders a full-screen iframe pointing to `/api/docs/`. Accessible
+to all logged-in users (non-admins can still read the API docs, even if some endpoints are
+admin-only). A new sidebar entry "API" (with a `fa-code` icon) appears for all logged-in
+users, placed below the Monitor entry. Same full-screen iframe pattern as `grafana.html`.
 
 ## Out of Scope
 
@@ -210,10 +218,17 @@ Error responses use HTTP 400 (existing pattern). Admin-check failures use HTTP 4
    - `APIMonitorSessionsController.Get()` — add non-admin cert filter
    - `APIMonitorTrafficController.Get()` — add non-admin `cn` ownership check
 
-2. **`routers/router.go`**
+2. **`controllers/apidocs.go`** (new) — `APIDocsController` with `NestPrepare` (login required) + `Get()` rendering `api-docs.html`
+
+3. **`routers/router.go`**
    - `web.SetStaticPath("/api/docs", "swagger")`
+   - `web.Router("/api-docs", &controllers.APIDocsController{})`
    - `web.NSRouter("/retention", &controllers.APIMonitorRetentionController{}, "get:Get")`
    - `web.NSRouter("/influx", &controllers.APIMonitorInfluxController{}, "get:Get")`
 
-3. **`swagger/swagger.yml`** — add 5 paths + 5 definitions + apiKey securityDefinition
-4. **`swagger/swagger.json`** — same, JSON format
+4. **`views/api-docs.html`** (new) — full-screen iframe to `/api/docs/`, same structure as `grafana.html`
+
+5. **`views/common/sidebar.html`** — add "API" menu entry (all logged-in users, `fa-code` icon, below Monitor)
+
+6. **`swagger/swagger.yml`** — add 5 paths + 5 definitions + apiKey securityDefinition
+7. **`swagger/swagger.json`** — same, JSON format
