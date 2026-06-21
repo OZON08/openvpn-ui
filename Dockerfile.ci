@@ -49,6 +49,7 @@ COPY build/assets/easyrsa-tools.lib               /usr/share/easy-rsa/easyrsa-to
 COPY --from=builder /app/openvpn-ui   /opt/openvpn-ui/openvpn-ui
 COPY --from=builder /app/views        /opt/openvpn-ui/views
 COPY --from=builder /app/static       /opt/openvpn-ui/static
+COPY --from=builder /app/swagger      /opt/openvpn-ui/swagger
 COPY --from=builder /app/conf         /opt/openvpn-ui/conf
 # Overwrite the dev-time conf/app.conf (relative paths, for `go run .`) with
 # the container variant that uses absolute paths under /etc/openvpn and
