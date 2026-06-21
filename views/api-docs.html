@@ -1,0 +1,23 @@
+{{ template "layout/base.html" . }}
+{{define "head"}}
+<title>OpenVPN - API Docs</title>
+<style>
+  #api-docs-frame {
+    position: fixed;
+    top: 57px;
+    left: 250px;
+    width: calc(100% - 250px);
+    height: calc(100vh - 57px);
+    border: none;
+    z-index: 100;
+  }
+  .sidebar-collapse #api-docs-frame {
+    left: 60px;
+    width: calc(100% - 60px);
+  }
+</style>
+{{end}}
+
+{{define "body"}}
+<iframe id="api-docs-frame" src="/api/docs/"></iframe>
+{{end}}

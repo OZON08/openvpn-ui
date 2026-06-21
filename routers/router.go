@@ -13,7 +13,7 @@ import (
 )
 
 func Init(configDir string) {
-	web.SetStaticPath("/swagger", "swagger")
+	web.SetStaticPath("/api/docs", "swagger")
 	web.Router("/", &controllers.MainController{})
 	web.Router("/login", &controllers.LoginController{}, "get:Login;post:Login")
 	web.Router("/logout", &controllers.LoginController{}, "get:Logout")
@@ -34,6 +34,7 @@ func Init(configDir string) {
 	web.Router("/monitor/influx", &controllers.MonitorController{}, "post:SaveInflux")
 	web.Router("/grafana", &controllers.GrafanaController{}, "get:Get;*:Proxy")
 	web.Router("/grafana/*", &controllers.GrafanaController{}, "*:Proxy")
+	web.Router("/api-docs", &controllers.APIDocsController{})
 
 	web.Include(&controllers.CertificatesController{ConfigDir: configDir})
 	web.Include(&controllers.DangerController{})
