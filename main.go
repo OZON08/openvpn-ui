@@ -32,6 +32,12 @@ func main() {
 		panic(err)
 	}
 
+	retentionDays := 365
+	if v, e := web.AppConfig.Int("AuditLogRetentionDays"); e == nil && v > 0 {
+		retentionDays = v
+	}
+	go models.RunAuditLogRetention(retentionDays)
+
 	models.CreateDefaultOVConfig(*configDir, defaultSettings.OVConfigPath, defaultSettings.MIAddress, defaultSettings.MINetwork)
 	models.CreateDefaultOVClientConfig(*configDir, defaultSettings.OVConfigPath, defaultSettings.MIAddress, defaultSettings.MINetwork)
 	models.CreateDefaultEasyRSAConfig(*configDir, defaultSettings.EasyRSAPath, defaultSettings.MIAddress, defaultSettings.MINetwork)
