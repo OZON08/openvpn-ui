@@ -9,27 +9,26 @@
         }
     },
     "basePath": "/api/v1",
+    "securityDefinitions": {
+        "MonitorToken": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-Monitor-Token"
+        }
+    },
     "paths": {
         "/session/": {
             "get": {
-                "tags": [
-                    "session"
-                ],
+                "tags": ["session"],
                 "description": "List vpn sessions",
                 "operationId": "APISessionController.list",
                 "responses": {
-                    "200": {
-                        "description": "request success"
-                    },
-                    "400": {
-                        "description": "request failure"
-                    }
+                    "200": { "description": "request success" },
+                    "400": { "description": "request failure" }
                 }
             },
             "delete": {
-                "tags": [
-                    "session"
-                ],
+                "tags": ["session"],
                 "description": "Delete (kill) session",
                 "operationId": "APISessionController.Kill",
                 "parameters": [
@@ -38,26 +37,18 @@
                         "name": "body",
                         "description": "CommonName of client to kill",
                         "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/controllers.KillParams"
-                        }
+                        "schema": { "$ref": "#/definitions/controllers.KillParams" }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "request success"
-                    },
-                    "400": {
-                        "description": "request failure"
-                    }
+                    "200": { "description": "request success" },
+                    "400": { "description": "request failure" }
                 }
             }
         },
         "/signal/": {
             "post": {
-                "tags": [
-                    "signal"
-                ],
+                "tags": ["signal"],
                 "description": "Sends signal to OpenVPN daemon",
                 "operationId": "APISignalController.Send signal",
                 "parameters": [
@@ -66,35 +57,171 @@
                         "name": "body",
                         "description": "Signal to send",
                         "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/controllers.SignalParams"
-                        }
+                        "schema": { "$ref": "#/definitions/controllers.SignalParams" }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "request success"
-                    },
-                    "400": {
-                        "description": "request failure"
-                    }
+                    "200": { "description": "request success" },
+                    "400": { "description": "request failure" }
                 }
             }
         },
         "/sysload/": {
             "get": {
-                "tags": [
-                    "sysload"
-                ],
+                "tags": ["sysload"],
                 "description": "Shows OS stats",
                 "operationId": "APISysloadController.Get system info",
                 "responses": {
-                    "200": {
-                        "description": "request success"
-                    },
-                    "400": {
-                        "description": "request failure"
+                    "200": { "description": "request success" },
+                    "400": { "description": "request failure" }
+                }
+            }
+        },
+        "/monitor/sessions": {
+            "get": {
+                "tags": ["monitor"],
+                "description": "List active and recent VPN sessions. Non-admin users see only sessions whose CommonName matches their assigned certificates.",
+                "operationId": "APIMonitorSessionsController.Get",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "description": "Maximum number of recent sessions to return (1-500, default 50)",
+                        "type": "integer"
                     }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "schema": {
+                            "properties": {
+                                "status": { "type": "string" },
+                                "data": {
+                                    "properties": {
+                                        "active": {
+                                            "type": "array",
+                                            "items": { "$ref": "#/definitions/models.VpnSession" }
+                                        },
+                                        "recent": {
+                                            "type": "array",
+                                            "items": { "$ref": "#/definitions/models.VpnSession" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": { "description": "error" }
+                }
+            }
+        },
+        "/monitor/traffic": {
+            "get": {
+                "tags": ["monitor"],
+                "description": "Per-user traffic history (hourly and daily deltas). Non-admin users may only query a cn that is in their assigned certificates.",
+                "operationId": "APIMonitorTrafficController.Get",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "cn",
+                        "description": "Common name to query (required)",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "range",
+                        "description": "Time range: 1d | 7d | 30d | 90d | 365d (default: 30d)",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "schema": {
+                            "properties": {
+                                "status": { "type": "string" },
+                                "data": {
+                                    "properties": {
+                                        "common_name": { "type": "string" },
+                                        "range_days": { "type": "integer" },
+                                        "hourly": {
+                                            "type": "array",
+                                            "items": { "$ref": "#/definitions/models.TrafficHourly" }
+                                        },
+                                        "daily": {
+                                            "type": "array",
+                                            "items": { "$ref": "#/definitions/models.TrafficDaily" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": { "description": "error (includes access denied for non-admins querying other users)" }
+                }
+            }
+        },
+        "/monitor/disconnect": {
+            "post": {
+                "tags": ["monitor"],
+                "description": "Client-disconnect webhook called by the OpenVPN server hook script. Requires the X-Monitor-Token header. Does not require a login session.",
+                "operationId": "APIMonitorHookController.Post",
+                "security": [{ "MonitorToken": [] }],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": { "$ref": "#/definitions/controllers.DisconnectPayload" }
+                    }
+                ],
+                "responses": {
+                    "200": { "description": "success" },
+                    "400": { "description": "error (token missing/invalid, monitoring disabled, bad JSON)" }
+                }
+            }
+        },
+        "/monitor/retention": {
+            "get": {
+                "tags": ["monitor"],
+                "description": "Retention pipeline stats: row counts and policies for each aggregation stage. Admin only.",
+                "operationId": "APIMonitorRetentionController.Get",
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "schema": {
+                            "properties": {
+                                "status": { "type": "string" },
+                                "data": {
+                                    "type": "array",
+                                    "items": { "$ref": "#/definitions/controllers.RetentionStage" }
+                                }
+                            }
+                        }
+                    },
+                    "400": { "description": "error" },
+                    "403": { "description": "admin privileges required" }
+                }
+            }
+        },
+        "/monitor/influx": {
+            "get": {
+                "tags": ["monitor"],
+                "description": "InfluxDB writer status and configuration. Admin only. Returns enabled=false when InfluxDB is disabled.",
+                "operationId": "APIMonitorInfluxController.Get",
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "schema": {
+                            "properties": {
+                                "status": { "type": "string" },
+                                "data": { "$ref": "#/definitions/controllers.InfluxStatus" }
+                            }
+                        }
+                    },
+                    "400": { "description": "error" },
+                    "403": { "description": "admin privileges required" }
                 }
             }
         }
@@ -104,33 +231,98 @@
             "title": "KillParams",
             "type": "object",
             "properties": {
-                "cname": {
-                    "type": "string"
-                }
+                "cname": { "type": "string" }
             }
         },
         "controllers.SignalParams": {
             "title": "SignalParams",
             "type": "object",
             "properties": {
-                "sname": {
-                    "type": "string"
-                }
+                "sname": { "type": "string" }
+            }
+        },
+        "controllers.DisconnectPayload": {
+            "title": "DisconnectPayload",
+            "type": "object",
+            "required": ["common_name"],
+            "properties": {
+                "common_name": { "type": "string" },
+                "real_ip": { "type": "string" },
+                "virtual_ip": { "type": "string" },
+                "connected_at": { "type": "integer", "description": "Unix timestamp (seconds)" },
+                "bytes_in": { "type": "integer" },
+                "bytes_out": { "type": "integer" },
+                "duration_s": { "type": "integer" }
+            }
+        },
+        "controllers.RetentionStage": {
+            "title": "RetentionStage",
+            "type": "object",
+            "properties": {
+                "Name": { "type": "string" },
+                "Granularity": { "type": "string" },
+                "Rows": { "type": "integer" },
+                "Size": { "type": "string" },
+                "Policy": { "type": "string" }
+            }
+        },
+        "controllers.InfluxStatus": {
+            "title": "InfluxStatus",
+            "type": "object",
+            "properties": {
+                "enabled": { "type": "boolean" },
+                "url": { "type": "string" },
+                "database": { "type": "string" },
+                "buffered": { "type": "integer" },
+                "flushed_24h": { "type": "integer" },
+                "errors_24h": { "type": "integer" }
+            }
+        },
+        "models.VpnSession": {
+            "title": "VpnSession",
+            "type": "object",
+            "properties": {
+                "Id": { "type": "integer" },
+                "CommonName": { "type": "string" },
+                "RealIP": { "type": "string" },
+                "VirtualIP": { "type": "string" },
+                "ConnectedAt": { "type": "string", "format": "date-time" },
+                "DisconnectedAt": { "type": "string", "format": "date-time" },
+                "BytesIn": { "type": "integer" },
+                "BytesOut": { "type": "integer" },
+                "DurationS": { "type": "integer" },
+                "Status": { "type": "string", "description": "active | closed" }
+            }
+        },
+        "models.TrafficHourly": {
+            "title": "TrafficHourly",
+            "type": "object",
+            "properties": {
+                "Id": { "type": "integer" },
+                "CommonName": { "type": "string" },
+                "HourTs": { "type": "string", "format": "date-time" },
+                "BytesInDelta": { "type": "integer" },
+                "BytesOutDelta": { "type": "integer" },
+                "SessionCount": { "type": "integer" }
+            }
+        },
+        "models.TrafficDaily": {
+            "title": "TrafficDaily",
+            "type": "object",
+            "properties": {
+                "Id": { "type": "integer" },
+                "CommonName": { "type": "string" },
+                "DayTs": { "type": "string", "format": "date" },
+                "BytesInDelta": { "type": "integer" },
+                "BytesOutDelta": { "type": "integer" },
+                "SessionCount": { "type": "integer" }
             }
         }
     },
     "tags": [
-        {
-            "name": "session",
-            "description": "APISessionController manages vpn sessions\n"
-        },
-        {
-            "name": "sysload",
-            "description": "APISysloadController provides system information\n"
-        },
-        {
-            "name": "signal",
-            "description": "APISignalController sends signals to OpenVPN daemon\n"
-        }
+        { "name": "session", "description": "APISessionController manages vpn sessions\n" },
+        { "name": "sysload", "description": "APISysloadController provides system information\n" },
+        { "name": "signal", "description": "APISignalController sends signals to OpenVPN daemon\n" },
+        { "name": "monitor", "description": "Monitor controllers expose VPN session data, traffic history, retention stats, and InfluxDB status\n" }
     ]
 }
