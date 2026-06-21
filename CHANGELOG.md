@@ -15,6 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   instead of hardcoded strings. `routers/router.go` annotation and
   `swagger/` files updated to match.
 
+- **OpenAPI spec for `/api/v1/monitor/*`** — Swagger 2.0 documentation for
+  all five monitor endpoints (`/sessions`, `/traffic`, `/disconnect`,
+  `/retention`, `/influx`) with full schema definitions and `X-Monitor-Token`
+  security definition. Served via Swagger UI at `/api/docs/`. A new "API"
+  sidebar entry (visible to all logged-in users) embeds the Swagger UI in a
+  full-screen iframe at `/api-docs`. `/retention` and `/influx` are admin-only;
+  `/sessions` and `/traffic` scope results to the requesting user's assigned
+  certificates for non-admins.
+
 - **Unit test coverage for `lib/monitor` and `lib/certificates`** — 28
   table-driven tests covering the OpenVPN status-log parser (`ParseStatusLog`
   v2/v3 formats, IPv6 real addresses, `parseConnectedSince` with 5 timestamp

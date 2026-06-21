@@ -45,7 +45,7 @@ accelerate something or propose an alternative.
       the certificate layer (`ReadCerts` happy path, `parseDetails` field
       coverage, `validateCertInputs`, `SafeNameRegex`, `trim`) with a
       fixture in `lib/testdata/`. 28 tests total; no external dependencies.
-- [ ] **OpenAPI spec for `/api/v1/monitor/*`** — schema + examples for the
+- [x] **OpenAPI spec for `/api/v1/monitor/*`** — schema + examples for the
       sessions / traffic / retention / influx endpoints, rendered under
       `/api/docs` (Swagger UI or similar).
 - [ ] **Audit log for admin actions** — login, cert create/revoke/renew,
