@@ -3,8 +3,7 @@
   <!-- Brand Logo -->
   <a href="{{urlfor "MainController.Get"}}" class="brand-link">
     <img src="/static/img/openvpn-win.svg" alt="OpenVPN UI Logo" class="brand-image img-circle elevation-3" style="opacity: .85">
-    <span class="brand-text font-weight-light"><b>OpenVPN</b> UI</span>
-    <span class="v097-version-badge">v{{ .AppVersion }}</span>
+    <span class="brand-text font-weight-light"><b>OpenVPN</b> UI <span class="v097-version-badge">v{{ .AppVersion }}</span></span>
   </a>
 
   <!-- Sidebar -->
@@ -103,22 +102,6 @@
           </a>
         </li>
         {{end}}
-
-        <li class="nav-header">Account</li>
-
-        <li class="nav-item">
-          <a href="{{urlfor "ProfileController.Get"}}" class="nav-link {{if compare .RouterPattern "/profile"}}active{{end}}">
-            <i class="nav-icon fa fa-user"></i>
-            <p>{{ .Userinfo.Name }}</p>
-          </a>
-        </li>
-
-        <li class="nav-item">
-          <a href="{{urlfor "LoginController.Logout"}}" class="nav-link">
-            <i class="nav-icon fa fa-sign-out"></i>
-            <p>Sign out</p>
-          </a>
-        </li>
 
       </ul>
     </nav>

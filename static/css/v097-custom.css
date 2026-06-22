@@ -103,8 +103,19 @@ h1,h2,h3,h4,h5,h6 { color: var(--v097-text) !important; font-weight: 600 !import
   border-bottom: 1px solid var(--v097-border-soft) !important;
   box-shadow: none !important;
   padding: 0 !important;
+  min-height: 57px;
 }
-.main-header .container, .main-header .container-fluid { min-height: 56px; align-items: center; }
+.main-header.navbar .navbar-nav {
+  align-items: center;
+  height: 57px;
+}
+.main-header.navbar .navbar-nav .nav-link {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px;
+  height: 100%;
+}
+.main-header .container, .main-header .container-fluid { min-height: 57px; align-items: center; }
 .navbar-brand {
   color: var(--v097-text) !important;
   font-weight: 500 !important;
@@ -302,6 +313,9 @@ body.login-page { background: var(--v097-bg) !important; }
 .main-footer a { color: var(--v097-accent-hover) !important; }
 
 /* ---------- Version badge ---------- */
+.main-sidebar .brand-link {
+  overflow: visible !important;
+}
 .v097-version-badge {
   background: var(--v097-accent-soft);
   color: var(--v097-accent-hover);
@@ -311,6 +325,8 @@ body.login-page { background: var(--v097-bg) !important; }
   border-radius: 4px;
   letter-spacing: .04em;
   margin-left: 6px;
+  vertical-align: middle;
+  white-space: nowrap;
 }
 
 /* ---------- Monitor-page tabs ---------- */

@@ -29,15 +29,13 @@ func (c *LogsController) Get() {
 		Title: "Logs",
 	}
 
-	settings := models.Settings{Profile: "default"}
-	settings.Read("Profile")
-
-	if err := settings.Read("OVConfigPath"); err != nil {
+	ovc := models.OVConfig{Profile: "default"}
+	if err := ovc.Read("Profile"); err != nil {
 		logs.Error(err)
 		return
 	}
 
-	fName := settings.OVConfigPath + "/log/openvpn.log"
+	fName := ovc.Config.OVConfigLogfile
 	file, err := os.Open(fName)
 	if err != nil {
 		logs.Error(err)
