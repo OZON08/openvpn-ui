@@ -13,18 +13,18 @@
       </div>
   </div>
   <div class="card-body">
+    {{ if .LogError }}
+    <div class="alert alert-warning"><i class="fa fa-exclamation-triangle mr-2"></i>{{ .LogError }}</div>
+    {{ else }}
     <form role="form">
       <div class="form-group" >
         <textarea type="text" class="form-control my-textarea" name="Logs"
-         id="Logs" spellcheck="false" rows="15">
-
-        {{ range $i, $line := .logs }}{{$line}}
-        {{ end }}
-
-        </textarea>
+         id="Logs" spellcheck="false" rows="15">{{ range .logs }}{{ . }}
+{{ end }}</textarea>
       </div>
     </form>
     <span id="helpBlock" class="text-muted">Last 300 lines of openvpn.log</span>
+    {{ end }}
   </div>
   <!-- /.card-body -->
 </div>  
@@ -32,14 +32,15 @@
   createEditor("Logs", "700px", "clouds", "ovpn", true);
 </script-->
 
+{{ if not .LogError }}
 <script>
-  // Check if "themeEditor" is set in localStorage
   if (localStorage.getItem("theme") === "dark") {
     createEditor("Logs", "700px", "clouds_midnight", "ovpn", true);
   } else {
     createEditor("Logs", "700px", "clouds", "ovpn", true);
   }
 </script>
+{{ end }}
 
 
 

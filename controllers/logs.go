@@ -32,13 +32,20 @@ func (c *LogsController) Get() {
 	ovc := models.OVConfig{Profile: "default"}
 	if err := ovc.Read("Profile"); err != nil {
 		logs.Error(err)
+		c.Data["LogError"] = "Cannot read OpenVPN config from DB: " + err.Error()
 		return
 	}
 
 	fName := ovc.OVConfigLogfile
+	if fName == "" {
+		c.Data["LogError"] = "Log file path is not configured (check OpenVPN Server settings → OVConfigLogfile)"
+		return
+	}
+
 	file, err := os.Open(fName)
 	if err != nil {
 		logs.Error(err)
+		c.Data["LogError"] = "Cannot open " + fName + ": " + err.Error()
 		return
 	}
 	defer file.Close()
