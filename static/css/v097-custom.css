@@ -103,19 +103,16 @@ h1,h2,h3,h4,h5,h6 { color: var(--v097-text) !important; font-weight: 600 !import
   border-bottom: 1px solid var(--v097-border-soft) !important;
   box-shadow: none !important;
   padding: 0 !important;
-  min-height: 57px;
 }
 .main-header.navbar .navbar-nav {
-  align-items: center;
-  height: 57px;
+  align-items: center !important;
 }
 .main-header.navbar .navbar-nav .nav-link {
   display: flex !important;
   align-items: center !important;
   gap: 6px;
-  height: 100%;
 }
-.main-header .container, .main-header .container-fluid { min-height: 57px; align-items: center; }
+.main-header .container, .main-header .container-fluid { min-height: 56px; align-items: center; }
 .navbar-brand {
   color: var(--v097-text) !important;
   font-weight: 500 !important;
@@ -314,9 +311,20 @@ body.login-page { background: var(--v097-bg) !important; }
 
 /* ---------- Version badge ---------- */
 .main-sidebar .brand-link {
-  overflow: visible !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px;
+  overflow: hidden !important;
+}
+.main-sidebar .brand-text {
+  flex: 1 !important;
+  min-width: 0 !important;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .v097-version-badge {
+  flex-shrink: 0;
   background: var(--v097-accent-soft);
   color: var(--v097-accent-hover);
   font-size: 10px;
@@ -324,8 +332,6 @@ body.login-page { background: var(--v097-bg) !important; }
   padding: 3px 7px;
   border-radius: 4px;
   letter-spacing: .04em;
-  margin-left: 6px;
-  vertical-align: middle;
   white-space: nowrap;
 }
 

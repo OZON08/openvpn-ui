@@ -35,7 +35,7 @@ func (c *LogsController) Get() {
 		return
 	}
 
-	fName := ovc.Config.OVConfigLogfile
+	fName := ovc.OVConfigLogfile
 	file, err := os.Open(fName)
 	if err != nil {
 		logs.Error(err)
