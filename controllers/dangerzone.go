@@ -14,6 +14,7 @@ type DangerController struct {
 func (c *DangerController) NestPrepare() {
 	if !c.IsLogin {
 		c.Ctx.Redirect(302, c.LoginPath())
+		c.StopRun()
 		return
 	}
 }
