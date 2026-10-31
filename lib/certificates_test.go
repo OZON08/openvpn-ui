@@ -284,3 +284,24 @@ func TestParseDetails_NameFallbackToCN(t *testing.T) {
 		t.Errorf("Name (CN fallback): want %q, got %q", "charlie", d.Name)
 	}
 }
+
+// ---------------------------------------------------------
+// ReadCerts
+// ---------------------------------------------------------
+
+// Removed certificates stay in index.txt, so that they stay on the CRL.
+func TestReadCertsSkipsRemovedEntries(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "index.txt")
+	index := "R\t300101000000Z\t260101000000Z\tAA\tunknown\t/CN=gone/name=gone/2FAName=none/removed=1\n" +
+		"V\t300101000000Z\t\tBB\tunknown\t/CN=kept/name=kept/LocalIP=dynamic.pool/2FAName=none\n"
+	if err := os.WriteFile(path, []byte(index), 0600); err != nil {
+		t.Fatal(err)
+	}
+	certs, err := ReadCerts(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(certs) != 1 || certs[0].Serial != "BB" {
+		t.Fatalf("expected only serial BB, got %d entries", len(certs))
+	}
+}

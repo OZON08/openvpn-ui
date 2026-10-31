@@ -35,6 +35,15 @@ func (c *APIBaseController) NestPrepare() {
 	}
 }
 
+// RequireAdmin answers with an error unless an administrator is logged in.
+func (c *APIBaseController) RequireAdmin() bool {
+	if c.Userinfo == nil || !c.Userinfo.IsAdmin {
+		c.ServeJSONError("You are not authorized")
+		return false
+	}
+	return true
+}
+
 func (c *APIBaseController) ServeJSONMessage(message string) {
 	r := NewJSONResponse()
 	r.Message = message

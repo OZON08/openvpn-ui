@@ -195,7 +195,13 @@ func CreateDefaultOVConfig(configDir string, ovConfigPath string, address string
 		}
 		serverConfig := filepath.Join(ovConfigPath, "server.conf")
 		if _, err = os.Stat(serverConfig); os.IsNotExist(err) {
-			if err = config.SaveToFile(filepath.Join(configDir, "openvpn-server-config.tpl"), c.Config, serverConfig); err != nil {
+			// A stored row can still hold the former management value
+			management, err := Settings{MIAddress: address, MINetwork: network}.ManagementDirective()
+			if err == nil {
+				c.Management = management
+				err = config.SaveToFile(filepath.Join(configDir, "openvpn-server-config.tpl"), c.Config, serverConfig)
+			}
+			if err != nil {
 				logs.Error(err)
 			}
 		}

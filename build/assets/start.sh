@@ -31,7 +31,10 @@ cd /opt/openvpn-ui
 # Create the database directory if it does not exist
 mkdir -p db
 
-chown -R openvpn-ui:openvpn-ui db
+# This script runs as root on paths the web user can write. It skips symlinks, and
+# hardlinks, which could point to a file outside of them, such as this script.
+UNLINKED=(! -type l \( -type d -o -links 1 \))
+find db "${UNLINKED[@]}" -exec chown openvpn-ui:openvpn-ui {} +
 
 # The web process only manages these paths. Anything else, such as fw-rules.sh and
 # .env, loses group write, also where earlier versions granted it. The run directory
@@ -46,12 +49,12 @@ done
 find "$OPENVPN_DIR" \( "${PRUNE[@]}" \) -prune -o ! -type l -exec chmod g-w {} + ||
   echo "WARNING: could not remove group write below $OPENVPN_DIR"
 # Certificate scripts run as the web user and need to read and write the PKI, including ca.key.
-find "${MANAGED[@]}" /usr/share/easy-rsa ! -type l -exec chgrp openvpn-ui {} + -exec chmod g+rwX {} + ||
+find "${MANAGED[@]}" /usr/share/easy-rsa "${UNLINKED[@]}" -exec chgrp openvpn-ui {} + -exec chmod g+rwX {} + ||
   echo "WARNING: could not grant openvpn-ui access to all managed paths"
 
 # Rendered files are saved with an owner-only mode, which requires owning them.
-chown -R openvpn-ui "$OPENVPN_DIR/server.conf" "$OPENVPN_DIR/config/client.conf" "$OPENVPN_DIR/config/easy-rsa.vars" \
-  "$OPENVPN_DIR/pki/vars" "$OPENVPN_DIR/clients" 2>/dev/null || true
+find "$OPENVPN_DIR/server.conf" "$OPENVPN_DIR/config/client.conf" "$OPENVPN_DIR/config/easy-rsa.vars" \
+  "$OPENVPN_DIR/pki/vars" "$OPENVPN_DIR/clients" "${UNLINKED[@]}" -exec chown openvpn-ui {} + 2>/dev/null || true
 
 # Membership in this group grants access to the management socket directory.
 # OPENVPN_MI_GID must match the value on the openvpn service.

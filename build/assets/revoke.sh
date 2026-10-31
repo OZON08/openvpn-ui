@@ -11,88 +11,51 @@ EASY_RSA="${EASY_RSA:-$(grep -E "^EasyRsaPath\s*=" "$APP_CONF" | cut -d= -f2 | t
 OPENVPN_DIR="${OPENVPN_DIR:-$(grep -E "^OpenVpnPath\s*=" "$APP_CONF" | cut -d= -f2 | tr -d '"' | tr -d '[:space:]')}"
 echo 'EasyRSA path: $EASY_RSA OVPN path: $OPENVPN_DIR'
 INDEX=$EASY_RSA/pki/index.txt
-PERSHIY=`cat $INDEX | grep "/CN=$CERT_NAME/" | head -1 | awk '{ print $3}'`
 OVPN_FILE_PATH="$OPENVPN_DIR/clients/$CERT_NAME.ovpn"
+ISSUED="$EASY_RSA/pki/issued/$CERT_NAME.crt"
+RENEWED="$EASY_RSA/pki/renewed/issued/$CERT_NAME.crt"
 
 export EASYRSA_BATCH=1 # see https://superuser.com/questions/1331293/easy-rsa-v3-execute-build-ca-and-gen-req-silently
 
-# Check if the user has two certificates in index.txt
-if [[ $(cat $INDEX | grep -c "/CN=$CERT_NAME/") -eq 2 ]]; then
-    # Check if first serial is the same as requested to revoke and if yes - revoke new cert and old cert
-    if [[ $PERSHIY = $CERT_SERIAL ]]; then
-        echo "Revoking renewed certificate..."
+serial_of() {
+    if [[ -f $1 ]]; then openssl x509 -noout -serial -in "$1" | cut -d= -f2; fi
+}
 
-        # removing the end of the line starting from /name=$NAME for the line that matches the $serial pattern
-        sed  -i'.bak' "/$CERT_SERIAL/s/\/name=$CERT_NAME.*//" $INDEX
-        echo "index.txt patched"
-        cd $EASY_RSA
-        
-        #moving new cert to old dir
-        echo "Runing: easyrsa revoke-renewed $CERT_NAME"
-        # Revoke renewed certificate
-        ./easyrsa revoke-renewed "$CERT_NAME"
-        echo -e "Old certificate revoked! \nRemoving old cert from the DB"
+# Revokes one certificate with the given easyrsa command. The record stays in index.txt,
+# because gen-crl only lists the serials it finds there.
+revoke_certificate() {
+    local command=$1 serial=$2
+    echo "Revoking certificate with serial $serial using: easyrsa $command"
+    # easyrsa compares the subject, so the /name suffix has to go first
+    sed -i'.bak' "/$serial/s/\/name=$CERT_NAME.*//" "$INDEX"
+    ./easyrsa "$command" "$CERT_NAME"
+    # Note: CERT_IP is intentionally omitted, the UI does not pass it for revoke operations.
+    sed -i'.bak' "/$serial/ s/$/\/name=${CERT_NAME}\/2FAName=${TFA_NAME}/" "$INDEX"
+}
 
-        # Removing old cert from the DB
-        sed -i'.bak' "/${CERT_SERIAL}/d" $INDEX
-        echo "Old cert with serial $CERT_SERIAL removed from the DB"
+ISSUED_SERIAL=$(serial_of "$ISSUED")
+RENEWED_SERIAL=$(serial_of "$RENEWED")
+cd "$EASY_RSA"
 
-        # removing *.ovpn file because it has old certificate
-        echo "removing *.ovpn file"
-        rm -f $OVPN_FILE_PATH
-    
-        echo 'Generate New .ovpn file...'
-        CA="$(cat $EASY_RSA/pki/ca.crt )"
-        CERT="$(cat $EASY_RSA/pki/issued/${CERT_NAME}.crt | grep -zEo -e '-----BEGIN CERTIFICATE-----(\n|.)*-----END CERTIFICATE-----' | tr -d '\0')"
-        KEY="$(cat $EASY_RSA/pki/private/${CERT_NAME}.key)"
-        TLS_AUTH="$(cat $EASY_RSA/pki/ta.key)"
-        echo "$(cat $OPENVPN_DIR/config/client.conf)
-<ca>
-$CA
-</ca>
-<cert>
-$CERT
-</cert>
-<key>
-$KEY
-</key>
-<tls-auth>
-$TLS_AUTH
-</tls-auth>
-" > "$OVPN_FILE_PATH"
-        echo -e "Old Certificate revoked!\nCreate new Create certificate revocation list (CRL)..."
-        ./easyrsa gen-crl
-        chmod +r $EASY_RSA/pki/crl.pem
-    else
-        cd $EASY_RSA
-        # Fix index.txt by removing the user from the list following the serial number
-        echo "Removing New Certificate..."
-        mv $EASY_RSA/pki/renewed/issued/$CERT_NAME.crt  $EASY_RSA/pki/issued/$CERT_NAME.crt
-        rm -f $EASY_RSA/pki/inline/$CERT_NAME.inline
-        # Removing old cert from the DB
-        sed -i'.bak' "/${CERT_SERIAL}/d" $INDEX
-        # Create new Create certificate revocation list (CRL)
-        echo -e "New Certificate revoked!\nCreate new certificate revocation list (CRL)..."
-        ./easyrsa gen-crl
-        chmod +r $EASY_RSA/pki/crl.pem
+if [[ -n $RENEWED_SERIAL && $CERT_SERIAL = "$RENEWED_SERIAL" ]]; then
+    # The old certificate of a renewal: the new one stays valid
+    revoke_certificate revoke-renewed "$RENEWED_SERIAL"
+elif [[ -n $ISSUED_SERIAL && $CERT_SERIAL = "$ISSUED_SERIAL" ]]; then
+    revoke_certificate revoke "$ISSUED_SERIAL"
+    # The old certificate would otherwise keep working after the current one is revoked
+    if [[ -n $RENEWED_SERIAL ]]; then
+        revoke_certificate revoke-renewed "$RENEWED_SERIAL"
     fi
 else
-    echo "Revoking certificate..."
-    # removing the end of the line starting from /name=$NAME for the line that matches the $serial pattern
-    sed  -i'.bak' "/$CERT_SERIAL/s/\/name=$CERT_NAME.*//" $INDEX
-    cd $EASY_RSA
-    # Revoke certificate
-    ./easyrsa revoke "$CERT_NAME"
-
-    echo 'Create new Create certificate revocation list (CRL)...'
-    ./easyrsa gen-crl
-    chmod +r $EASY_RSA/pki/crl.pem
-    # restoring the index.txt, new /name in index.txt (adding name and ip to the last line)
-    #sed -i'.bak' "$ s/$/\/name=${CERT_NAME}\/LocalIP=${CERT_IP}\/2FAName=${TFA_NAME}/" $EASY_RSA/pki/index.txt
-    # adding name, ip and 2fa-name to the same CERT serial
-    # Note: CERT_IP is intentionally omitted here — the IP assignment is not
-    # relevant after revocation and is not passed by the UI for revoke operations.
-    sed -i'.bak' "/${CERT_SERIAL}/ s/$/\/name=${CERT_NAME}\/2FAName=${TFA_NAME}/" $EASY_RSA/pki/index.txt
+    echo "No valid certificate of $CERT_NAME has serial $CERT_SERIAL. Exiting..."
+    exit 1
 fi
+
+# The UI renders a new profile on download. A file left here could hold a revoked certificate.
+rm -f "$OVPN_FILE_PATH"
+
+echo 'Create new certificate revocation list (CRL)...'
+./easyrsa gen-crl
+chmod +r "$EASY_RSA/pki/crl.pem"
 
 echo -e 'Done!\nIf you want to disconnect the user please restart the service using docker-compose restart openvpn.'

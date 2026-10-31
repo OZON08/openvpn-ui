@@ -24,6 +24,9 @@ type KillParams struct {
 // @Failure 400 request failure
 // @router / [get]
 func (c *APISessionController) Get() {
+	if !c.RequireAdmin() {
+		return
+	}
 	client := mi.NewClient(state.GlobalCfg.MINetwork, state.GlobalCfg.MIAddress)
 	status, err := client.GetStatus()
 	if err != nil {
@@ -41,6 +44,9 @@ func (c *APISessionController) Get() {
 // @Failure 400 request failure
 // @router / [delete]
 func (c *APISessionController) Kill() {
+	if !c.RequireAdmin() {
+		return
+	}
 	client := mi.NewClient(state.GlobalCfg.MINetwork, state.GlobalCfg.MIAddress)
 	p := KillParams{}
 	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &p); err != nil {

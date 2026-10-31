@@ -31,8 +31,7 @@ func isAllowedSignal(name string) bool {
 // @Failure 400 request failure
 // @router / [post]
 func (c *APISignalController) Send() {
-	if c.Userinfo == nil || !c.Userinfo.IsAdmin {
-		c.ServeJSONError("You are not authorized")
+	if !c.RequireAdmin() {
 		return
 	}
 	client := mi.NewClient(state.GlobalCfg.MINetwork, state.GlobalCfg.MIAddress)
