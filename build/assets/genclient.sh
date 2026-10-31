@@ -73,9 +73,6 @@ CERT="$(awk '/-----BEGIN CERTIFICATE-----/{flag=1;next}/-----END CERTIFICATE----
 KEY="$(cat $EASY_RSA/pki/private/${CERT_NAME}.key)"
 TLS_AUTH="$(cat $EASY_RSA/pki/ta.key)"
 
-echo 'Fixing permissions for pki/issued...'
-chmod +r $EASY_RSA/pki/issued
-
 echo 'Generating .ovpn file...'
 echo "$(cat $OPENVPN_DIR/config/client.conf)
 <ca>

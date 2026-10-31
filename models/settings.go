@@ -1,6 +1,9 @@
 package models
 
 import (
+	"fmt"
+	"net"
+	"strings"
 	"time"
 
 	"github.com/beego/beego/v2/client/orm"
@@ -23,6 +26,21 @@ type Settings struct {
 
 	Created time.Time `orm:"auto_now_add;type(datetime)"`
 	Updated time.Time `orm:"auto_now;type(datetime)"`
+}
+
+// ManagementDirective returns the arguments of the OpenVPN management directive for
+// these settings. A TCP server listens on all addresses, because the stored host is
+// the name the UI connects to.
+func (s Settings) ManagementDirective() (string, error) {
+	if s.MINetwork == "unix" && s.MIAddress != "" {
+		return s.MIAddress + " unix", nil
+	}
+	if strings.HasPrefix(s.MINetwork, "tcp") {
+		if _, port, err := net.SplitHostPort(s.MIAddress); err == nil && port != "" {
+			return "0.0.0.0 " + port, nil
+		}
+	}
+	return "", fmt.Errorf("invalid management settings: %q %q", s.MIAddress, s.MINetwork)
 }
 
 // Insert wrapper

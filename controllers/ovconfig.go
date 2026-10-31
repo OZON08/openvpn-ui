@@ -78,7 +78,11 @@ func (c *OVConfigController) Post() {
 
 	destPath := filepath.Join(state.GlobalCfg.OVConfigPath, "server.conf")
 	logs.Info("Post: Saving configuration to file according to template")
-	err := config.SaveToFile(filepath.Join(c.ConfigDir, "openvpn-server-config.tpl"), cfg.Config, destPath)
+	management, err := state.GlobalCfg.ManagementDirective()
+	if err == nil {
+		cfg.Management = management
+		err = config.SaveToFile(filepath.Join(c.ConfigDir, "openvpn-server-config.tpl"), cfg.Config, destPath)
+	}
 	if err != nil {
 		logs.Warning(err)
 		flash.Error("%s", err.Error())

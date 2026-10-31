@@ -11,12 +11,6 @@ RUN apt-get update && apt-get install git musl-tools -y
 ENV GO111MODULE=on
 ENV CGO_ENABLED=1
 
-# Copy the go.mod and go.sum files to the container
-COPY go.mod go.sum ./
-
-# Download the dependencies
-RUN go mod download
-
 # Install the beego and bee packages — pinned to a specific release for reproducible builds
 RUN go install github.com/beego/bee/v2@v2.3.0
 

@@ -1,4 +1,4 @@
-management /etc/openvpn/run/mi.sock unix  # Don't change this line. OpenVPN UI uses this feature to manage the server
+management {{ .Management }}  # Set by OpenVPN UI from its settings. OpenVPN UI uses this feature to manage the server
 
 dev {{ .Device }}
 port {{ .Port }}

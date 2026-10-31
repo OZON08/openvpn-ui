@@ -2,8 +2,10 @@ package models
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/core/logs"
@@ -125,10 +127,15 @@ func CreateDefaultSettings() (*Settings, error) {
 	}
 }
 
-// migrateLegacyManagement replaces the former default TCP management endpoint in
-// stored settings. Values that an administrator changed are kept.
+// migrateLegacyManagement moves stored settings on the former TCP port to the socket,
+// as the server does with its config. Both only happen once the run directory is
+// shared, otherwise the server stays on TCP. Other ports are kept.
 func migrateLegacyManagement(s *Settings, address, network string) bool {
-	if s.MIAddress != "openvpn:2080" || s.MINetwork != "tcp" {
+	_, port, err := net.SplitHostPort(s.MIAddress)
+	if err != nil || port != "2080" || !strings.HasPrefix(s.MINetwork, "tcp") {
+		return false
+	}
+	if _, err := os.Stat(filepath.Dir(address)); err != nil {
 		return false
 	}
 	s.MIAddress, s.MINetwork = address, network

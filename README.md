@@ -36,7 +36,7 @@ Quick to deploy and easy to use, makes work with small OpenVPN environments a br
 * OpenVPN-UI Admin user and password can be passed via environment variables to container
 * Updated infrastructure:
   * Alpine Linux as fastest and secure base image
-  * GoLang 1.25.0
+  * GoLang 1.26.10
   * Beego 2.3.10
   * Easy-rsa 3.X
   * Openssl 3.X

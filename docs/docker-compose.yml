@@ -39,7 +39,7 @@ services:
             # First start generates the PKI including 4096-bit DH parameters,
             # which can take 5-15 minutes on slower hardware. Subsequent starts
             # complete within seconds because PKI is persisted in the volume.
-            start_period: 900s
+            start_period: 7200s
 
     openvpn-ui:
         container_name: openvpn-ui
