@@ -32,7 +32,7 @@
           <div class="input-group-prepend">
             <span class="input-group-text"><i class="fas fa-gear"></i></span>
           </div>
-          <input type="text" class="form-control" id="MIAddress" title="OpenVPN management interface address."  name="MIAddress" placeholder="openvpn:2080" value="{{ .Settings.MIAddress }}">
+          <input type="text" class="form-control" id="MIAddress" title="OpenVPN management interface address."  name="MIAddress" placeholder="/etc/openvpn/run/mi.sock" value="{{ .Settings.MIAddress }}">
         </div>
       </div>
 
@@ -42,7 +42,7 @@
           <div class="input-group-prepend">
             <span class="input-group-text"><i class="fa fa-exchange"></i></span>
           </div>
-          <input type="text" class="form-control" id="MINetwork" title="OpenVPN management interface protocol." name="MINetwork" placeholder="tcp" value="{{ .Settings.MINetwork }}">
+          <input type="text" class="form-control" id="MINetwork" title="OpenVPN management interface protocol." name="MINetwork" placeholder="unix" value="{{ .Settings.MINetwork }}">
         </div>
       </div>
 

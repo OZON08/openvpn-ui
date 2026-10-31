@@ -3,7 +3,7 @@
 #
 
 # All the variables
-GOVERSION="1.22.3"
+GOVERSION="1.26.10"
 
 # Description
 echo "This script will install OpenVPN-UI and all the dependencies on your local environment. No containers will be used."

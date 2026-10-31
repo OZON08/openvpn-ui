@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0.0-dev] - Unreleased
 
+### Security
+
+- **Management interface moved to a Unix socket** — `server.conf` no longer opens TCP port 2080. The UI connects through `/etc/openvpn/run/mi.sock`, and stored settings with the old default `openvpn:2080` are migrated at startup. Requires `openvpn-server` v0.6.4 and the `./run:/etc/openvpn/run` volume in `docker-compose.yml`.
+- **Dependency security updates** — `golang.org/x/net` v0.62.0, `golang.org/x/text` v0.43.0, `google.golang.org/grpc` v1.85.0, `github.com/Azure/go-ntlmssp` v0.1.1 and `github.com/klauspost/compress` v1.20.3. `govulncheck` reports no vulnerabilities in called code.
+
+### Changed
+
+- **`build/build.sh` rejects armv5 and armv6** — the script stops with an error on these architectures. The armv6 path already failed before, because `arm32v5/golang` has no current image.
+
 ### Added
 
 - **Centralized app version** — single source of truth at `lib/version.go`

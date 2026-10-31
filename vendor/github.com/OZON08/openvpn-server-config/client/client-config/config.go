@@ -1,9 +1,9 @@
 package clientconfig
 
 import (
-	"bytes"
-	"os"
-	"text/template"
+	"errors"
+
+	"github.com/OZON08/openvpn-server-config/internal/render"
 )
 
 var defaultConfig = Config{
@@ -74,29 +74,19 @@ func New() Config {
 
 // GetText injects config values into template
 func GetText(tpl string, c Config) (string, error) {
-	t := template.New("config")
-	t, err := t.Parse(tpl)
-	if err != nil {
-		return "", err
-	}
-	buf := new(bytes.Buffer)
-	if err = t.Execute(buf, c); err != nil {
-		return "", err
-	}
-	return buf.String(), nil
+	return render.Text(tpl, c)
 }
 
-// SaveToFile reads teamplate and writes result to destination file
+// SaveToFile reads template and writes result to destination file
 func SaveToFile(tplPath string, c Config, destPath string) error {
-	template, err := os.ReadFile(tplPath)
-	if err != nil {
-		return err
-	}
+	return render.SaveToFile(tplPath, c, destPath)
+}
 
-	str, err := GetText(string(template), c)
-	if err != nil {
-		return err
-	}
-
-	return os.WriteFile(destPath, []byte(str), 0600)
+// Validate rejects line breaks outside the key material and raw directive fields
+// and values that could close an inline key block
+func (c Config) Validate() error {
+	return errors.Join(
+		render.RequireSingleLine(c, "Ca", "Cert", "Key", "Ta", "CustomConfOne", "CustomConfTwo", "CustomConfThree"),
+		render.RequireKeyMaterial(c.Ca, c.Cert, c.Key, c.Ta),
+	)
 }

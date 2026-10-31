@@ -1,11 +1,16 @@
 package easyrsaconfig
 
-// html/template changed to text/template
 import (
-	"bytes"
-	"os"
-	"text/template"
+	"fmt"
+	"regexp"
+
+	"github.com/OZON08/openvpn-server-config/internal/render"
 )
+
+// safeValue allows what organization names and addresses need. Easy-RSA sources
+// the vars file as shell and expands values again in eval, so quoting cannot
+// make other characters safe.
+var safeValue = regexp.MustCompile(`^[\p{L}\p{M}\p{N} .,_@&+():-]*$`)
 
 // Don't think these defaults are ever used -- see models/models.go
 var defaultConfig = Config{
@@ -47,31 +52,22 @@ func New() Config {
 	return defaultConfig
 }
 
-// GetText injects config values into template
-func GetText(tpl string, c Config) (string, error) {
-	t := template.New("config")
-	t, err := t.Parse(tpl)
-	if err != nil {
-		return "", err
-	}
-	buf := new(bytes.Buffer)
-	if err = t.Execute(buf, c); err != nil {
-		return "", err
-	}
-	return buf.String(), nil
+// Validate rejects values that could run commands when Easy-RSA sources the vars file
+func (c Config) Validate() error {
+	return render.CheckStrings(c, func(name, value string) error {
+		if !safeValue.MatchString(value) {
+			return fmt.Errorf("invalid value in %s: only letters, digits, spaces and . , _ @ & + ( ) : - are allowed", name)
+		}
+		return nil
+	})
 }
 
-// SaveToFile reads teamplate and writes result to destination file
+// GetText validates config and injects its values into template
+func GetText(tpl string, c Config) (string, error) {
+	return render.Text(tpl, c)
+}
+
+// SaveToFile validates config, reads template and writes result to destination file
 func SaveToFile(tplPath string, c Config, destPath string) error {
-	template, err := os.ReadFile(tplPath)
-	if err != nil {
-		return err
-	}
-
-	str, err := GetText(string(template), c)
-	if err != nil {
-		return err
-	}
-
-	return os.WriteFile(destPath, []byte(str), 0600)
+	return render.SaveToFile(tplPath, c, destPath)
 }

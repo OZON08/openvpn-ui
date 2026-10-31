@@ -1081,7 +1081,7 @@ The openvpn-ui container must be able to read `pki/index.txt`. In **rootless Doc
 the container process maps to a non-root host UID and the PKI files created by the OpenVPN
 container (host root) are not world-readable by default.
 
-The PKI files are owned by `root` with group `karsten` (or whatever user runs your Docker
+The PKI files are owned by `root` with the group of the user that runs your Docker
 daemon). The group has write but **no read** by default (`-w-`). Because the openvpn-ui
 container process runs in the same group, Linux applies the group permission — and "others"
 read access (added by a naive `chmod o+r`) is ignored whenever the process matches the

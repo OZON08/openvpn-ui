@@ -76,6 +76,8 @@ func ParseStatus(input string) (*Status, error) {
 		fields := strings.Split(trim(line), ",")
 		c := fields[0]
 		switch {
+		case strings.HasPrefix(c, "ERROR:"):
+			return nil, errors.New(trim(line))
 		case c == "TITLE":
 			if len(fields) < 2 {
 				continue
@@ -89,7 +91,7 @@ func ParseStatus(input string) (*Status, error) {
 			s.TimeT = fields[2]
 		case c == "ROUTING_TABLE":
 			if len(fields) < 6 {
-				continue
+				return nil, fmt.Errorf("unsupported ROUTING_TABLE format: expected at least 6 fields, got %d", len(fields))
 			}
 			item := &RoutingPath{
 				VirtualAddress: fields[1],
@@ -101,10 +103,16 @@ func ParseStatus(input string) (*Status, error) {
 			s.RoutingTable = append(s.RoutingTable, item)
 		case c == "CLIENT_LIST":
 			if len(fields) < 12 {
-				continue
+				return nil, fmt.Errorf("unsupported CLIENT_LIST format: expected at least 12 fields, got %d", len(fields))
 			}
-			bytesR, _ := strconv.ParseUint(fields[5], 10, 64)
-			bytesS, _ := strconv.ParseUint(fields[6], 10, 64)
+			bytesR, err := strconv.ParseUint(fields[5], 10, 64)
+			if err != nil {
+				return nil, fmt.Errorf("invalid CLIENT_LIST bytes received: %w", err)
+			}
+			bytesS, err := strconv.ParseUint(fields[6], 10, 64)
+			if err != nil {
+				return nil, fmt.Errorf("invalid CLIENT_LIST bytes sent: %w", err)
+			}
 			item := &OVClient{
 				CommonName:      fields[1],
 				RealAddress:     fields[2],

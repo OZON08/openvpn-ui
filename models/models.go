@@ -112,11 +112,27 @@ func CreateDefaultSettings() (*Settings, error) {
 			logs.Info("New settings profile created")
 		} else {
 			logs.Debug(s)
+			if migrateLegacyManagement(&s, miAddress, miNetwork) {
+				if _, err := o.Update(&s, "MIAddress", "MINetwork"); err != nil {
+					return nil, err
+				}
+				logs.Info("Management interface settings moved to %s %s", miNetwork, miAddress)
+			}
 		}
 		return &s, nil
 	} else {
 		return nil, err
 	}
+}
+
+// migrateLegacyManagement replaces the former default TCP management endpoint in
+// stored settings. Values that an administrator changed are kept.
+func migrateLegacyManagement(s *Settings, address, network string) bool {
+	if s.MIAddress != "openvpn:2080" || s.MINetwork != "tcp" {
+		return false
+	}
+	s.MIAddress, s.MINetwork = address, network
+	return true
 }
 
 func CreateDefaultOVConfig(configDir string, ovConfigPath string, address string, network string) {

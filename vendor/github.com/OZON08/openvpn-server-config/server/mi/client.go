@@ -2,6 +2,7 @@ package mi
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"net"
 	"strings"
@@ -12,6 +13,8 @@ import (
 type Client struct {
 	MINetwork string
 	MIAddress string
+	// MIPassword is optional. Set it when the server uses a management pw-file.
+	MIPassword string `json:"-"`
 }
 
 // NewClient initializes Management Interface client structure
@@ -62,9 +65,6 @@ func (c *Client) GetLoadStats() (*LoadStats, error) {
 
 // KillSession kills OpenVPN connection
 func (c *Client) KillSession(cname string) (string, error) {
-	if err := validateMIInput(cname); err != nil {
-		return "", err
-	}
 	str, err := c.Execute("kill " + cname)
 	if err != nil {
 		return "", err
@@ -74,23 +74,11 @@ func (c *Client) KillSession(cname string) (string, error) {
 
 // Signal sends signal to daemon
 func (c *Client) Signal(signal string) error {
-	if err := validateMIInput(signal); err != nil {
-		return err
-	}
 	str, err := c.Execute("signal " + signal)
 	if err != nil {
 		return err
 	}
 	return ParseSignal(str)
-}
-
-// validateMIInput rejects inputs containing newline characters to prevent
-// command injection via the OpenVPN Management Interface protocol.
-func validateMIInput(s string) error {
-	if strings.ContainsAny(s, "\r\n") {
-		return fmt.Errorf("invalid input: newline characters are not allowed")
-	}
-	return nil
 }
 
 // Restarts the OpenVPN server
@@ -104,10 +92,52 @@ func (c *Client) RestartServer() error {
 	return nil
 }
 
-const miTimeout = 10 * time.Second
+const (
+	miTimeout        = 10 * time.Second
+	miPasswordPrompt = "ENTER PASSWORD:"
+)
+
+// login answers the password prompt, which OpenVPN sends without a line ending
+func (c *Client) login(conn net.Conn, buf *bufio.Reader) error {
+	prompt, err := buf.ReadString(':')
+	if err != nil {
+		return fmt.Errorf("management login: %w", err)
+	}
+	if strings.TrimSpace(prompt) != miPasswordPrompt {
+		return errors.New("management login: server did not ask for a password")
+	}
+	if err := writeLine(conn, c.MIPassword); err != nil {
+		return fmt.Errorf("management login: %w", err)
+	}
+	// A wrong password only gets a new prompt without a line ending
+	reply, err := buf.ReadString(':')
+	if err != nil {
+		return fmt.Errorf("management login: %w", err)
+	}
+	if strings.TrimSpace(reply) != "SUCCESS:" {
+		return errors.New("management login: password rejected")
+	}
+	if _, err := buf.ReadString('\n'); err != nil {
+		return fmt.Errorf("management login: %w", err)
+	}
+	return nil
+}
+
+// String keeps the password out of logs and debug output
+func (c Client) String() string {
+	return c.MINetwork + "://" + c.MIAddress
+}
+
+// GoString does the same for the %#v format
+func (c Client) GoString() string {
+	return c.String()
+}
 
 // Execute connects to the OpenVPN server, sends command and reads response
 func (c *Client) Execute(cmd string) (string, error) {
+	if err := validateLine(cmd); err != nil {
+		return "", err
+	}
 	conn, err := net.DialTimeout(c.MINetwork, c.MIAddress, miTimeout)
 	if err != nil {
 		return "", err
@@ -116,7 +146,18 @@ func (c *Client) Execute(cmd string) (string, error) {
 	conn.SetDeadline(time.Now().Add(miTimeout))
 
 	buf := bufio.NewReader(conn)
-	buf.ReadString('\n') //read welcome message
+	if c.MIPassword != "" {
+		if err := c.login(conn, buf); err != nil {
+			return "", err
+		}
+	}
+	// The prompt has no line ending, so waiting for the welcome line would stall
+	if head, _ := buf.Peek(len(miPasswordPrompt)); string(head) == miPasswordPrompt {
+		return "", errors.New("management login: server requires a password, set MIPassword")
+	}
+	if _, err := buf.ReadString('\n'); err != nil {
+		return "", fmt.Errorf("management welcome: %w", err)
+	}
 	err = SendCommand(conn, cmd)
 	if err != nil {
 		return "", err

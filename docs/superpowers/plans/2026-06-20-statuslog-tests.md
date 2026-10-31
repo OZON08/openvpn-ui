@@ -12,7 +12,7 @@
 
 - Test file must be `package monitor` (not `package monitor_test`) — required to access unexported functions `parseConnectedSince` and `splitHostPort`
 - All fixture files live under `lib/monitor/testdata/` — Go sets the working directory to the package source dir when running tests, so `"testdata/filename"` resolves correctly
-- Run tests with: `export PATH=$PATH:/usr/local/go/bin && go test ./lib/monitor/... -v` from the repo root `/home/karsten/OneDrive/Dokumente/Repos/openvpn-ui`
+- Run tests with: `export PATH=$PATH:/usr/local/go/bin && go test ./lib/monitor/... -v` from the repo root
 - No new exported symbols — existing API unchanged
 - No mocking — all tests use real file I/O or real function calls
 
