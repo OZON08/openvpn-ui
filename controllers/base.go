@@ -2,7 +2,9 @@ package controllers
 
 import (
 	"os"
+	"slices"
 
+	mi "github.com/OZON08/openvpn-server-config/server/mi"
 	"github.com/beego/beego/v2/server/web"
 	"github.com/OZON08/openvpn-ui/lib"
 	"github.com/OZON08/openvpn-ui/models"
@@ -93,6 +95,43 @@ func (c *BaseController) RequireAdmin() {
 		c.Ctx.Redirect(302, c.URLFor("MainController.Get"))
 		c.StopRun()
 	}
+}
+
+// canAccessCert reports whether the logged-in user may act on this certificate.
+func (c *BaseController) canAccessCert(name string) bool {
+	if c.Userinfo == nil {
+		return false
+	}
+	if c.Userinfo.IsAdmin {
+		return true
+	}
+	allowed, err := models.CertsForUser(c.Userinfo.Id)
+	return err == nil && slices.Contains(allowed, name)
+}
+
+// visibleClients limits VPN sessions to those the logged-in user may see.
+func (c *BaseController) visibleClients(clients []*mi.OVClient) []*mi.OVClient {
+	if c.Userinfo != nil && c.Userinfo.IsAdmin {
+		return clients
+	}
+	if c.Userinfo == nil {
+		return filterClients(clients, nil)
+	}
+	allowed, err := models.CertsForUser(c.Userinfo.Id)
+	if err != nil {
+		return filterClients(clients, nil)
+	}
+	return filterClients(clients, allowed)
+}
+
+func filterClients(clients []*mi.OVClient, allowed []string) []*mi.OVClient {
+	filtered := make([]*mi.OVClient, 0, len(clients))
+	for _, client := range clients {
+		if slices.Contains(allowed, client.CommonName) {
+			filtered = append(filtered, client)
+		}
+	}
+	return filtered
 }
 
 func (c *BaseController) LoginPath() string {

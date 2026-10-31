@@ -159,22 +159,6 @@ func (c *CertificatesController) showCerts() {
 	c.Data["SettingsC"] = &cfg1
 }
 
-func (c *CertificatesController) canAccessCert(name string) bool {
-	if c.Userinfo.IsAdmin {
-		return true
-	}
-	allowed, err := models.CertsForUser(c.Userinfo.Id)
-	if err != nil {
-		return false
-	}
-	for _, n := range allowed {
-		if n == name {
-			return true
-		}
-	}
-	return false
-}
-
 // @router /certificates [post]
 func (c *CertificatesController) Post() {
 	c.TplName = "certificates.html"

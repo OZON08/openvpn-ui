@@ -24,14 +24,12 @@ type KillParams struct {
 // @Failure 400 request failure
 // @router / [get]
 func (c *APISessionController) Get() {
-	if !c.RequireAdmin() {
-		return
-	}
 	client := mi.NewClient(state.GlobalCfg.MINetwork, state.GlobalCfg.MIAddress)
 	status, err := client.GetStatus()
 	if err != nil {
 		c.ServeJSONError(err.Error())
 	} else {
+		status.ClientList = c.visibleClients(status.ClientList)
 		c.ServeJSONData(status)
 	}
 }
@@ -44,9 +42,6 @@ func (c *APISessionController) Get() {
 // @Failure 400 request failure
 // @router / [delete]
 func (c *APISessionController) Kill() {
-	if !c.RequireAdmin() {
-		return
-	}
 	client := mi.NewClient(state.GlobalCfg.MINetwork, state.GlobalCfg.MIAddress)
 	p := KillParams{}
 	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &p); err != nil {
@@ -54,6 +49,10 @@ func (c *APISessionController) Kill() {
 		return
 	}
 
+	if !c.canAccessCert(p.Cname) {
+		c.ServeJSONError("You are not authorized")
+		return
+	}
 	if r, err := client.KillSession(p.Cname); err != nil {
 		c.ServeJSONError(err.Error())
 	} else {
