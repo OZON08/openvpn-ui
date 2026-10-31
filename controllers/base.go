@@ -83,6 +83,18 @@ func (c *BaseController) SetLogin(user *models.User) {
 	c.Userinfo = user
 }
 
+// RequireAdmin ends the request unless an administrator is logged in.
+func (c *BaseController) RequireAdmin() {
+	if !c.IsLogin {
+		c.Ctx.Redirect(302, c.LoginPath())
+		c.StopRun()
+	}
+	if c.Userinfo == nil || !c.Userinfo.IsAdmin {
+		c.Ctx.Redirect(302, c.URLFor("MainController.Get"))
+		c.StopRun()
+	}
+}
+
 func (c *BaseController) LoginPath() string {
 	return c.URLFor("LoginController.Login")
 }

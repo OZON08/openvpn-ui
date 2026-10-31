@@ -3,6 +3,9 @@ package models
 import (
 	"fmt"
 	"net"
+	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -28,19 +31,24 @@ type Settings struct {
 	Updated time.Time `orm:"auto_now;type(datetime)"`
 }
 
+// socketPath matches paths that stay one argument of the management directive.
+var socketPath = regexp.MustCompile(`^/[A-Za-z0-9._/-]+$`)
+
 // ManagementDirective returns the arguments of the OpenVPN management directive for
-// these settings. A TCP server listens on all addresses, because the stored host is
-// the name the UI connects to.
+// these settings. A TCP server binds to the stored IP address. Host names are rejected,
+// because they would need a listener on all addresses, and the interface has no password.
 func (s Settings) ManagementDirective() (string, error) {
-	if s.MINetwork == "unix" && s.MIAddress != "" {
+	if s.MINetwork == "unix" && socketPath.MatchString(s.MIAddress) && filepath.Clean(s.MIAddress) == s.MIAddress {
 		return s.MIAddress + " unix", nil
 	}
 	if strings.HasPrefix(s.MINetwork, "tcp") {
-		if _, port, err := net.SplitHostPort(s.MIAddress); err == nil && port != "" {
-			return "0.0.0.0 " + port, nil
+		if host, port, err := net.SplitHostPort(s.MIAddress); err == nil {
+			if number, err := strconv.ParseUint(port, 10, 16); err == nil && number > 0 && net.ParseIP(host) != nil {
+				return host + " " + port, nil
+			}
 		}
 	}
-	return "", fmt.Errorf("invalid management settings: %q %q", s.MIAddress, s.MINetwork)
+	return "", fmt.Errorf("invalid management settings %q %q: use the socket path with unix, or an IP address and port with tcp", s.MIAddress, s.MINetwork)
 }
 
 // Insert wrapper

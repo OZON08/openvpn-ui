@@ -21,10 +21,7 @@ type OVClientConfigController struct {
 }
 
 func (c *OVClientConfigController) NestPrepare() {
-	if !c.IsLogin {
-		c.Ctx.Redirect(302, c.LoginPath())
-		return
-	}
+	c.RequireAdmin()
 	c.Data["breadcrumbs"] = &BreadCrumbs{
 		Title: "OpenVPN Client configuration",
 	}

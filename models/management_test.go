@@ -66,8 +66,9 @@ func TestMigrateLegacyManagementWaitsForSharedDirectory(t *testing.T) {
 func TestManagementDirective(t *testing.T) {
 	for _, tc := range []struct{ address, network, want string }{
 		{"/etc/openvpn/run/mi.sock", "unix", "/etc/openvpn/run/mi.sock unix"},
-		{"openvpn:2080", "tcp", "0.0.0.0 2080"},
-		{"10.0.0.5:2081", "tcp4", "0.0.0.0 2081"},
+		{"10.0.0.5:2081", "tcp4", "10.0.0.5 2081"},
+		{"127.0.0.1:2080", "tcp", "127.0.0.1 2080"},
+		{"[::1]:2080", "tcp6", "::1 2080"},
 	} {
 		s := Settings{MIAddress: tc.address, MINetwork: tc.network}
 		got, err := s.ManagementDirective()
@@ -83,6 +84,13 @@ func TestManagementDirective(t *testing.T) {
 func TestManagementDirectiveRejectsUnusableSettings(t *testing.T) {
 	for _, s := range []Settings{
 		{MIAddress: "no-port", MINetwork: "tcp"},
+		{MIAddress: "openvpn:2080", MINetwork: "tcp"},
+		{MIAddress: "10.0.0.5:99999", MINetwork: "tcp"},
+		{MIAddress: "10.0.0.5:0", MINetwork: "tcp"},
+		{MIAddress: "/run/mi.sock pwfile", MINetwork: "unix"},
+		{MIAddress: "/run/mi.sock#x", MINetwork: "unix"},
+		{MIAddress: "/run/../tmp/mi.sock", MINetwork: "unix"},
+		{MIAddress: "relative/mi.sock", MINetwork: "unix"},
 		{MIAddress: "openvpn:2080", MINetwork: "udp"},
 		{MIAddress: "", MINetwork: "unix"},
 	} {

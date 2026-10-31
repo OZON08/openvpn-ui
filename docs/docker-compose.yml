@@ -2,7 +2,6 @@ services:
     openvpn:
         container_name: openvpn
         image: ozon08/openvpn-server:latest
-        privileged: true
         ports:
             - "1194:1194/udp"   # openvpn UDP port
             # - "1194:1194/tcp"   # openvpn TCP port
@@ -30,6 +29,10 @@ services:
             - ./run:/etc/openvpn/run
         cap_add:
             - NET_ADMIN
+        devices:
+            - /dev/net/tun:/dev/net/tun
+        sysctls:
+            net.ipv4.ip_forward: "1"
         restart: always
         healthcheck:
             test: ["CMD-SHELL", "test -S /etc/openvpn/run/mi.sock && pgrep openvpn >/dev/null"]
@@ -37,7 +40,7 @@ services:
             timeout: 5s
             retries: 3
             # First start generates the PKI including 4096-bit DH parameters,
-            # which can take 5-15 minutes on slower hardware. Subsequent starts
+            # which can take over an hour on slower hardware. Subsequent starts
             # complete within seconds because PKI is persisted in the volume.
             start_period: 7200s
 

@@ -14,7 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`start.sh` no longer reads its path from `conf/app.conf`** — the web user can change that file, and the script uses the path as root for `chgrp` and `chmod`. A compromised web process could have become root in the container. The path is now `/etc/openvpn`, or `OPENVPN_DIR` if set.
 - **`start.sh` limits group access in `/etc/openvpn`** — the web process could overwrite `fw-rules.sh`, `.env` and private keys. Group access now covers only `server.conf`, `config/`, `clients/`, `staticclients/` and `pki/`, and earlier group write is removed elsewhere. A host user with GID 1000 can now read the PKI, because the certificate scripts need it.
+- **Configuration pages and the signal API need an administrator** — any logged-in user could edit `server.conf`, the settings and EasyRSA values, use the maintenance actions and send signals. The menu already hid these pages from other users.
 - **Signal API rejects other signals** — only `SIGUSR1`, `SIGUSR2` and `SIGTERM` are accepted. `SIGHUP` stopped OpenVPN once `server.conf` had mode `0600`.
+- **Stricter management settings** — a socket path must be absolute and clean, and TCP needs an IP address and port. Host names no longer open a port on all addresses.
+- **Workflow actions pinned to commit SHAs** — they receive the Docker Hub token.
+- **Compose examples in `docs/` no longer use `privileged`** — they use `/dev/net/tun` and the forwarding sysctl, as `openvpn-server` does.
 - **Client profiles are validated** — they now use the library's `SaveToFile`, which rejects line breaks in single-value fields.
 
 ### Changed

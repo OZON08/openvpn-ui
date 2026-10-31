@@ -13,14 +13,16 @@ The matching server change is in the `openvpn-server` repo, version v0.6.4, in `
 | File | Change |
 |---|---|
 | `conf/app.conf`, `build/assets/app.conf` | Management address and network set to the socket |
-| `conf/openvpn-server-config.tpl`, `controllers/ovconfig.go`, `models/settings.go` | The `management` line now comes from the settings. It was fixed to `0.0.0.0 2080` before |
+| `conf/openvpn-server-config.tpl`, `controllers/ovconfig.go`, `models/settings.go` | The `management` line now comes from the settings. It was fixed to `0.0.0.0 2080` before. A socket path must be absolute and clean, and TCP needs an IP address and port |
+| `controllers/base.go`, `settings.go`, `ovconfig.go`, `ovclientconfig.go`, `easyrsaconfig.go`, `dangerzone.go` | `RequireAdmin` limits these pages to administrators, as the menu already does |
+| `.github/workflows/` | Actions are pinned to commit SHAs, because they receive the Docker Hub token |
 | `models/models.go`, `models/management_test.go` | Stored TCP settings with port 2080 move to the socket at startup, once the `run` directory exists. Other ports are kept |
-| `controllers/api-signal.go` | The signal API only accepts `SIGUSR1`, `SIGUSR2` and `SIGTERM` |
+| `controllers/api-signal.go` | The signal API is limited to administrators and only accepts `SIGUSR1`, `SIGUSR2` and `SIGTERM` |
 | `controllers/certificates.go` | Client profiles use `clientconfig.SaveToFile`, so they are validated as well |
 | `build/assets/genclient.sh` | Removed a `chmod` on `pki/issued`, which stopped the script for a non-owner |
 | `build/go.mod`, `build/go.sum` | Removed. They were outdated and only filled a cache layer in `build/Dockerfile-beego` |
 | `views/settings.html` | Placeholders show the socket |
-| `docs/docker-compose.yml`, `docs/docker-compose.influx.yml` | New `./run:/etc/openvpn/run` volume, healthcheck checks socket and process, port entry removed |
+| `docs/docker-compose.yml`, `docs/docker-compose.influx.yml` | New `./run:/etc/openvpn/run` volume, healthcheck checks socket and process, port entry removed, `privileged` replaced by `/dev/net/tun` and the forwarding sysctl as in `openvpn-server`, `start_period` of 7200s |
 | `go.mod`, `go.sum`, `vendor/` | `openvpn-server-config` v0.5.0, Go 1.26.10 and security updates for `x/net`, `x/text`, `grpc`, `go-ntlmssp` and `klauspost/compress` |
 | `build/build.sh`, `build/Dockerfile-beego`, `Dockerfile.ci`, `build/standalone-install.sh` | Go 1.26.10. `build/build.sh` rejects armv5 and armv6 |
 | `build/assets/start.sh` | Adds `openvpn-ui` to the group `openvpn-mi`, limits group access in `/etc/openvpn` to the paths the UI manages, hands the rendered files to `openvpn-ui`, and no longer reads its path from `conf/app.conf`, which the web user can change. `OPENVPN_DIR` overrides the default `/etc/openvpn` |
@@ -110,5 +112,7 @@ The new `start.sh` and `genclient.sh` were tested in the UI image, mounted over 
 
 1. The monitoring cannot read `log/openvpn-status.log` with an older server image: OpenVPN creates it with mode `0600` as root. `openvpn-server` now creates the logs for the group `openvpn-mi`. This is not tested with this version of the UI.
 2. Decide which TLS mode client profiles use. `build/assets/genclient.sh`, `revoke.sh` and `rmcert.sh` write `<tls-auth>`, while `conf/openvpn-client-config.tpl` writes `<tls-crypt>`. A server config rendered by the UI reportedly rejects `tls-auth` clients. This does not come from this change.
-3. A server config saved with TCP settings opens an unauthenticated port on all addresses. This is the former behaviour and only applies to settings an administrator kept on TCP.
+3. A server config saved with TCP settings opens an unauthenticated port on the stored IP address. This only applies to settings an administrator kept on TCP. Host names are rejected, so saving fails until such settings use an IP address or the socket. This also applies when the `run` volume is still missing.
 4. `conf/app.conf` and installs without containers point at the socket, but only the server image creates `run`. There, set the address and network in the settings.
+5. Forms have no CSRF protection, because `EnableXSRF` is not set. A logged-in administrator who opens a malicious page could trigger changes. This does not come from this change.
+6. The compose examples in `README.md` and `DOCKER_HUB.md` still use `privileged: true`.

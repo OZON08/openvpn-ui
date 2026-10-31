@@ -31,6 +31,10 @@ func isAllowedSignal(name string) bool {
 // @Failure 400 request failure
 // @router / [post]
 func (c *APISignalController) Send() {
+	if c.Userinfo == nil || !c.Userinfo.IsAdmin {
+		c.ServeJSONError("You are not authorized")
+		return
+	}
 	client := mi.NewClient(state.GlobalCfg.MINetwork, state.GlobalCfg.MIAddress)
 	p := SignalParams{}
 	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &p); err != nil {
