@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Stricter management settings** — a socket path must be absolute and clean, and TCP needs an IP address and port. Host names no longer open a port on all addresses.
 - **Workflow actions pinned to commit SHAs** — they receive the Docker Hub token.
 - **Compose examples in `docs/` no longer use `privileged`** — they use `/dev/net/tun` and the forwarding sysctl, as `openvpn-server` does.
+- **Revocation works for renewed and removed certificates** — `revoke.sh` deleted the record of a renewed certificate and `rmcert.sh` deleted revoked records, so these certificates were not on the next CRL and kept working. Certificates handled this way before stay valid until they are revoked again by hand or expire.
+- **Session API limited to the user's own certificates** — any logged-in user could list all sessions and routes and disconnect any client.
+- **`start.sh` skips hardlinks** — a link to a file outside the managed paths could be taken over, because the script runs as root.
 - **Client profiles are validated** — they now use the library's `SaveToFile`, which rejects line breaks in single-value fields.
 
 ### Changed
@@ -31,6 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Creating client certificates** — the web user can now read the PKI, and `genclient.sh` no longer stops at a `chmod` it may not run.
+- **Static client addresses** — the files get mode `0644`, so that OpenVPN can read them without a server restart.
+- **Profile from `genclient.sh`** — the certificate keeps its PEM lines. OpenVPN could not load this file before.
+- **Recreated `server.conf`** — it uses the management settings, not a former stored value.
 - **`OPENVPN_MI_GID` collisions** — a GID that already exists no longer stops the UI from starting.
 - **`build/Dockerfile` installs `su-exec` and creates `openvpn-ui`** — `start.sh` needs both, so local images from `build/build.sh` could not start.
 

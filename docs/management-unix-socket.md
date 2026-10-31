@@ -1,6 +1,6 @@
 # Management interface over a Unix socket
 
-Status: 2026-10-31. The change is committed on the branch `feat/management-unix-socket`. The complete stack was tested with both images built from `Dockerfile.ci` and the `openvpn-server` Dockerfile.
+Status: 2026-10-31. The change is committed on the branch `feat/management-unix-socket` and not merged. The complete stack was tested with commit `e3920ec`, built from `Dockerfile.ci`, against `ozon08/openvpn-server:dev` with OpenVPN 2.7.7 and easy-rsa 3.2.5.
 
 ## Goal
 
@@ -15,17 +15,20 @@ The matching server change is in the `openvpn-server` repo, version v0.6.4, in `
 | `conf/app.conf`, `build/assets/app.conf` | Management address and network set to the socket |
 | `conf/openvpn-server-config.tpl`, `controllers/ovconfig.go`, `models/settings.go` | The `management` line now comes from the settings. It was fixed to `0.0.0.0 2080` before. A socket path must be absolute and clean, and TCP needs an IP address and port |
 | `controllers/base.go`, `settings.go`, `ovconfig.go`, `ovclientconfig.go`, `easyrsaconfig.go`, `dangerzone.go` | `RequireAdmin` limits these pages to administrators, as the menu already does |
+| `controllers/api-session.go`, `default.go`, `base.go` | Other users only list and disconnect sessions of certificates assigned to them. This covers clients and the routing table |
+| `build/assets/revoke.sh`, `build/assets/rmcert.sh`, `lib/certificates.go` | See [Revocation](#revocation) |
 | `.github/workflows/` | Actions are pinned to commit SHAs, because they receive the Docker Hub token |
 | `models/models.go`, `models/management_test.go` | Stored TCP settings with port 2080 move to the socket at startup, once the `run` directory exists. Other ports are kept |
 | `controllers/api-signal.go` | The signal API is limited to administrators and only accepts `SIGUSR1`, `SIGUSR2` and `SIGTERM` |
 | `controllers/certificates.go` | Client profiles use `clientconfig.SaveToFile`, so they are validated as well |
-| `build/assets/genclient.sh` | Removed a `chmod` on `pki/issued`, which stopped the script for a non-owner |
+| `build/assets/genclient.sh` | Removed a `chmod` on `pki/issued`, which stopped the script for a non-owner. The certificate in the written profile keeps its PEM lines |
+| `lib/certificates.go` | Files for static client addresses get mode `0644`, so that OpenVPN can read them as `nobody` |
 | `build/go.mod`, `build/go.sum` | Removed. They were outdated and only filled a cache layer in `build/Dockerfile-beego` |
 | `views/settings.html` | Placeholders show the socket |
 | `docs/docker-compose.yml`, `docs/docker-compose.influx.yml` | New `./run:/etc/openvpn/run` volume, healthcheck checks socket and process, port entry removed, `privileged` replaced by `/dev/net/tun` and the forwarding sysctl as in `openvpn-server`, `start_period` of 7200s |
 | `go.mod`, `go.sum`, `vendor/` | `openvpn-server-config` v0.5.0, Go 1.26.10 and security updates for `x/net`, `x/text`, `grpc`, `go-ntlmssp` and `klauspost/compress` |
 | `build/build.sh`, `build/Dockerfile-beego`, `Dockerfile.ci`, `build/standalone-install.sh` | Go 1.26.10. `build/build.sh` rejects armv5 and armv6 |
-| `build/assets/start.sh` | Adds `openvpn-ui` to the group `openvpn-mi`, limits group access in `/etc/openvpn` to the paths the UI manages, hands the rendered files to `openvpn-ui`, and no longer reads its path from `conf/app.conf`, which the web user can change. `OPENVPN_DIR` overrides the default `/etc/openvpn` |
+| `build/assets/start.sh` | Adds `openvpn-ui` to the group `openvpn-mi`, limits group access in `/etc/openvpn` to the paths the UI manages, hands the rendered files to `openvpn-ui`, skips symlinks and hardlinks in what it changes as root, prepares a missing `server.conf`, and no longer reads its path from `conf/app.conf`, which the web user can change. `OPENVPN_DIR` overrides the default `/etc/openvpn` |
 | `build/Dockerfile` | Installs `su-exec` and creates the user `openvpn-ui`, which `start.sh` needs |
 | `CHANGELOG.md` | Entry for this change |
 | `README.md`, `DOCKER_HUB.md` | `./run` volume in the examples |
@@ -50,9 +53,20 @@ To use another GID, set `OPENVPN_MI_GID` to the same value on both services. Rec
 
 ## Group access in `/etc/openvpn`
 
-`start.sh` gives the group `openvpn-ui` (GID 1000) read and write access to `server.conf`, `config/`, `clients/`, `staticclients/` and `pki/`. It removes group write from everything else except `run`, also where earlier versions added it. The web process can therefore no longer change `fw-rules.sh`, `.env` or `/etc/openvpn` itself.
+`start.sh` gives the group `openvpn-ui` (GID 1000) read and write access to `server.conf`, `config/`, `clients/`, `staticclients/` and `pki/`. It removes group write from everything else except `run`, also where earlier versions added it. The web process can therefore no longer change `fw-rules.sh`, `.env` or `/etc/openvpn` itself, **unless these files or this directory belong to UID 1000 on the host**. That is often the normal host user.
 
-The certificate scripts run as the web user and need the CA key. **A host user with GID 1000 can therefore read `pki/private/ca.key` and the other private keys.** Before this change that user could overwrite these files but not read them, and creating certificates failed unless the README's `g+rX` step was applied.
+The certificate scripts run as the web user and need the CA key. **A host user with GID 1000 can therefore read `pki/private/ca.key` and the other private keys, and also the private keys in `clients/*.ovpn` and `oath.secrets`.** Before this change that user could overwrite these files but not read them, and creating certificates failed unless the README's `g+rX` step was applied.
+
+## Revocation
+
+`revoke.sh` revokes the requested certificate and keeps its record in `index.txt`, because `gen-crl` only lists the serials it finds there.
+
+- **Old certificate of a renewal:** only this certificate is revoked. The new one stays valid.
+- **Current certificate of a renewal:** the old certificate is revoked as well, otherwise it would keep working.
+
+`rmcert.sh` no longer deletes a record. It marks it with `/removed=1`, and the UI hides it. Deleting it made the certificate valid again with the next CRL.
+
+**Earlier versions deleted these records.** A renewed certificate that was "revoked" with an earlier version is not on the CRL and stays valid until it expires. The same applies to a revoked certificate that was removed. These certificates have to be revoked again by hand, or the CA replaced.
 
 ## Rollout
 
@@ -84,24 +98,25 @@ The UI keeps its TCP settings until the `run` directory exists, so it stays on t
   - An old `server.conf` moves to the socket and keeps its inode. A line with port `20800` is left alone.
   - Saving `server.conf` through the UI works, also when the file belonged to root. It keeps its inode, gets mode `0600`, and OpenVPN starts with the rendered file.
 
-One check with the UI started first failed once and returned no version. It passed in the other complete runs and in 10 further requests over 5 restarts of this start order, without socket errors in the log. The cause of the single failure is unknown.
-
 A custom GID through `.env` was tested on both services.
 
-The stack results above are from before the changes to group access, the `management` line and the signal API.
+Commit `e3920ec` was tested with 59 checks and no failures, once with a copied PKI and once with a new PKI from easy-rsa 3.2.5. The stack used the compose file of the commit, without `docker.sock`:
 
-The new `start.sh` and `genclient.sh` were tested in the UI image, mounted over the older files, without the server container and with a test PKI that uses `EASYRSA_DN=cn_only`. As the web user:
-
-- Creating and revoking a client certificate works. With the older files it fails, because the web user cannot read the PKI.
-- `fw-rules.sh`, `.env` and `/etc/openvpn` are not writable. With the older files they are.
-- `OPENVPN_MI_GID=1000` and a changed GID start correctly. With the older file, GID 1000 stops the container.
+- Certificates created, renewed and revoked through the web interface, with real client connections. Revoked certificates are rejected, also after a removal and a new CRL.
+- A profile downloaded from the UI connects once the server config was saved through the UI. See Open item 1.
+- Anonymous requests and other users are refused on the configuration pages and the signal API. Their `POST` requests change nothing.
+- Other users do not see or disconnect foreign sessions. An assigned user does both.
+- `pki` stays searchable and `crl.pem` readable for `nobody` after a UI restart, while `ca.key` is not readable.
+- `fw-rules.sh`, a root-only file and `/etc/openvpn` are not writable when they belong to root.
+- A static address file has mode `0644` and `nobody` can read it. Whether the client gets this address was not checked.
+- Stored settings with `vpn:2080` and `tcp4` move to the socket. A missing `server.conf` is recreated with the socket, also when the database holds the former value.
+- The monitoring logs no `status.log` errors.
+- A hardlink to `/opt/start.sh` keeps its group, where the previous version changed it.
 
 ## Not tested
 
 - An image built with `build/build.sh`, including the `build/Dockerfile` change.
 - The restart buttons that use `docker.sock`.
-- An actual VPN client connection with this version of the UI.
-- Creating a certificate through the web interface against a PKI from the server container.
 - Rootless Docker.
 
 ## Decisions
@@ -110,9 +125,10 @@ The new `start.sh` and `genclient.sh` were tested in the UI image, mounted over 
 
 ## Open
 
-1. The monitoring cannot read `log/openvpn-status.log` with an older server image: OpenVPN creates it with mode `0600` as root. `openvpn-server` now creates the logs for the group `openvpn-mi`. This is not tested with this version of the UI.
-2. Decide which TLS mode client profiles use. `build/assets/genclient.sh`, `revoke.sh` and `rmcert.sh` write `<tls-auth>`, while `conf/openvpn-client-config.tpl` writes `<tls-crypt>`. A server config rendered by the UI reportedly rejects `tls-auth` clients. This does not come from this change.
-3. A server config saved with TCP settings opens an unauthenticated port on the stored IP address. This only applies to settings an administrator kept on TCP. Host names are rejected, so saving fails until such settings use an IP address or the socket. This also applies when the `run` volume is still missing.
-4. `conf/app.conf` and installs without containers point at the socket, but only the server image creates `run`. There, set the address and network in the settings.
-5. Forms have no CSRF protection, because `EnableXSRF` is not set. A logged-in administrator who opens a malicious page could trigger changes. This does not come from this change.
-6. The compose examples in `README.md` and `DOCKER_HUB.md` still use `privileged: true`.
+1. Decide which TLS mode client profiles use. `build/assets/genclient.sh`, `revoke.sh` and `rmcert.sh` write `<tls-auth>`, and the `server.conf` of `openvpn-server` uses it. `conf/openvpn-client-config.tpl` and the config rendered by the UI use `tls-crypt`. A downloaded profile therefore only connects once the config was saved through the UI, and a `tls-auth` profile stops working then. This does not come from this change.
+2. A server config saved with TCP settings opens an unauthenticated port on the stored IP address. This only applies to settings an administrator kept on TCP. Host names are rejected, so saving fails until such settings use an IP address or the socket. This also applies when the `run` volume is still missing.
+3. `conf/app.conf` and installs without containers point at the socket, but only the server image creates `run`. There, set the address and network in the settings.
+4. Forms have no CSRF protection, because `EnableXSRF` is not set. A logged-in administrator who opens a malicious page could trigger changes. This does not come from this change.
+5. The compose examples in `README.md` and `DOCKER_HUB.md` still use `privileged: true`.
+6. `./:/etc/openvpn` gives the UI container the whole directory. Mounting only the paths it manages would also protect `fw-rules.sh` and `.env` when they belong to UID 1000.
+7. `.github/dependabot.yml` has an empty `package-ecosystem`, so version updates are probably not running.
