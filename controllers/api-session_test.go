@@ -6,15 +6,24 @@ import (
 	mi "github.com/OZON08/openvpn-server-config/server/mi"
 )
 
-func TestFilterClientsKeepsOnlyAllowedNames(t *testing.T) {
-	clients := []*mi.OVClient{{CommonName: "mine"}, {CommonName: "other"}}
-
-	got := filterClients(clients, []string{"mine"})
-
-	if len(got) != 1 || got[0].CommonName != "mine" {
-		t.Fatalf("unexpected clients: %d", len(got))
+func TestLimitStatusKeepsOnlyAllowedNames(t *testing.T) {
+	status := &mi.Status{
+		ClientList:   []*mi.OVClient{{CommonName: "mine"}, {CommonName: "other"}},
+		RoutingTable: []*mi.RoutingPath{{CommonName: "mine"}, {CommonName: "other"}},
 	}
-	if got := filterClients(clients, nil); len(got) != 0 {
-		t.Fatalf("expected no clients without assignments, got %d", len(got))
+
+	limitStatus(status, []string{"mine"})
+
+	if len(status.ClientList) != 1 || status.ClientList[0].CommonName != "mine" {
+		t.Fatalf("unexpected clients: %d", len(status.ClientList))
+	}
+	if len(status.RoutingTable) != 1 || status.RoutingTable[0].CommonName != "mine" {
+		t.Fatalf("unexpected routes: %d", len(status.RoutingTable))
+	}
+
+	limitStatus(status, nil)
+
+	if len(status.ClientList) != 0 || len(status.RoutingTable) != 0 {
+		t.Fatalf("expected nothing without assignments: %d clients, %d routes", len(status.ClientList), len(status.RoutingTable))
 	}
 }

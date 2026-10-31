@@ -40,6 +40,8 @@ find db "${UNLINKED[@]}" -exec chown openvpn-ui:openvpn-ui {} +
 # .env, loses group write, also where earlier versions granted it. The run directory
 # is skipped as well, because it restricts access to the management socket.
 mkdir -p "$OPENVPN_DIR/config" "$OPENVPN_DIR/clients" "$OPENVPN_DIR/staticclients"
+# The web user cannot create files in this directory, and renders a missing server.conf into an empty one.
+[ -e "$OPENVPN_DIR/server.conf" ] || install -m 640 /dev/null "$OPENVPN_DIR/server.conf"
 PRUNE=(-path "$OPENVPN_DIR/run")
 MANAGED=()
 for name in server.conf config clients staticclients pki; do

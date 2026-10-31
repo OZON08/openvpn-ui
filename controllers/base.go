@@ -109,29 +109,27 @@ func (c *BaseController) canAccessCert(name string) bool {
 	return err == nil && slices.Contains(allowed, name)
 }
 
-// visibleClients limits VPN sessions to those the logged-in user may see.
-func (c *BaseController) visibleClients(clients []*mi.OVClient) []*mi.OVClient {
+// scopeStatus limits a VPN status to the sessions the logged-in user may see.
+func (c *BaseController) scopeStatus(status *mi.Status) {
 	if c.Userinfo != nil && c.Userinfo.IsAdmin {
-		return clients
+		return
 	}
-	if c.Userinfo == nil {
-		return filterClients(clients, nil)
-	}
-	allowed, err := models.CertsForUser(c.Userinfo.Id)
-	if err != nil {
-		return filterClients(clients, nil)
-	}
-	return filterClients(clients, allowed)
-}
-
-func filterClients(clients []*mi.OVClient, allowed []string) []*mi.OVClient {
-	filtered := make([]*mi.OVClient, 0, len(clients))
-	for _, client := range clients {
-		if slices.Contains(allowed, client.CommonName) {
-			filtered = append(filtered, client)
+	var allowed []string
+	if c.Userinfo != nil {
+		if names, err := models.CertsForUser(c.Userinfo.Id); err == nil {
+			allowed = names
 		}
 	}
-	return filtered
+	limitStatus(status, allowed)
+}
+
+func limitStatus(status *mi.Status, allowed []string) {
+	status.ClientList = slices.DeleteFunc(status.ClientList, func(client *mi.OVClient) bool {
+		return !slices.Contains(allowed, client.CommonName)
+	})
+	status.RoutingTable = slices.DeleteFunc(status.RoutingTable, func(route *mi.RoutingPath) bool {
+		return !slices.Contains(allowed, route.CommonName)
+	})
 }
 
 func (c *BaseController) LoginPath() string {

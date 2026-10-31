@@ -194,7 +194,8 @@ func CreateDefaultOVConfig(configDir string, ovConfigPath string, address string
 			logs.Debug(c)
 		}
 		serverConfig := filepath.Join(ovConfigPath, "server.conf")
-		if _, err = os.Stat(serverConfig); os.IsNotExist(err) {
+		// start.sh prepares an empty file, because the web user cannot create it
+		if info, err := os.Stat(serverConfig); os.IsNotExist(err) || (err == nil && info.Size() == 0) {
 			// A stored row can still hold the former management value
 			management, err := Settings{MIAddress: address, MINetwork: network}.ManagementDirective()
 			if err == nil {

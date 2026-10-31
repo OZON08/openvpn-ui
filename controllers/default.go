@@ -33,7 +33,7 @@ func (c *MainController) Get() {
 		logs.Warn(fmt.Sprintf("passed client line: %s", client))
 		logs.Warn(fmt.Sprintf("error: %s", err))
 	} else {
-		status.ClientList = c.visibleClients(status.ClientList)
+		c.scopeStatus(status)
 		c.Data["ovstatus"] = status
 	}
 	lib.Dump(status)

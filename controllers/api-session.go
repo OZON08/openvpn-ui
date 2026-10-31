@@ -29,7 +29,7 @@ func (c *APISessionController) Get() {
 	if err != nil {
 		c.ServeJSONError(err.Error())
 	} else {
-		status.ClientList = c.visibleClients(status.ClientList)
+		c.scopeStatus(status)
 		c.ServeJSONData(status)
 	}
 }
