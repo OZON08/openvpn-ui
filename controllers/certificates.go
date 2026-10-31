@@ -177,17 +177,20 @@ func (c *CertificatesController) Post() {
 		if vMap := validateCertParams(cParams); vMap != nil {
 			c.Data["validation"] = vMap
 		} else {
+			// The name can be free again after a removal. Its former owner must not get this certificate.
+			if err := clearFreeCertName(cParams.Name); err != nil {
+				logs.Error(err)
+				flash.Error("%s", err.Error())
+				flash.Store(&c.Controller)
+				c.showCerts()
+				return
+			}
 			logs.Info("Controller: Creating certificate with parameters: Name=%s, Staticip=%s, Passphrase=%s, ExpireDays=%s, Email=%s, Country=%s, Province=%s, City=%s, Org=%s, OrgUnit=%s, TFAName=%s, TFAIssuer=%s", cParams.Name, cParams.Staticip, cParams.Passphrase, cParams.ExpireDays, cParams.Email, cParams.Country, cParams.Province, cParams.City, cParams.Org, cParams.OrgUnit, cParams.TFAName, cParams.TFAIssuer)
 			if err := lib.CreateCertificate(cParams.Name, cParams.Staticip, cParams.Passphrase, cParams.ExpireDays, cParams.Email, cParams.Country, cParams.Province, cParams.City, cParams.Org, cParams.OrgUnit, cParams.TFAName, cParams.TFAIssuer); err != nil {
 				logs.Error(err)
 				flash.Error("%s", err.Error())
 				flash.Store(&c.Controller)
 			} else {
-				// The name can be free again after a removal. Its former owner must not get this certificate.
-				if err := models.RemoveCertAssignments(cParams.Name); err != nil {
-					logs.Error(err)
-					flash.Warning("Certificate created, but its former assignment could not be removed: %s", err.Error())
-				}
 				flash.Success("Success! Certificate for the name \"%s\" has been created", cParams.Name)
 				flash.Store(&c.Controller)
 				models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "cert.create", cParams.Name, "", c.Ctx.Input.IP())
@@ -251,6 +254,9 @@ func (c *CertificatesController) Burn() {
 		flash.Success("Success! Certificate for the name \"%s\" and serial \"%s\" has been removed", CN, serial)
 		flash.Store(&c.Controller)
 		models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "cert.burn", CN, "", c.Ctx.Input.IP())
+		if err := clearFreeCertName(CN); err != nil {
+			logs.Error(err)
+		}
 	}
 	c.showCerts()
 }
@@ -290,6 +296,20 @@ func validateCertParams(cert NewCertParams) map[string]map[string]string {
 		return lib.CreateValidationMap(valid)
 	}
 	return nil
+}
+
+// clearFreeCertName removes the assignments of a name no listed certificate uses.
+func clearFreeCertName(name string) error {
+	certs, err := lib.ReadCerts(filepath.Join(state.GlobalCfg.OVConfigPath, "pki/index.txt"))
+	if err != nil {
+		return err
+	}
+	for _, cert := range certs {
+		if cert.Details.Name == name {
+			return nil
+		}
+	}
+	return models.RemoveCertAssignments(name)
 }
 
 // saveProfile renders a client profile in the TLS mode of the server config.
