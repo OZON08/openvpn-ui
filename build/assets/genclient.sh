@@ -69,7 +69,7 @@ echo "Database fixed:"
 tail -1 $EASY_RSA/pki/index.txt
 # Certificate properties
 CA="$(cat $EASY_RSA/pki/ca.crt )"
-CERT="$(awk '/-----BEGIN CERTIFICATE-----/{flag=1;next}/-----END CERTIFICATE-----/{flag=0}flag' ./pki/issued/${CERT_NAME}.crt | tr -d '\0')"
+CERT="$(sed -n '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' ./pki/issued/${CERT_NAME}.crt | tr -d '\0')"
 KEY="$(cat $EASY_RSA/pki/private/${CERT_NAME}.key)"
 TLS_AUTH="$(cat $EASY_RSA/pki/ta.key)"
 
