@@ -68,6 +68,12 @@ The certificate scripts run as the web user and need the CA key. **A host user w
 
 **Earlier versions deleted these records.** A renewed certificate that was "revoked" with an earlier version is not on the CRL and stays valid until it expires. The same applies to a revoked certificate that was removed. These certificates have to be revoked again by hand, or the CA replaced.
 
+## TLS control channel
+
+The active `tls-auth` or `tls-crypt` line in `server.conf` decides the mode. The installer sets it under **OpenVPN Server > TLS control channel**, or in the file itself. Client profiles from the UI and from `genclient.sh` use the same mode, so a new install works without saving the config first. Saving the form keeps the current mode.
+
+After a change, existing clients need a newly downloaded profile. `tls-crypt-v2` is not supported. A server with that line gets `tls-crypt` profiles that do not connect.
+
 ## Rollout
 
 1. Update the `openvpn` and `openvpn-ui` images together. The new UI only talks to the socket. An older UI opens `run` to GID 1000 when it starts, and so to a host user with this GID.
@@ -103,7 +109,6 @@ A custom GID through `.env` was tested on both services.
 Commit `e3920ec` was tested with 59 checks and no failures, once with a copied PKI and once with a new PKI from easy-rsa 3.2.5. The stack used the compose file of the commit, without `docker.sock`:
 
 - Certificates created, renewed and revoked through the web interface, with real client connections. Revoked certificates are rejected, also after a removal and a new CRL.
-- A profile downloaded from the UI connects once the server config was saved through the UI. See Open item 1.
 - Anonymous requests and other users are refused on the configuration pages and the signal API. Their `POST` requests change nothing.
 - Other users do not see or disconnect foreign sessions. An assigned user does both.
 - `pki` stays searchable and `crl.pem` readable for `nobody` after a UI restart, while `ca.key` is not readable.
@@ -121,14 +126,14 @@ Commit `e3920ec` was tested with 59 checks and no failures, once with a copied P
 
 ## Decisions
 
+- The installer chooses the TLS mode. See [TLS control channel](#tls-control-channel).
 - armv6 stays dropped. CI builds only amd64, arm64 and armv7, and `build/Dockerfile-beego` needs Debian packages, so an Alpine Go image would require an additional build path.
 
 ## Open
 
-1. Decide which TLS mode client profiles use. `build/assets/genclient.sh`, `revoke.sh` and `rmcert.sh` write `<tls-auth>`, and the `server.conf` of `openvpn-server` uses it. `conf/openvpn-client-config.tpl` and the config rendered by the UI use `tls-crypt`. A downloaded profile therefore only connects once the config was saved through the UI, and a `tls-auth` profile stops working then. This does not come from this change.
-2. A server config saved with TCP settings opens an unauthenticated port on the stored IP address. This only applies to settings an administrator kept on TCP. Host names are rejected, so saving fails until such settings use an IP address or the socket. This also applies when the `run` volume is still missing.
-3. `conf/app.conf` and installs without containers point at the socket, but only the server image creates `run`. There, set the address and network in the settings.
-4. Forms have no CSRF protection, because `EnableXSRF` is not set. A logged-in administrator who opens a malicious page could trigger changes. This does not come from this change.
-5. The compose examples in `README.md` and `DOCKER_HUB.md` still use `privileged: true`.
-6. `./:/etc/openvpn` gives the UI container the whole directory. Mounting only the paths it manages would also protect `fw-rules.sh` and `.env` when they belong to UID 1000.
-7. `.github/dependabot.yml` has an empty `package-ecosystem`, so version updates are probably not running.
+1. A server config saved with TCP settings opens an unauthenticated port on the stored IP address. This only applies to settings an administrator kept on TCP. Host names are rejected, so saving fails until such settings use an IP address or the socket. This also applies when the `run` volume is still missing.
+2. `conf/app.conf` and installs without containers point at the socket, but only the server image creates `run`. There, set the address and network in the settings.
+3. Forms have no CSRF protection, because `EnableXSRF` is not set. A logged-in administrator who opens a malicious page could trigger changes. This does not come from this change.
+4. The compose examples in `README.md` and `DOCKER_HUB.md` still use `privileged: true`.
+5. `./:/etc/openvpn` gives the UI container the whole directory. Mounting only the paths it manages would also protect `fw-rules.sh` and `.env` when they belong to UID 1000.
+6. `.github/dependabot.yml` has an empty `package-ecosystem`, so version updates are probably not running.

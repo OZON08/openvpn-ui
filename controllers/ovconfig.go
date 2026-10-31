@@ -44,6 +44,10 @@ func (c *OVConfigController) Get() {
 	c.Data["xsrfdata"] = template.HTML(c.XSRFFormHTML())
 	cfg := models.OVConfig{Profile: "default"}
 	_ = cfg.Read("Profile")
+	// The file is what OpenVPN uses, and saving must not change the mode by accident
+	if line := lib.ServerTLSLine(string(serverConf)); line != "" {
+		cfg.TLSControlChannel = line
+	}
 	c.Data["Settings"] = &cfg
 
 }

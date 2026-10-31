@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The installer chooses the TLS mode** — a new field on the OpenVPN Server page selects `tls-crypt` or `tls-auth`. Client profiles follow the active line in `server.conf`, so downloaded profiles match the server without saving the config first, and saving no longer switches the mode by accident.
 - **`build/build.sh` rejects armv5 and armv6** — the script stops with an error on these architectures. The armv6 path already failed before, because `arm32v5/golang` has no current image.
 - **`management` line comes from the settings** — `server.conf` now uses the stored management address and network.
 - **Wider settings migration** — stored TCP settings with port 2080 move to the socket, but only once the `run` directory exists.

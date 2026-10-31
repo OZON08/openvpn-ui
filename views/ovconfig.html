@@ -186,11 +186,16 @@
       </div>
                
       <div class="form-group">
-        <label for="name">TLS-Crypt</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
-        <input type="text" class="form-control" name="TLSControlChannel" id="TLSControlChannel" placeholder="tls-crypt pki/ta.key"
-         value="{{ .Settings.TLSControlChannel }}">
-        <span id="helpBlock" class="text-muted"> Key for TLS authentication and session encryption. Full format option (to disable - comment with #). 
-        <a href="https://community.openvpn.net/openvpn/wiki/Openvpn24ManPage" target="_blank">Info</a>
+        <label for="TLSControlChannel">TLS control channel</label>
+        <select name="TLSControlChannel" id="TLSControlChannel" class="form-control" aria-describedby="TLSControlChannelHelp">
+          <option value="tls-crypt pki/ta.key" {{if eq .Settings.TLSControlChannel "tls-crypt pki/ta.key"}}selected{{end}}>tls-crypt: authenticates and encrypts the control channel</option>
+          <option value="tls-auth pki/ta.key 0" {{if eq .Settings.TLSControlChannel "tls-auth pki/ta.key 0"}}selected{{end}}>tls-auth: only authenticates the control channel</option>
+          {{if and (ne .Settings.TLSControlChannel "tls-crypt pki/ta.key") (ne .Settings.TLSControlChannel "tls-auth pki/ta.key 0")}}
+          <option value="{{ .Settings.TLSControlChannel }}" selected>Current value: {{ .Settings.TLSControlChannel }}</option>
+          {{end}}
+        </select>
+        <span id="TLSControlChannelHelp" class="text-muted"> New client profiles use the same mode as the server. After a change, existing clients need a newly downloaded profile.
+        <a href="https://community.openvpn.net/openvpn/wiki/Openvpn24ManPage" target="_blank" rel="noopener">Info</a>
         </span>
       </div>
                 

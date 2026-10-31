@@ -283,6 +283,26 @@ func validateCertParams(cert NewCertParams) map[string]map[string]string {
 	return nil
 }
 
+// saveProfile renders a client profile in the TLS mode of the server config.
+func saveProfile(tplPath string, cfg clientconfig.Config, destPath string) error {
+	tpl, err := os.ReadFile(tplPath)
+	if err != nil {
+		return err
+	}
+	serverConf, err := os.ReadFile(filepath.Join(state.GlobalCfg.OVConfigPath, "server.conf"))
+	if err != nil {
+		return err
+	}
+	text, err := clientconfig.GetText(lib.ProfileTemplateForServer(string(tpl), string(serverConf)), cfg)
+	if err != nil {
+		return err
+	}
+	if err := os.WriteFile(destPath, []byte(text), 0600); err != nil {
+		return err
+	}
+	return os.Chmod(destPath, 0600) // WriteFile keeps the mode of an existing file
+}
+
 func (c *CertificatesController) saveClientConfig(keysPath string, name string) (string, error) {
 	cfg := clientconfig.New()
 	keysPathCa := filepath.Join(state.GlobalCfg.OVConfigPath, "pki")
@@ -345,7 +365,7 @@ func (c *CertificatesController) saveClientConfig(keysPath string, name string) 
 	// cfg.Cipher = serverConfig.Cipher //Now getting it from client config
 
 	destPath := filepath.Join(state.GlobalCfg.OVConfigPath, "clients", name+".ovpn")
-	if err := clientconfig.SaveToFile(filepath.Join(c.ConfigDir, "openvpn-client-config.tpl"), cfg, destPath); err != nil {
+	if err := saveProfile(filepath.Join(c.ConfigDir, "openvpn-client-config.tpl"), cfg, destPath); err != nil {
 		logs.Error(err)
 		return "", err
 	}

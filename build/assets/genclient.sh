@@ -71,7 +71,14 @@ tail -1 $EASY_RSA/pki/index.txt
 CA="$(cat $EASY_RSA/pki/ca.crt )"
 CERT="$(sed -n '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' ./pki/issued/${CERT_NAME}.crt | tr -d '\0')"
 KEY="$(cat $EASY_RSA/pki/private/${CERT_NAME}.key)"
-TLS_AUTH="$(cat $EASY_RSA/pki/ta.key)"
+TLS_KEY="$(cat $EASY_RSA/pki/ta.key)"
+# The profile uses the TLS mode of the server config, as the UI does when it renders one
+TLS_TAG=tls-crypt
+KEY_DIRECTION=""
+if grep -qE '^[[:space:]]*tls-auth[[:space:]]' "$OPENVPN_DIR/server.conf"; then
+    TLS_TAG=tls-auth
+    KEY_DIRECTION="key-direction 1"
+fi
 
 echo 'Generating .ovpn file...'
 echo "$(cat $OPENVPN_DIR/config/client.conf)
@@ -84,9 +91,10 @@ $CERT
 <key>
 $KEY
 </key>
-<tls-auth>
-$TLS_AUTH
-</tls-auth>
+$KEY_DIRECTION
+<$TLS_TAG>
+$TLS_KEY
+</$TLS_TAG>
 " > "$OVPN_FILE_PATH"
 
 echo -e "OpenVPN Client configuration successfully generated!\nCheckout openvpn-server/clients/$CERT_NAME.ovpn"
