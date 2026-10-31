@@ -163,6 +163,10 @@ func (c *CertificatesController) showCerts() {
 func (c *CertificatesController) Post() {
 	c.TplName = "certificates.html"
 	flash := web.NewFlash()
+	if !c.Userinfo.IsAdmin {
+		c.Redirect(c.URLFor("CertificatesController.Get"), 302)
+		return
+	}
 
 	cParams := NewCertParams{}
 	if err := c.ParseForm(&cParams); err != nil {
@@ -179,6 +183,11 @@ func (c *CertificatesController) Post() {
 				flash.Error("%s", err.Error())
 				flash.Store(&c.Controller)
 			} else {
+				// The name can be free again after a removal. Its former owner must not get this certificate.
+				if err := models.RemoveCertAssignments(cParams.Name); err != nil {
+					logs.Error(err)
+					flash.Warning("Certificate created, but its former assignment could not be removed: %s", err.Error())
+				}
 				flash.Success("Success! Certificate for the name \"%s\" has been created", cParams.Name)
 				flash.Store(&c.Controller)
 				models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "cert.create", cParams.Name, "", c.Ctx.Input.IP())

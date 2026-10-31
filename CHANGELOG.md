@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Workflow actions pinned to commit SHAs** — they receive the Docker Hub token.
 - **Compose examples in `docs/` no longer use `privileged`** — they use `/dev/net/tun` and the forwarding sysctl, as `openvpn-server` does.
 - **Revocation works for renewed and removed certificates** — `revoke.sh` deleted the record of a renewed certificate and `rmcert.sh` deleted revoked records, so these certificates were not on the next CRL and kept working. Certificates handled this way before stay valid until they are revoked again by hand or expire.
+- **Creating certificates needs an administrator** — any logged-in user could create one with a direct request. The page already hid the form.
+- **A reused certificate name loses its old assignment** — the former owner could otherwise download the new certificate.
 - **Session API limited to the user's own certificates** — any logged-in user could list all sessions and routes and disconnect any client.
 - **`start.sh` skips hardlinks** — a link to a file outside the managed paths could be taken over, because the script runs as root.
 - **Client profiles are validated** — they now use the library's `SaveToFile`, which rejects line breaks in single-value fields.
