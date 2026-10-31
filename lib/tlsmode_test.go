@@ -1,6 +1,8 @@
 package lib
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -31,5 +33,28 @@ func TestProfileTemplateForServer(t *testing.T) {
 		if got := ProfileTemplateForServer(tpl, conf); got != tpl {
 			t.Errorf("%q: template must stay on tls-crypt:\n%s", conf, got)
 		}
+	}
+}
+
+func TestWritePrivateFileTightensExistingFile(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "client.ovpn")
+	if err := os.WriteFile(path, []byte("older and longer content"), 0660); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(path, 0660); err != nil {
+		t.Fatal(err)
+	}
+	if err := WritePrivateFile(path, "new"); err != nil {
+		t.Fatal(err)
+	}
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Mode().Perm() != 0600 {
+		t.Errorf("unexpected mode: %o", info.Mode().Perm())
+	}
+	if data, _ := os.ReadFile(path); string(data) != "new" {
+		t.Errorf("unexpected content: %q", data)
 	}
 }

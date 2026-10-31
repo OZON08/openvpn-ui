@@ -306,10 +306,7 @@ func saveProfile(tplPath string, cfg clientconfig.Config, destPath string) error
 	if err != nil {
 		return err
 	}
-	if err := os.WriteFile(destPath, []byte(text), 0600); err != nil {
-		return err
-	}
-	return os.Chmod(destPath, 0600) // WriteFile keeps the mode of an existing file
+	return lib.WritePrivateFile(destPath, text)
 }
 
 func (c *CertificatesController) saveClientConfig(keysPath string, name string) (string, error) {
