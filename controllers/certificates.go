@@ -1,12 +1,10 @@
 package controllers
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
-	"text/template"
 
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/core/validation"
@@ -159,22 +157,6 @@ func (c *CertificatesController) showCerts() {
 	cfg1 := models.OVClientConfig{Profile: "default"}
 	_ = cfg1.Read("Profile")
 	c.Data["SettingsC"] = &cfg1
-}
-
-func (c *CertificatesController) canAccessCert(name string) bool {
-	if c.Userinfo.IsAdmin {
-		return true
-	}
-	allowed, err := models.CertsForUser(c.Userinfo.Id)
-	if err != nil {
-		return false
-	}
-	for _, n := range allowed {
-		if n == name {
-			return true
-		}
-	}
-	return false
 }
 
 // @router /certificates [post]
@@ -363,38 +345,10 @@ func (c *CertificatesController) saveClientConfig(keysPath string, name string) 
 	// cfg.Cipher = serverConfig.Cipher //Now getting it from client config
 
 	destPath := filepath.Join(state.GlobalCfg.OVConfigPath, "clients", name+".ovpn")
-	if err := SaveToFile(filepath.Join(c.ConfigDir, "openvpn-client-config.tpl"), cfg, destPath); err != nil {
+	if err := clientconfig.SaveToFile(filepath.Join(c.ConfigDir, "openvpn-client-config.tpl"), cfg, destPath); err != nil {
 		logs.Error(err)
 		return "", err
 	}
 
 	return destPath, nil
-}
-
-func GetText(tpl string, c clientconfig.Config) (string, error) {
-	t := template.New("config")
-	t, err := t.Parse(tpl)
-	if err != nil {
-		return "", err
-	}
-	buf := new(bytes.Buffer)
-	err = t.Execute(buf, c)
-	if err != nil {
-		return "", err
-	}
-	return buf.String(), nil
-}
-
-func SaveToFile(tplPath string, c clientconfig.Config, destPath string) error {
-	tpl, err := os.ReadFile(tplPath)
-	if err != nil {
-		return err
-	}
-
-	str, err := GetText(string(tpl), c)
-	if err != nil {
-		return err
-	}
-
-	return os.WriteFile(destPath, []byte(str), 0600)
 }

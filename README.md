@@ -36,7 +36,7 @@ Quick to deploy and easy to use, makes work with small OpenVPN environments a br
 * OpenVPN-UI Admin user and password can be passed via environment variables to container
 * Updated infrastructure:
   * Alpine Linux as fastest and secure base image
-  * GoLang 1.25.0
+  * GoLang 1.26.10
   * Beego 2.3.10
   * Easy-rsa 3.X
   * Openssl 3.X
@@ -120,6 +120,7 @@ services:
            - ./log:/var/log/openvpn
            - ./fw-rules.sh:/opt/app/fw-rules.sh
            - ./server.conf:/etc/openvpn/server.conf
+           - ./run:/etc/openvpn/run
        cap_add:
            - NET_ADMIN
        restart: always
@@ -231,6 +232,7 @@ docker run  --interactive --tty --rm \
   -v ./log:/var/log/openvpn \
   -v ./fw-rules.sh:/opt/app/fw-rules.sh \
   -v ./server.conf:/etc/openvpn/server.conf \
+  -v ./run:/etc/openvpn/run \
   --privileged OZON08/openvpn-server:latest
 ```
   </details>
@@ -1081,7 +1083,7 @@ The openvpn-ui container must be able to read `pki/index.txt`. In **rootless Doc
 the container process maps to a non-root host UID and the PKI files created by the OpenVPN
 container (host root) are not world-readable by default.
 
-The PKI files are owned by `root` with group `karsten` (or whatever user runs your Docker
+The PKI files are owned by `root` with the group of the user that runs your Docker
 daemon). The group has write but **no read** by default (`-w-`). Because the openvpn-ui
 container process runs in the same group, Linux applies the group permission — and "others"
 read access (added by a naive `chmod o+r`) is ignored whenever the process matches the

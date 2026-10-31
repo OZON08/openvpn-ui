@@ -29,6 +29,7 @@ func (c *APISessionController) Get() {
 	if err != nil {
 		c.ServeJSONError(err.Error())
 	} else {
+		c.scopeStatus(status)
 		c.ServeJSONData(status)
 	}
 }
@@ -48,6 +49,10 @@ func (c *APISessionController) Kill() {
 		return
 	}
 
+	if !c.canAccessCert(p.Cname) {
+		c.ServeJSONError("You are not authorized")
+		return
+	}
 	if r, err := client.KillSession(p.Cname); err != nil {
 		c.ServeJSONError(err.Error())
 	} else {

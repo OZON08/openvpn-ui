@@ -321,7 +321,7 @@ body.login-page { background: var(--v097-bg) !important; }
   border-radius: 4px;
   letter-spacing: .04em;
   white-space: nowrap;
-  margin-top: 3px;
+  margin: 3px auto 0;
   width: fit-content;
 }
 

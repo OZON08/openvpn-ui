@@ -28,7 +28,7 @@ OpenVPN server web administration interface — quick to deploy, easy to use.
 - User management — Admins have full access, regular users access certificates, logs and status only
 - Admin credentials passed via environment variables
 - Google OAuth 2.0 login support
-- Alpine Linux base, Go 1.25.0, Beego 2.3.10, EasyRSA 3.x, OpenSSL 3.x
+- Alpine Linux base, Go 1.26.10, Beego 2.3.10, EasyRSA 3.x, OpenSSL 3.x
 - **v0.9.7.2**: Security hardening — container now runs as a dedicated non-root user (`openvpn-ui`, UID/GID 1000) via `su-exec`. Mitigates privilege-escalation impact from host kernel vulnerabilities (e.g. CVE-2026-31431). Group write permissions ensure EasyRSA scripts continue to function without root.
 - **v0.9.7.1**: Bugfix — certificate create/revoke/renew/remove actions failed inside the container because the `easyrsa` helper scripts read `EasyRsaPath`/`OpenVpnPath` via a broken relative path. Paths are now injected as env vars from Go. Dockerfile COPY order also corrected so the container-variant `app.conf` is not overwritten by the dev-time copy. Light/dark toggle hidden in the topbar (dark mode forced).
 - **dev**: Several UX and correctness fixes for non-admin users — connected devices on the home page are now scoped to the user's own assigned certificates; non-admins can renew their own certificates (Revoke/Delete remain admin-only); profile tab state is preserved across page reloads; duplicate email addresses are rejected on user creation with a flash warning; the "Assign Certificate" dropdown hides already-assigned certs and enforces one-cert-one-user; the "Transfer Certificate" dropdown is populated with currently assigned certs; navbar and login icons that rendered as blank rectangles (Font Awesome FA4/FA5 class conflict) are fixed.
@@ -80,6 +80,7 @@ services:
       - ./log:/var/log/openvpn
       - ./fw-rules.sh:/opt/app/fw-rules.sh
       - ./server.conf:/etc/openvpn/server.conf
+      - ./run:/etc/openvpn/run
     cap_add:
       - NET_ADMIN
     restart: always

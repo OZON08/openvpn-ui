@@ -2,8 +2,10 @@ package models
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/core/logs"
@@ -112,11 +114,32 @@ func CreateDefaultSettings() (*Settings, error) {
 			logs.Info("New settings profile created")
 		} else {
 			logs.Debug(s)
+			if migrateLegacyManagement(&s, miAddress, miNetwork) {
+				if _, err := o.Update(&s, "MIAddress", "MINetwork"); err != nil {
+					return nil, err
+				}
+				logs.Info("Management interface settings moved to %s %s", miNetwork, miAddress)
+			}
 		}
 		return &s, nil
 	} else {
 		return nil, err
 	}
+}
+
+// migrateLegacyManagement moves stored settings on the former TCP port to the socket,
+// as the server does with its config. Both only happen once the run directory is
+// shared, otherwise the server stays on TCP. Other ports are kept.
+func migrateLegacyManagement(s *Settings, address, network string) bool {
+	_, port, err := net.SplitHostPort(s.MIAddress)
+	if err != nil || port != "2080" || !strings.HasPrefix(s.MINetwork, "tcp") {
+		return false
+	}
+	if _, err := os.Stat(filepath.Dir(address)); err != nil {
+		return false
+	}
+	s.MIAddress, s.MINetwork = address, network
+	return true
 }
 
 func CreateDefaultOVConfig(configDir string, ovConfigPath string, address string, network string) {
@@ -171,8 +194,15 @@ func CreateDefaultOVConfig(configDir string, ovConfigPath string, address string
 			logs.Debug(c)
 		}
 		serverConfig := filepath.Join(ovConfigPath, "server.conf")
-		if _, err = os.Stat(serverConfig); os.IsNotExist(err) {
-			if err = config.SaveToFile(filepath.Join(configDir, "openvpn-server-config.tpl"), c.Config, serverConfig); err != nil {
+		// start.sh prepares an empty file, because the web user cannot create it
+		if info, err := os.Stat(serverConfig); os.IsNotExist(err) || (err == nil && info.Size() == 0) {
+			// A stored row can still hold the former management value
+			management, err := Settings{MIAddress: address, MINetwork: network}.ManagementDirective()
+			if err == nil {
+				c.Management = management
+				err = config.SaveToFile(filepath.Join(configDir, "openvpn-server-config.tpl"), c.Config, serverConfig)
+			}
+			if err != nil {
 				logs.Error(err)
 			}
 		}

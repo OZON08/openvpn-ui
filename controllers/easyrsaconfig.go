@@ -21,10 +21,7 @@ type EasyRSAConfigController struct {
 }
 
 func (c *EasyRSAConfigController) NestPrepare() {
-	if !c.IsLogin {
-		c.Ctx.Redirect(302, c.LoginPath())
-		return
-	}
+	c.RequireAdmin()
 	c.Data["breadcrumbs"] = &BreadCrumbs{
 		Title: "EasyRSA vars",
 	}

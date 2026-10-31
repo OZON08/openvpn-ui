@@ -15,10 +15,7 @@ type SettingsController struct {
 }
 
 func (c *SettingsController) NestPrepare() {
-	if !c.IsLogin {
-		c.Ctx.Redirect(302, c.LoginPath())
-		return
-	}
+	c.RequireAdmin()
 	c.Data["breadcrumbs"] = &BreadCrumbs{
 		Title: "OpenVPN UI Settings",
 	}

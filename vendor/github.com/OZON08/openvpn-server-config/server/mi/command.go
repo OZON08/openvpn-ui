@@ -2,17 +2,35 @@ package mi
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
+	"io"
 	"net"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
 )
 
+// validateLine rejects line breaks, which would smuggle in further commands
+func validateLine(line string) error {
+	if strings.ContainsAny(line, "\r\n") {
+		return errors.New("invalid input: newline characters are not allowed")
+	}
+	return nil
+}
+
+// writeLine sends one protocol line. It never logs, because the line may be a password.
+func writeLine(conn net.Conn, line string) error {
+	if err := validateLine(line); err != nil {
+		return err
+	}
+	_, err := io.WriteString(conn, line+"\n")
+	return err
+}
+
 // SendCommand passes command to a given connection (adds logging and EOL character)
 func SendCommand(conn net.Conn, cmd string) error {
-	log.Debug("Sending command: " + cmd)
-	if _, err := fmt.Fprintf(conn, cmd+"\n"); err != nil {
+	if err := writeLine(conn, cmd); err != nil {
 		return err
 	}
 	log.Debug("Command ", cmd, " successfuly send")
@@ -30,6 +48,11 @@ func ReadResponse(reader *bufio.Reader) (string, error) {
 		if err != nil {
 			log.Error(line, err)
 			return "", err
+		}
+
+		// Asynchronous notifications can arrive before the actual reply
+		if strings.HasPrefix(line, ">") {
+			continue
 		}
 
 		result += line

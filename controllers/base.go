@@ -2,7 +2,9 @@ package controllers
 
 import (
 	"os"
+	"slices"
 
+	mi "github.com/OZON08/openvpn-server-config/server/mi"
 	"github.com/beego/beego/v2/server/web"
 	"github.com/OZON08/openvpn-ui/lib"
 	"github.com/OZON08/openvpn-ui/models"
@@ -81,6 +83,53 @@ func (c *BaseController) SetLogin(user *models.User) {
 	c.SetSession("userinfo", user.Id)
 	c.IsLogin = true
 	c.Userinfo = user
+}
+
+// RequireAdmin ends the request unless an administrator is logged in.
+func (c *BaseController) RequireAdmin() {
+	if !c.IsLogin {
+		c.Ctx.Redirect(302, c.LoginPath())
+		c.StopRun()
+	}
+	if c.Userinfo == nil || !c.Userinfo.IsAdmin {
+		c.Ctx.Redirect(302, c.URLFor("MainController.Get"))
+		c.StopRun()
+	}
+}
+
+// canAccessCert reports whether the logged-in user may act on this certificate.
+func (c *BaseController) canAccessCert(name string) bool {
+	if c.Userinfo == nil {
+		return false
+	}
+	if c.Userinfo.IsAdmin {
+		return true
+	}
+	allowed, err := models.CertsForUser(c.Userinfo.Id)
+	return err == nil && slices.Contains(allowed, name)
+}
+
+// scopeStatus limits a VPN status to the sessions the logged-in user may see.
+func (c *BaseController) scopeStatus(status *mi.Status) {
+	if c.Userinfo != nil && c.Userinfo.IsAdmin {
+		return
+	}
+	var allowed []string
+	if c.Userinfo != nil {
+		if names, err := models.CertsForUser(c.Userinfo.Id); err == nil {
+			allowed = names
+		}
+	}
+	limitStatus(status, allowed)
+}
+
+func limitStatus(status *mi.Status, allowed []string) {
+	status.ClientList = slices.DeleteFunc(status.ClientList, func(client *mi.OVClient) bool {
+		return !slices.Contains(allowed, client.CommonName)
+	})
+	status.RoutingTable = slices.DeleteFunc(status.RoutingTable, func(route *mi.RoutingPath) bool {
+		return !slices.Contains(allowed, route.CommonName)
+	})
 }
 
 func (c *BaseController) LoginPath() string {

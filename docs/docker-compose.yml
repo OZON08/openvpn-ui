@@ -2,15 +2,14 @@ services:
     openvpn:
         container_name: openvpn
         image: ozon08/openvpn-server:latest
-        privileged: true
         ports:
             - "1194:1194/udp"   # openvpn UDP port
             # - "1194:1194/tcp"   # openvpn TCP port
-            # - "2080:2080/tcp"  # management port. uncomment if you would like to share it with the host
         environment:
             TRUST_SUB: "10.0.70.0/24"
             GUEST_SUB: "10.0.71.0/24"
             HOME_SUB: "192.168.88.0/24"
+            OPENVPN_MI_GID: "${OPENVPN_MI_GID:-61194}" # group with access to the management socket
             # v0.9.7 client-disconnect hook — the script is bundled into
             # openvpn-server v0.6.2+ at /opt/app/bin/client-disconnect.sh.
             # Leave OPENVPN_UI_HOOK_TOKEN empty to disable; otherwise it must
@@ -27,18 +26,23 @@ services:
             - ./fw-rules.sh:/opt/app/fw-rules.sh
             - ./checkpsw.sh:/opt/app/checkpsw.sh
             - ./server.conf:/etc/openvpn/server.conf
+            - ./run:/etc/openvpn/run
         cap_add:
             - NET_ADMIN
+        devices:
+            - /dev/net/tun:/dev/net/tun
+        sysctls:
+            net.ipv4.ip_forward: "1"
         restart: always
         healthcheck:
-            test: ["CMD", "bash", "-c", "echo '' > /dev/tcp/127.0.0.1/2080"]
+            test: ["CMD-SHELL", "test -S /etc/openvpn/run/mi.sock && pgrep openvpn >/dev/null"]
             interval: 30s
             timeout: 5s
             retries: 3
             # First start generates the PKI including 4096-bit DH parameters,
-            # which can take 5-15 minutes on slower hardware. Subsequent starts
+            # which can take over an hour on slower hardware. Subsequent starts
             # complete within seconds because PKI is persisted in the volume.
-            start_period: 900s
+            start_period: 7200s
 
     openvpn-ui:
         container_name: openvpn-ui
@@ -46,6 +50,7 @@ services:
         environment:
             - OPENVPN_ADMIN_USERNAME=${OPENVPN_ADMIN_USERNAME}
             - OPENVPN_ADMIN_PASSWORD=${OPENVPN_ADMIN_PASSWORD}
+            - OPENVPN_MI_GID=${OPENVPN_MI_GID:-61194}
             # v0.9.7 monitoring — all optional, defaults in app.conf apply when unset.
             # Set a strong token to enable the client-disconnect webhook; must match
             # OPENVPN_UI_HOOK_TOKEN on the openvpn service above.

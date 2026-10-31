@@ -119,6 +119,10 @@ func ReadCerts(path string) ([]*Cert, error) {
 				fmt.Errorf("incorrect number of lines in line: \n%s\n. Expected %d, found %d",
 					line, 6, len(fields))
 		}
+		// rmcert.sh keeps removed certificates in the index, so that they stay on the CRL
+		if strings.HasSuffix(fields[5], "/removed=1") {
+			continue
+		}
 		expT, _ := time.Parse("060102150405Z", fields[1])
 		expTA := time.Now().AddDate(0, 0, 30).After(expT) // If cer will expire in 30 days, raise this flag
 		revT, _ := time.Parse("060102150405Z", fields[2])
@@ -235,7 +239,8 @@ func CreateCertificate(name string, staticip string, passphrase string, expireda
 	if haveip {
 		configPath := filepath.Join("/etc/openvpn/staticclients", filepath.Base(name))
 		content := fmt.Sprintf("ifconfig-push %s 255.255.255.0\n", staticip)
-		if err := os.WriteFile(configPath, []byte(content), 0640); err != nil {
+		// OpenVPN reads this file as nobody. It only holds the address.
+		if err := os.WriteFile(configPath, []byte(content), 0644); err != nil {
 			return fmt.Errorf("failed to write static IP config: %w", err)
 		}
 	}

@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0.0-dev] - Unreleased
 
+### Security
+
+- **Management interface moved to a Unix socket** — `server.conf` no longer opens TCP port 2080. The UI connects through `/etc/openvpn/run/mi.sock`, and stored TCP settings with port 2080 are migrated at startup. Requires `openvpn-server` v0.6.4 and the `./run:/etc/openvpn/run` volume in `docker-compose.yml`. The web process stays unprivileged and reaches the socket through the group `openvpn-mi` (GID 61194, `OPENVPN_MI_GID`).
+- **Dependency security updates** — `golang.org/x/net` v0.62.0, `golang.org/x/text` v0.43.0, `google.golang.org/grpc` v1.85.0, `github.com/Azure/go-ntlmssp` v0.1.1 and `github.com/klauspost/compress` v1.20.3. `govulncheck` reports no vulnerabilities in called code.
+
+- **`start.sh` no longer reads its path from `conf/app.conf`** — the web user can change that file, and the script uses the path as root for `chgrp` and `chmod`. A compromised web process could have become root in the container. The path is now `/etc/openvpn`, or `OPENVPN_DIR` if set.
+- **`start.sh` limits group access in `/etc/openvpn`** — the web process could overwrite `fw-rules.sh`, `.env` and private keys. Group access now covers only `server.conf`, `config/`, `clients/`, `staticclients/` and `pki/`, and earlier group write is removed elsewhere. A host user with GID 1000 can now read the PKI, because the certificate scripts need it.
+- **Configuration pages and the signal API need an administrator** — any logged-in user could edit `server.conf`, the settings and EasyRSA values, use the maintenance actions and send signals. The menu already hid these pages from other users.
+- **Signal API rejects other signals** — only `SIGUSR1`, `SIGUSR2` and `SIGTERM` are accepted. `SIGHUP` stopped OpenVPN once `server.conf` had mode `0600`.
+- **Stricter management settings** — a socket path must be absolute and clean, and TCP needs an IP address and port. Host names no longer open a port on all addresses.
+- **Workflow actions pinned to commit SHAs** — they receive the Docker Hub token.
+- **Compose examples in `docs/` no longer use `privileged`** — they use `/dev/net/tun` and the forwarding sysctl, as `openvpn-server` does.
+- **Revocation works for renewed and removed certificates** — `revoke.sh` deleted the record of a renewed certificate and `rmcert.sh` deleted revoked records, so these certificates were not on the next CRL and kept working. Certificates handled this way before stay valid until they are revoked again by hand or expire.
+- **Session API limited to the user's own certificates** — any logged-in user could list all sessions and routes and disconnect any client.
+- **`start.sh` skips hardlinks** — a link to a file outside the managed paths could be taken over, because the script runs as root.
+- **Client profiles are validated** — they now use the library's `SaveToFile`, which rejects line breaks in single-value fields.
+
+### Changed
+
+- **`build/build.sh` rejects armv5 and armv6** — the script stops with an error on these architectures. The armv6 path already failed before, because `arm32v5/golang` has no current image.
+- **`management` line comes from the settings** — `server.conf` now uses the stored management address and network.
+- **Wider settings migration** — stored TCP settings with port 2080 move to the socket, but only once the `run` directory exists.
+- **`start.sh` hands rendered files to `openvpn-ui`** — `server.conf`, `config/client.conf`, `config/easy-rsa.vars`, `pki/vars` and `clients/` now belong to UID 1000. Saving failed with `operation not permitted` when they belonged to root.
+
+### Fixed
+
+- **Creating client certificates** — the web user can now read the PKI, and `genclient.sh` no longer stops at a `chmod` it may not run.
+- **Static client addresses** — the files get mode `0644`, so that OpenVPN can read them without a server restart.
+- **Profile from `genclient.sh`** — the certificate keeps its PEM lines. OpenVPN could not load this file before.
+- **Recreated `server.conf`** — it uses the management settings, not a former stored value.
+- **`OPENVPN_MI_GID` collisions** — a GID that already exists no longer stops the UI from starting.
+- **`build/Dockerfile` installs `su-exec` and creates `openvpn-ui`** — `start.sh` needs both, so local images from `build/build.sh` could not start.
+
+### Removed
+
+- **`build/go.mod`, `build/go.sum`** — outdated copies that only filled a cache layer.
+
 ### Added
 
 - **Centralized app version** — single source of truth at `lib/version.go`
