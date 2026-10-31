@@ -5,6 +5,7 @@ set -e  # Exit immediately if a command exits with a non-zero status. Set -x opt
 # Define the machine architecture
 # PLATFORM="linux/amd64" # arm64v8 = "linux/arm64/v8", arm32v7 - "linux/arm/v7", amd64 - "linux/amd64"
 ARCH=$(uname -m)
+GO_VERSION="1.26.10"
 case $ARCH in
   armv5*|armv6*)
     echo "Architecture $ARCH is not supported by this build script. Use armv7, arm64 or amd64." >&2
@@ -14,25 +15,25 @@ case $ARCH in
     PLATFORM="linux/arm/v7"
     #UIIMAGE="FROM arm32v7/debian:stable-slim"
     UIIMAGE="FROM arm32v7/alpine" #moving to unstable because it has easy-rsa v3.1.6 which supports cert renewal
-    BEEIMAGE="FROM arm32v7/golang:1.26.10-bookworm"
+    BEEIMAGE="FROM arm32v7/golang:$GO_VERSION-bookworm"
     ;;
   aarch64*)
     PLATFORM="linux/arm64/v8"
     #UIIMAGE="FROM arm64v8/debian:stable-slim"
     UIIMAGE="FROM arm64v8/alpine" #moving to unstable because it has easy-rsa v3.1.6 which supports cert renewal
-    BEEIMAGE="FROM arm64v8/golang:1.26.10-bookworm"
+    BEEIMAGE="FROM arm64v8/golang:$GO_VERSION-bookworm"
     ;;
   arm64*)
     PLATFORM="linux/arm64/v8"
     #UIIMAGE="FROM arm64v8/debian:stable-slim"
     UIIMAGE="FROM arm64v8/alpine" #moving to unstable because it has easy-rsa v3.1.6 which supports cert renewal
-    BEEIMAGE="FROM arm64v8/golang:1.26.10-bookworm"
+    BEEIMAGE="FROM arm64v8/golang:$GO_VERSION-bookworm"
     ;;
   *)
     PLATFORM="linux/amd64"
     #UIIMAGE="FROM debian:stable-slim"
     UIIMAGE="FROM alpine" #moving to unstable because it has easy-rsa v3.1.6 which supports cert renewal
-    BEEIMAGE="FROM golang:1.26.10-bookworm"
+    BEEIMAGE="FROM golang:$GO_VERSION-bookworm"
     ;;
 esac
 

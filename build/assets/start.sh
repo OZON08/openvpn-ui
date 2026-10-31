@@ -3,7 +3,9 @@
 set -e
 
 # Directory where OpenVPN configuration files are stored
-OPENVPN_DIR=$(grep -E "^OpenVpnPath\s*=" openvpn-ui/conf/app.conf | cut -d= -f2 | tr -d '"' | tr -d '[:space:]')
+# Not read from conf/app.conf: the web user can change that file, and this script runs as root
+OPENVPN_DIR=${OPENVPN_DIR:-/etc/openvpn}
+OPENVPN_DIR=${OPENVPN_DIR%/}
 echo "Init. OVPN path: $OPENVPN_DIR"
 
 # Change to the /opt directory
@@ -29,10 +31,19 @@ mkdir -p db
 # Grant the openvpn-ui group write access to mounted volumes so that the
 # non-root process can manage certificates and configs.
 chown -R openvpn-ui:openvpn-ui db
-chgrp -R openvpn-ui "$OPENVPN_DIR" 2>/dev/null || true
-chmod -R g+w "$OPENVPN_DIR" 2>/dev/null || true
+# The run directory is skipped: it restricts access to the management socket.
+find "$OPENVPN_DIR" -path "$OPENVPN_DIR/run" -prune -o ! -type l -exec chgrp openvpn-ui {} + -exec chmod g+w {} + 2>/dev/null || true
 chgrp -R openvpn-ui /usr/share/easy-rsa 2>/dev/null || true
 chmod -R g+w /usr/share/easy-rsa 2>/dev/null || true
+
+# Rendered files are saved with an owner-only mode, which requires owning them.
+chown -R openvpn-ui "$OPENVPN_DIR/server.conf" "$OPENVPN_DIR/config/client.conf" "$OPENVPN_DIR/config/easy-rsa.vars" \
+  "$OPENVPN_DIR/pki/vars" "$OPENVPN_DIR/clients" 2>/dev/null || true
+
+# Membership in this group grants access to the management socket directory.
+# OPENVPN_MI_GID must match the value on the openvpn service.
+grep -q '^openvpn-mi:' /etc/group || addgroup -g "${OPENVPN_MI_GID:-61194}" openvpn-mi
+id -nG openvpn-ui | grep -qw openvpn-mi || addgroup openvpn-ui openvpn-mi
 
 # Drop from root to unprivileged openvpn-ui user for the web process
 echo "Starting OpenVPN UI!"

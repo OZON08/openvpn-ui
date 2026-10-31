@@ -80,6 +80,7 @@ services:
       - ./log:/var/log/openvpn
       - ./fw-rules.sh:/opt/app/fw-rules.sh
       - ./server.conf:/etc/openvpn/server.conf
+      - ./run:/etc/openvpn/run
     cap_add:
       - NET_ADMIN
     restart: always

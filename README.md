@@ -120,6 +120,7 @@ services:
            - ./log:/var/log/openvpn
            - ./fw-rules.sh:/opt/app/fw-rules.sh
            - ./server.conf:/etc/openvpn/server.conf
+           - ./run:/etc/openvpn/run
        cap_add:
            - NET_ADMIN
        restart: always
@@ -231,6 +232,7 @@ docker run  --interactive --tty --rm \
   -v ./log:/var/log/openvpn \
   -v ./fw-rules.sh:/opt/app/fw-rules.sh \
   -v ./server.conf:/etc/openvpn/server.conf \
+  -v ./run:/etc/openvpn/run \
   --privileged OZON08/openvpn-server:latest
 ```
   </details>

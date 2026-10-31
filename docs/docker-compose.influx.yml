@@ -17,6 +17,7 @@ services:
             TRUST_SUB: "10.0.70.0/24"
             GUEST_SUB: "10.0.71.0/24"
             HOME_SUB: "192.168.88.0/24"
+            OPENVPN_MI_GID: "${OPENVPN_MI_GID:-61194}" # group with access to the management socket
             # v0.9.7 client-disconnect hook — bundled into openvpn-server
             # v0.6.2+ at /opt/app/bin/client-disconnect.sh. Uncomment the
             # `client-disconnect` line in server.conf to enable it.
@@ -51,6 +52,7 @@ services:
         environment:
             - OPENVPN_ADMIN_USERNAME=${OPENVPN_ADMIN_USERNAME}
             - OPENVPN_ADMIN_PASSWORD=${OPENVPN_ADMIN_PASSWORD}
+            - OPENVPN_MI_GID=${OPENVPN_MI_GID:-61194}
             # v0.9.7 monitoring — client-disconnect webhook shared secret.
             - OPENVPN_UI_MONITORING_HOOK_TOKEN=${OPENVPN_UI_MONITORING_HOOK_TOKEN:-}
             # InfluxDB v3 export. URL/token/database can also be edited at runtime

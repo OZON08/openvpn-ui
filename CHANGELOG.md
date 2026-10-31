@@ -9,12 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-- **Management interface moved to a Unix socket** — `server.conf` no longer opens TCP port 2080. The UI connects through `/etc/openvpn/run/mi.sock`, and stored settings with the old default `openvpn:2080` are migrated at startup. Requires `openvpn-server` v0.6.4 and the `./run:/etc/openvpn/run` volume in `docker-compose.yml`.
+- **Management interface moved to a Unix socket** — `server.conf` no longer opens TCP port 2080. The UI connects through `/etc/openvpn/run/mi.sock`, and stored settings with the old default `openvpn:2080` are migrated at startup. Requires `openvpn-server` v0.6.4 and the `./run:/etc/openvpn/run` volume in `docker-compose.yml`. The web process stays unprivileged and reaches the socket through the group `openvpn-mi` (GID 61194, `OPENVPN_MI_GID`).
 - **Dependency security updates** — `golang.org/x/net` v0.62.0, `golang.org/x/text` v0.43.0, `google.golang.org/grpc` v1.85.0, `github.com/Azure/go-ntlmssp` v0.1.1 and `github.com/klauspost/compress` v1.20.3. `govulncheck` reports no vulnerabilities in called code.
+
+- **`start.sh` no longer reads its path from `conf/app.conf`** — the web user can change that file, and the script uses the path as root for `chgrp` and `chmod`. A compromised web process could have become root in the container. The path is now `/etc/openvpn`, or `OPENVPN_DIR` if set.
 
 ### Changed
 
 - **`build/build.sh` rejects armv5 and armv6** — the script stops with an error on these architectures. The armv6 path already failed before, because `arm32v5/golang` has no current image.
+- **`start.sh` hands rendered files to `openvpn-ui`** — `server.conf`, `config/client.conf`, `config/easy-rsa.vars`, `pki/vars` and `clients/` now belong to UID 1000. Saving failed with `operation not permitted` when they belonged to root.
+
+### Fixed
+
+- **`build/Dockerfile` installs `su-exec` and creates `openvpn-ui`** — `start.sh` needs both, so local images from `build/build.sh` could not start.
 
 ### Added
 
