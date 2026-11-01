@@ -170,7 +170,6 @@ func (c *LoginController) GoogleCallback() {
 		return
 	}
 
-	logs.Info("User Info: %+v", userinfo)
 
 	// Check if the user's email domain is allowed
 	emailParts := strings.Split(userinfo.Email, "@")

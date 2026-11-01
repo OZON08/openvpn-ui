@@ -49,13 +49,17 @@ To use another GID, set `OPENVPN_MI_GID` to the same value on both services. Rec
 
 ## File ownership
 
-`SaveToFile` sets a mode of `0600`, and only the owner of a file may do this. `start.sh` therefore gives `server.conf`, `config/client.conf`, `config/easy-rsa.vars`, `pki/vars` and `clients/` to UID 1000 at startup. Otherwise saving fails with `operation not permitted` when these files belong to root. On the host, these files then belong to the user with UID 1000, if there is one.
+`SaveToFile` sets a mode of `0600`, and only the owner of a file may do this. `start.sh` therefore gives `server.conf`, `config/client.conf`, `config/easy-rsa.vars`, `pki/vars` and `clients/` to the web user, UID 61195, at startup. Otherwise saving fails with `operation not permitted` when these files belong to root. On the host, these files then belong to the user with UID 1000, if there is one.
 
 ## Group access in `/etc/openvpn`
 
-`start.sh` gives the group `openvpn-ui` (GID 1000) read and write access to `server.conf`, `config/`, `clients/`, `staticclients/` and `pki/`. It removes group write from everything else except `run`, also where earlier versions added it. The web process can therefore no longer change `fw-rules.sh`, `.env` or `/etc/openvpn` itself, **unless these files or this directory belong to UID 1000 on the host**. That is often the normal host user.
+`start.sh` gives the group `openvpn-ui` (GID 61195) read and write access to `server.conf`, `config/`, `clients/`, `staticclients/` and `pki/`. It removes group write from everything else except `run` and `log`, also where earlier versions added it.
 
-The certificate scripts run as the web user and need the CA key. **A host user with GID 1000 can therefore read `pki/private/ca.key` and the other private keys, and also the private keys in `clients/*.ovpn` and `oath.secrets`.** Before this change that user could overwrite these files but not read them, and creating certificates failed unless the README's `g+rX` step was applied.
+The web user has UID and GID 61195, because 1000 often belongs to the host user. `start.sh` gives files of UID 1000 in the managed paths and in `db` to the web user, so **a host user with UID 1000 loses access to them**. No host account should use UID or GID 61195, because it can read the PKI.
+
+The certificate scripts need to read `pki/private/ca.key`. It belongs to root with mode `0640`, so the web process cannot change it.
+
+The UI container mounts only the paths it manages, so it does not see `fw-rules.sh` and `.env`. `server.conf` must exist before the first start, as for the `openvpn` service.
 
 ## Revocation
 
@@ -120,11 +124,15 @@ Commit `bbea9d5` was tested with 71 checks and no failures, once with a copied P
 - A downloaded profile follows the TLS mode of `server.conf` and connects. After switching to `tls-crypt`, the old `tls-auth` profile is rejected, and a new download and a `genclient.sh` profile connect.
 - Other users cannot create a certificate. A new certificate drops the assignment of an old one with the same name, and a duplicate name keeps its assignment.
 
+## Restart and TA key
+
+The UI has no access to `docker.sock`, which would give it control over the host. Restarting the server sends `SIGTERM` over the management socket, and restarting the UI ends its process. The services need `restart: always`. The image creates `ta.key` with its own `openvpn` binary.
+
 ## Not tested
 
 - An image built with `build/build.sh`, including the `build/Dockerfile` change.
-- The restart buttons that use `docker.sock`.
-- Rootless Docker.
+- Rootless Docker. It is not available on the test machine.
+- Installs without containers.
 
 ## Decisions
 
@@ -135,7 +143,6 @@ Commit `bbea9d5` was tested with 71 checks and no failures, once with a copied P
 
 1. A server config saved with TCP settings opens an unauthenticated port on the stored IP address. This only applies to settings an administrator kept on TCP. Host names are rejected, so saving fails until such settings use an IP address or the socket. This also applies when the `run` volume is still missing.
 2. `conf/app.conf` and installs without containers point at the socket, but only the server image creates `run`. There, set the address and network in the settings.
-3. Forms have no CSRF protection, because `EnableXSRF` is not set. A logged-in administrator who opens a malicious page could trigger changes. This does not come from this change.
-4. The compose examples in `README.md` and `DOCKER_HUB.md` still use `privileged: true`.
-5. `./:/etc/openvpn` gives the UI container the whole directory. Mounting only the paths it manages would also protect `fw-rules.sh` and `.env` when they belong to UID 1000.
-6. `.github/dependabot.yml` has an empty `package-ecosystem`, so version updates are probably not running.
+3. Saving through the form renders `server.conf` from the template, so lines added by hand are lost. Use the custom options for them.
+4. `tls-crypt-v2` is not supported, because it needs a key per client.
+5. An Influx token saved in the UI takes precedence over `OPENVPN_UI_INFLUX_TOKEN`, and the form cannot clear it.

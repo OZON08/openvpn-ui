@@ -81,6 +81,8 @@ if grep -qE '^[[:space:]]*tls-auth[[:space:]]' "$OPENVPN_DIR/server.conf"; then
 fi
 
 echo 'Generating .ovpn file...'
+# The profile holds the private key
+install -m 600 /dev/null "$OVPN_FILE_PATH"
 echo "$(cat $OPENVPN_DIR/config/client.conf)
 <ca>
 $CA

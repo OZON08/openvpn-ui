@@ -211,8 +211,6 @@ func (c *ProfileController) Create() {
 			flash.Success(c.T("New user with login \"%s\" created successfully."), user.Login)
 			flash.Store(&c.Controller)
 			models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "user.create", user.Login, "", c.Ctx.Input.IP())
-		} else {
-			logs.Debug(newUser)
 		}
 	} else {
 		logs.Error(err)

@@ -42,7 +42,7 @@ find db "${UNLINKED[@]}" -exec chown openvpn-ui:openvpn-ui {} +
 mkdir -p "$OPENVPN_DIR/config" "$OPENVPN_DIR/clients" "$OPENVPN_DIR/staticclients"
 # The web user cannot create files in this directory, and renders a missing server.conf into an empty one.
 [ -e "$OPENVPN_DIR/server.conf" ] || install -m 640 /dev/null "$OPENVPN_DIR/server.conf"
-PRUNE=(-path "$OPENVPN_DIR/run")
+PRUNE=(-path "$OPENVPN_DIR/run" -o -path "$OPENVPN_DIR/log")
 MANAGED=()
 for name in server.conf config clients staticclients pki; do
   PRUNE+=(-o -path "$OPENVPN_DIR/$name")
@@ -53,6 +53,17 @@ find "$OPENVPN_DIR" \( "${PRUNE[@]}" \) -prune -o ! -type l -exec chmod g-w {} +
 # Certificate scripts run as the web user and need to read and write the PKI, including ca.key.
 find "${MANAGED[@]}" /usr/share/easy-rsa "${UNLINKED[@]}" -exec chgrp openvpn-ui {} + -exec chmod g+rwX {} + ||
   echo "WARNING: could not grant openvpn-ui access to all managed paths"
+
+# Earlier versions used UID and GID 1000, which often belong to the host user. The
+# web user now has an ID without a host account, so the host user loses this access.
+find db "${MANAGED[@]}" "${UNLINKED[@]}" -uid 1000 -exec chown openvpn-ui {} + ||
+  echo "WARNING: could not take over files of UID 1000"
+
+# The web process signs with the CA key, but cannot change it.
+if [ -f "$OPENVPN_DIR/pki/private/ca.key" ] && [ ! -L "$OPENVPN_DIR/pki/private/ca.key" ]; then
+  chown root:openvpn-ui "$OPENVPN_DIR/pki/private/ca.key"
+  chmod 640 "$OPENVPN_DIR/pki/private/ca.key"
+fi
 
 # Rendered files are saved with an owner-only mode, which requires owning them.
 find "$OPENVPN_DIR/server.conf" "$OPENVPN_DIR/config/client.conf" "$OPENVPN_DIR/config/easy-rsa.vars" \

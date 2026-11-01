@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -212,10 +213,13 @@ func parseConnectedSince(s string) time.Time {
 	return time.Time{}
 }
 
+// protocolPrefix matches what OpenVPN 2.6 and later put in front of an address.
+var protocolPrefix = regexp.MustCompile(`^(udp|tcp)[46]?(-server|-client)?:`)
+
 // splitHostPort handles both "1.2.3.4:54321" and "[::1]:54321", as well as
 // bare hostnames. It is tolerant of missing ports.
 func splitHostPort(s string) (host, port string) {
-	s = strings.TrimSpace(s)
+	s = protocolPrefix.ReplaceAllString(strings.TrimSpace(s), "")
 	if s == "" {
 		return "", ""
 	}

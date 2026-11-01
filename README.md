@@ -76,6 +76,8 @@ It includes all the files in its main directory, as well.
 
 #### Running this image with `docker-compose.yml` file
 
+Before the first start, create the files that are mounted singly: `touch server.conf`. Keep `restart: always`, because the restart buttons end the process and rely on it. The web process runs with UID and GID 61195, and does not need `privileged` or `docker.sock`.
+
 ```yaml
     openvpn-ui:
        container_name: openvpn-ui
@@ -349,6 +351,8 @@ After build and installation is complete:
 5. Update `OpenVpnPath` and `EasyRsaPath` with real location of your OpenVPN server config (`/etc/openvpn`) and EasyRSA (`/usr/share/easy-rsa`) in main application config file - `./conf/app.conf` file. 
 6. Set `EnableAdmin = false` and `RunMode = prod` in the same file, if you don't need to run BeeGo in development mode and don't need BeeGo admin console to run (in most cases you don't need it).
 7. On the first run set `OPENVPN_ADMIN_USERNAME` and `OPENVPN_ADMIN_PASSWORD` environment variables to create admin user with secret password:
+
+   These values only apply when the database is created. Later changes to them have no effect, so change the password on the Profile page.
 ```bash
 export OPENVPN_ADMIN_USERNAME=admin
 export OPENVPN_ADMIN_PASSWORD=$3kR3tPa$Sw0rd
@@ -972,6 +976,8 @@ When `InfluxEnabled=true`, the UI writes two measurements:
   `bytes_in`, `bytes_out`, `duration_s`, `real_ip`, `virtual_ip`.
 
 #### OpenVPN `client-disconnect` webhook (optional, recommended)
+
+Saving the form on the OpenVPN Server page renders `server.conf` from the template, so lines added by hand are lost. Put the hook lines into the custom options on that page.
 
 The scraper alone closes stale sessions with ~60s lag. For authoritative,
 real-time session-end data (exact final byte counts and duration), wire

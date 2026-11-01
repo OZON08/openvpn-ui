@@ -60,20 +60,14 @@ func (c *OVConfigController) Post() {
 	_ = cfg.Read("Profile")
 
 	logs.Info("Post: Parsing form data")
-	logs.Info("Form data before parsing: %v", c.Ctx.Request.Form)
 	if err := c.ParseForm(&cfg); err != nil {
 		logs.Warning(err)
 		flash.Error("%s", err.Error())
 		flash.Store(&c.Controller)
 		return
 	}
-	logs.Info("Form data after parsing: %v", c.Ctx.Request.Form)
 
-	logs.Info("Post: Dumping configuration data")
-	logs.Info("Configuration data: %v", cfg)
-	lib.Dump(cfg)
 	c.Data["Settings"] = &cfg
-	logs.Info("Settings data: %v", c.Data["Settings"])
 
 	destPath := filepath.Join(state.GlobalCfg.OVConfigPath, "server.conf")
 	logs.Info("Post: Saving configuration to file according to template")
@@ -130,7 +124,6 @@ func (c *OVConfigController) Edit() {
 	}
 
 	//logs.Info("Post: Dumping configuration data")
-	lib.Dump(cfg)
 	c.Data["Settings"] = &cfg
 
 	//logs.Info("Starting Edit method in OVConfigController")

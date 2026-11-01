@@ -26,6 +26,11 @@ func main() {
 		panic(err)
 	}
 
+	// Debug output holds user records and full configurations.
+	if web.BConfig.RunMode == web.PROD {
+		logs.SetLevel(logs.LevelInformational)
+	}
+
 	models.InitDB()
 	models.CreateDefaultUsers()
 	defaultSettings, err := models.CreateDefaultSettings()

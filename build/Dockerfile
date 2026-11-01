@@ -13,8 +13,8 @@ RUN apk update \
       oath-toolkit-oathtool \
       su-exec \
    && rm -rf /var/cache/apk/* && chmod 755 /usr/share/easy-rsa/* \
-   && addgroup -g 1000 openvpn-ui \
-   && adduser -D -u 1000 -G openvpn-ui openvpn-ui
+   && addgroup -g 61195 openvpn-ui \
+   && adduser -D -u 61195 -G openvpn-ui openvpn-ui
 
 ADD assets/start.sh /opt/start.sh
 ADD assets/generate_ca_and_server_certs.sh /opt/scripts/generate_ca_and_server_certs.sh
