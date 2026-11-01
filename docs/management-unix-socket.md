@@ -1,6 +1,6 @@
 # Management interface over a Unix socket
 
-Status: 2026-10-31. The change is merged into `main`. The complete stack was tested with commit `a631c34`, built from `Dockerfile.ci`, against `ozon08/openvpn-server:dev` with OpenVPN 2.7.7 and easy-rsa 3.2.5.
+Status: 2026-10-31. The change is merged into `main`. The complete stack was tested with commit `9de7044`, built from `Dockerfile.ci`, against `ozon08/openvpn-server:dev` with OpenVPN 2.7.7 and easy-rsa 3.2.5.
 
 ## Goal
 
@@ -110,7 +110,7 @@ The UI keeps its TCP settings until the `run` directory exists, so it stays on t
 
 A custom GID through `.env` was tested on both services.
 
-Commit `a631c34` was tested with 145 checks and no failures, once with a copied PKI and once with a new PKI from easy-rsa 3.2.5. The stack used the compose file of the commit, without `docker.sock`:
+Commit `9de7044` was tested with 148 checks and no failures, once with a copied PKI and once with a new PKI from easy-rsa 3.2.5. The stack used the compose file of the commit, without `docker.sock`:
 
 - Certificates created, renewed and revoked through the web interface, with real client connections. Revoked certificates are rejected, also after a removal and a new CRL.
 - Anonymous requests and other users are refused on the configuration pages and the signal API. Their `POST` requests change nothing.
