@@ -12,7 +12,7 @@ echo 'EasyRSA path: $EASY_RSA OVPN path: $OPENVPN_DIR'
 PKI_DIR=$EASY_RSA/pki
 CERT_DIR=$OPENVPN_DIR/clients
 STATIC_CLIENT_DIR=$OPENVPN_DIR/staticclients
-OVPN_DB_DIR=$OPENVPN_DIR/db
+OVPN_DB_DIR=/opt/openvpn-ui/db
 
 if [ "$ACTION" = "remove_pki" ]; then
   # Remove PKI

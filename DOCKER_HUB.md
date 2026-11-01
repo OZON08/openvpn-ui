@@ -65,7 +65,6 @@ services:
   openvpn:
     container_name: openvpn
     image: ozon08/openvpn-server:latest
-    privileged: true
     ports:
       - "1194:1194/udp"
     environment:
@@ -83,6 +82,10 @@ services:
       - ./run:/etc/openvpn/run
     cap_add:
       - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    sysctls:
+      net.ipv4.ip_forward: "1"
     restart: always
 
   openvpn-ui:
@@ -91,11 +94,17 @@ services:
     environment:
       - OPENVPN_ADMIN_USERNAME=admin
       - OPENVPN_ADMIN_PASSWORD=changeme
-    privileged: true
     ports:
       - "8080:8080/tcp"
     volumes:
-      - ./:/etc/openvpn
+      - ./server.conf:/etc/openvpn/server.conf
+      - ./config:/etc/openvpn/config
+      - ./clients:/etc/openvpn/clients
+      - ./staticclients:/etc/openvpn/staticclients
+      - ./pki:/etc/openvpn/pki
+      - ./run:/etc/openvpn/run
+      - ./log:/etc/openvpn/log:ro
+      - ./log:/var/log/openvpn:ro
       - ./db:/opt/openvpn-ui/db
       - ./pki:/usr/share/easy-rsa/pki
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -112,14 +121,21 @@ docker compose up -d
 
 ```shell
 docker run \
-  -v /etc/openvpn:/etc/openvpn \
+  -v /etc/openvpn/server.conf:/etc/openvpn/server.conf \
+  -v /etc/openvpn/config:/etc/openvpn/config \
+  -v /etc/openvpn/clients:/etc/openvpn/clients \
+  -v /etc/openvpn/staticclients:/etc/openvpn/staticclients \
+  -v /etc/openvpn/pki:/etc/openvpn/pki \
+  -v /etc/openvpn/run:/etc/openvpn/run \
+  -v /etc/openvpn/log:/etc/openvpn/log:ro \
+  -v /etc/openvpn/log:/var/log/openvpn:ro \
   -v /etc/openvpn/db:/opt/openvpn-ui/db \
   -v /etc/openvpn/pki:/usr/share/easy-rsa/pki \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -e OPENVPN_ADMIN_USERNAME='admin' \
   -e OPENVPN_ADMIN_PASSWORD='changeme' \
   -p 8080:8080/tcp \
-  --privileged ozon08/openvpn-ui:latest
+  ozon08/openvpn-ui:latest
 ```
 
 ## Environment Variables

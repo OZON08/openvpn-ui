@@ -83,11 +83,17 @@ It includes all the files in its main directory, as well.
        environment:
            - OPENVPN_ADMIN_USERNAME={{ ovpnui_user }}
            - OPENVPN_ADMIN_PASSWORD={{ ovpnui_password }}
-       privileged: true
        ports:
            - "8080:8080/tcp"
        volumes:
-           - ./:/etc/openvpn
+           - ./server.conf:/etc/openvpn/server.conf
+           - ./config:/etc/openvpn/config
+           - ./clients:/etc/openvpn/clients
+           - ./staticclients:/etc/openvpn/staticclients
+           - ./pki:/etc/openvpn/pki
+           - ./run:/etc/openvpn/run
+           - ./log:/etc/openvpn/log:ro
+           - ./log:/var/log/openvpn:ro
            - ./db:/opt/openvpn-ui/db
            - ./pki:/usr/share/easy-rsa/pki
            - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -105,7 +111,6 @@ services:
     openvpn:
        container_name: openvpn
        image: OZON08/openvpn-server:latest
-       privileged: true
        ports: 
           - "1194:1194/udp"
        environment:
@@ -123,6 +128,10 @@ services:
            - ./run:/etc/openvpn/run
        cap_add:
            - NET_ADMIN
+         devices:
+           - /dev/net/tun:/dev/net/tun
+         sysctls:
+           net.ipv4.ip_forward: "1"
        restart: always
 
     openvpn-ui:
@@ -131,11 +140,17 @@ services:
        environment:
            - OPENVPN_ADMIN_USERNAME=admin
            - OPENVPN_ADMIN_PASSWORD=gagaZush
-       privileged: true
        ports:
            - "8080:8080/tcp"
        volumes:
-           - ./:/etc/openvpn
+           - ./server.conf:/etc/openvpn/server.conf
+           - ./config:/etc/openvpn/config
+           - ./clients:/etc/openvpn/clients
+           - ./staticclients:/etc/openvpn/staticclients
+           - ./pki:/etc/openvpn/pki
+           - ./run:/etc/openvpn/run
+           - ./log:/etc/openvpn/log:ro
+           - ./log:/var/log/openvpn:ro
            - ./db:/opt/openvpn-ui/db
            - ./pki:/usr/share/easy-rsa/pki
            - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -203,15 +218,21 @@ iptables -A FORWARD -d 10.0.70.77 -s 10.0.70.88 -j DROP
 Run the OpenVPN-UI image
 ```shell
 docker run \
--v /home/pi/openvpn:/etc/openvpn \
+-v /home/pi/openvpn/server.conf:/etc/openvpn/server.conf \
+-v /home/pi/openvpn/config:/etc/openvpn/config \
+-v /home/pi/openvpn/clients:/etc/openvpn/clients \
+-v /home/pi/openvpn/staticclients:/etc/openvpn/staticclients \
+-v /home/pi/openvpn/pki:/etc/openvpn/pki \
+-v /home/pi/openvpn/run:/etc/openvpn/run \
+-v /home/pi/openvpn/log:/etc/openvpn/log:ro \
 -v /home/pi/openvpn/db:/opt/openvpn-ui/db \
 -v /home/pi/openvpn/pki:/usr/share/easy-rsa/pki \
--v /home/pi/openvpn/log:/var/log/openvpn \
+-v /home/pi/openvpn/log:/var/log/openvpn:ro \
 -v /var/run/docker.sock:/var/run/docker.sock \
 -e OPENVPN_ADMIN_USERNAME='admin' \
 -e OPENVPN_ADMIN_PASSWORD='gagaZush' \
 -p 8080:8080/tcp \
---privileged OZON08/openvpn-ui:latest
+OZON08/openvpn-ui:latest
 ```
 
 Run the OpenVPN Server image:
@@ -233,7 +254,7 @@ docker run  --interactive --tty --rm \
   -v ./fw-rules.sh:/opt/app/fw-rules.sh \
   -v ./server.conf:/etc/openvpn/server.conf \
   -v ./run:/etc/openvpn/run \
-  --privileged OZON08/openvpn-server:latest
+  --device /dev/net/tun --sysctl net.ipv4.ip_forward=1 OZON08/openvpn-server:latest
 ```
   </details>
 
@@ -1099,7 +1120,6 @@ is a one-shot privileged init service in your `docker-compose.yml`:
 ```yaml
 pki-chmod:
   image: busybox
-  privileged: true
   volumes:
     - /your/openvpn/data/pki:/pki
   command: sh -c "chmod -R g+rX /pki && echo 'PKI permissions fixed'"
