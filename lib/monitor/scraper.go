@@ -220,21 +220,12 @@ func (s *Scraper) upsertSession(c StatusClient, now time.Time) (*models.VpnSessi
 		return nil, errors.New("empty common name")
 	}
 	if !c.ConnectedAt.IsZero() {
-		if existing, err := models.FindActiveSession(c.CommonName, c.ConnectedAt); err == nil && existing != nil {
+		if existing, err := models.FindActiveSession(c.CommonName, c.RealIP, c.ConnectedAt); err == nil && existing != nil {
 			return existing, nil
 		}
 	}
-	// No matching active session — close any stale actives for this CN first,
-	// then open a fresh one. This handles reconnects cleanly.
-	if stale, err := models.FindActiveSessionsByCN(c.CommonName); err == nil {
-		for _, st := range stale {
-			st.Status = "closed"
-			st.DisconnectedAt = now
-			st.DurationS = int64(now.Sub(st.ConnectedAt).Seconds())
-			_ = st.Update("Status", "DisconnectedAt", "DurationS")
-		}
-	}
-
+	// Other sessions of this name stay open, because duplicate-cn allows several.
+	// After a reconnect, closeMissingSessions closes the old one in the same scrape.
 	session := &models.VpnSession{
 		CommonName:  c.CommonName,
 		RealIP:      c.RealIP,

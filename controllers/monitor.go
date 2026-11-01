@@ -407,7 +407,7 @@ func (c *APIMonitorHookController) Post() {
 	var session *models.VpnSession
 	if payload.ConnectedAt > 0 {
 		connectedAt := time.Unix(payload.ConnectedAt, 0).UTC()
-		session, _ = models.FindActiveSession(payload.CommonName, connectedAt)
+		session, _ = models.FindActiveSession(payload.CommonName, payload.RealIP, connectedAt)
 	}
 	if session == nil {
 		// Fall back: close the newest active session for this CN.

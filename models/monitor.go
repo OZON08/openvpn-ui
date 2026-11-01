@@ -71,19 +71,20 @@ func (s *VpnSession) Update(fields ...string) error {
 	return err
 }
 
-// FindActiveSession returns the currently active VpnSession for a common name,
-// identified by the exact ConnectedAt timestamp reported by OpenVPN.
-func FindActiveSession(commonName string, connectedAt time.Time) (*VpnSession, error) {
-	var s VpnSession
-	err := orm.NewOrm().QueryTable(new(VpnSession)).
-		Filter("CommonName", commonName).
-		Filter("ConnectedAt", connectedAt).
-		Filter("Status", "active").
-		One(&s)
+// FindActiveSession returns the active VpnSession of one connection. The address
+// separates connections of the same name, which duplicate-cn allows. The time is
+// compared here, because the stored format differs from the one of a query filter.
+func FindActiveSession(commonName, realIP string, connectedAt time.Time) (*VpnSession, error) {
+	sessions, err := FindActiveSessionsByCN(commonName)
 	if err != nil {
 		return nil, err
 	}
-	return &s, nil
+	for _, s := range sessions {
+		if s.RealIP == realIP && s.ConnectedAt.Equal(connectedAt) {
+			return s, nil
+		}
+	}
+	return nil, orm.ErrNoRows
 }
 
 // FindActiveSessionsByCN returns all active sessions for a user (typically one).

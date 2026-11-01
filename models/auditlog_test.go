@@ -12,7 +12,7 @@ import (
 func TestMain(m *testing.M) {
 	_ = orm.RegisterDriver("sqlite3", orm.DRSqlite)
 	_ = orm.RegisterDataBase("default", "sqlite3", ":memory:")
-	orm.RegisterModel(new(AuditLog))
+	orm.RegisterModel(new(AuditLog), new(VpnSession))
 	if err := orm.RunSyncdb("default", false, false); err != nil {
 		panic(err)
 	}

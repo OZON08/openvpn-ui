@@ -241,3 +241,27 @@ func TestFormatAddr(t *testing.T) {
 		}
 	}
 }
+
+// With duplicate-cn, several connections share one common name.
+func TestParseStatusLog_DuplicateCN(t *testing.T) {
+	for _, name := range []string{"v2-duplicate-cn.log", "v3-duplicate-cn.log"} {
+		clients, err := ParseStatusLog(testdata(name))
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		if len(clients) != 2 {
+			t.Fatalf("%s: expected 2 clients, got %d: %+v", name, len(clients), clients)
+		}
+		got := map[string]StatusClient{}
+		for _, c := range clients {
+			got[c.RealIP] = c
+		}
+		first, second := got["203.0.113.10"], got["203.0.113.11"]
+		if first.VirtualIP != "10.0.70.2" || first.BytesReceived != 100 {
+			t.Errorf("%s: first client: %+v", name, first)
+		}
+		if second.VirtualIP != "10.0.70.3" || second.BytesReceived != 300 {
+			t.Errorf("%s: second client: %+v", name, second)
+		}
+	}
+}
