@@ -229,7 +229,7 @@ func (c *CertificatesController) Revoke() {
 // @router /certificates/restart [post]
 func (c *CertificatesController) Restart() {
 	c.RequireAdmin()
-	if err := lib.Restart(); err != nil {
+	if err := lib.RestartContainer(lib.ContainerServer); err != nil {
 		logs.Error(err)
 	}
 	c.Redirect(c.URLFor("CertificatesController.Get"), http.StatusSeeOther)

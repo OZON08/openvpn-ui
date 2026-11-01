@@ -107,7 +107,6 @@ services:
       - ./log:/var/log/openvpn:ro
       - ./db:/opt/openvpn-ui/db
       - ./pki:/usr/share/easy-rsa/pki
-      - /var/run/docker.sock:/var/run/docker.sock:ro
     restart: always
 ```
 
@@ -131,7 +130,6 @@ docker run \
   -v /etc/openvpn/log:/var/log/openvpn:ro \
   -v /etc/openvpn/db:/opt/openvpn-ui/db \
   -v /etc/openvpn/pki:/usr/share/easy-rsa/pki \
-  -v /var/run/docker.sock:/var/run/docker.sock \
   -e OPENVPN_ADMIN_USERNAME='admin' \
   -e OPENVPN_ADMIN_PASSWORD='changeme' \
   -p 8080:8080/tcp \

@@ -96,7 +96,6 @@ It includes all the files in its main directory, as well.
            - ./log:/var/log/openvpn:ro
            - ./db:/opt/openvpn-ui/db
            - ./pki:/usr/share/easy-rsa/pki
-           - /var/run/docker.sock:/var/run/docker.sock:ro
        restart: always
 ```
 ---
@@ -153,7 +152,6 @@ services:
            - ./log:/var/log/openvpn:ro
            - ./db:/opt/openvpn-ui/db
            - ./pki:/usr/share/easy-rsa/pki
-           - /var/run/docker.sock:/var/run/docker.sock:ro
        restart: always
 ``` 
 
@@ -228,7 +226,6 @@ docker run \
 -v /home/pi/openvpn/db:/opt/openvpn-ui/db \
 -v /home/pi/openvpn/pki:/usr/share/easy-rsa/pki \
 -v /home/pi/openvpn/log:/var/log/openvpn:ro \
--v /var/run/docker.sock:/var/run/docker.sock \
 -e OPENVPN_ADMIN_USERNAME='admin' \
 -e OPENVPN_ADMIN_PASSWORD='gagaZush' \
 -p 8080:8080/tcp \

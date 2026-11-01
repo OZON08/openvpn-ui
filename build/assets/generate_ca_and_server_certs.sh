@@ -53,23 +53,8 @@ if [[ ! -f $EASY_RSA/openssl-easyrsa.cnf || ! -f $OPENVPN_DIR/pki/ca.crt || ! -f
       $EASY_RSA/easyrsa gen-dh
 
     elif [[ "$ACTION" = "gen_ta" && ! -f $OPENVPN_DIR/pki/ta.key ]]; then
-      # Generate HMAC signature in "openvpn" container with Docker API or in host
       echo 'Generate HMAC signature...'
-      # Check if the "openvpn" command exists
-      if ! command -v openvpn &> /dev/null
-      then 
-        echo 'Running in Docker container...'
-        # Get the container ID of the "openvpn" container
-        CONTAINER_ID=$(curl --unix-socket /var/run/docker.sock "http://v1.40/containers/json?filters=%7B%22name%22%3A%5B%22%5Eopenvpn$%22%5D%7D" | jq -r '.[0].Id')
-        # Create the exec instance
-        EXEC_ID=$(curl --unix-socket /var/run/docker.sock -H "Content-Type: application/json" -d '{"AttachStdin": true, "AttachStdout": true, "AttachStderr": true, "Cmd": ["openvpn", "--genkey", "--secret", "'"$OPENVPN_DIR"'/pki/ta.key"], "DetachKeys": "ctrl-p,ctrl-q", "Tty": true}' -X POST "http://v1.40/containers/$CONTAINER_ID/exec" | jq -r '.Id')
-        # Start the exec instance
-        curl --unix-socket /var/run/docker.sock -H "Content-Type: application/json" -d '{"Detach": false, "Tty": true}' -X POST "http://v1.40/exec/$EXEC_ID/start"
-      else
-         # Run the "openvpn --genkey --secret pki/ta.key" command on localhost
-         echo 'Running in host...'
-         openvpn --genkey --secret $OPENVPN_DIR/pki/ta.key
-      fi
+      openvpn --genkey secret $OPENVPN_DIR/pki/ta.key
 
     elif [ "$ACTION" = "gen_crl" ]; then
       echo 'Create certificate revocation list (CRL)...'
@@ -104,16 +89,7 @@ if [[ ! -f $EASY_RSA/openssl-easyrsa.cnf || ! -f $OPENVPN_DIR/pki/ca.crt || ! -f
       $EASY_RSA/easyrsa gen-dh
 
       echo 'Generate HMAC signature...'
-      if ! command -v openvpn &> /dev/null
-      then 
-        echo 'Running in Docker container...'
-        CONTAINER_ID=$(curl --unix-socket /var/run/docker.sock "http://v1.40/containers/json?filters=%7B%22name%22%3A%5B%22%5Eopenvpn$%22%5D%7D" | jq -r '.[0].Id')
-        EXEC_ID=$(curl --unix-socket /var/run/docker.sock -H "Content-Type: application/json" -d '{"AttachStdin": true, "AttachStdout": true, "AttachStderr": true, "Cmd": ["openvpn", "--genkey", "--secret", "'"$OPENVPN_DIR"'/pki/ta.key"], "DetachKeys": "ctrl-p,ctrl-q", "Tty": true}' -X POST "http://v1.40/containers/$CONTAINER_ID/exec" | jq -r '.Id')
-        curl --unix-socket /var/run/docker.sock -H "Content-Type: application/json" -d '{"Detach": false, "Tty": true}' -X POST "http://v1.40/exec/$EXEC_ID/start"
-      else
-         echo 'Running in host...'
-         openvpn --genkey --secret $OPENVPN_DIR/pki/ta.key
-      fi
+      openvpn --genkey secret $OPENVPN_DIR/pki/ta.key
 
       echo 'Create certificate revocation list (CRL)...'
       $EASY_RSA/easyrsa gen-crl

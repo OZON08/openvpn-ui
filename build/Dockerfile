@@ -9,8 +9,7 @@ RUN apk update \
    && apk add --update-cache \
       bash \
       easy-rsa \
-      curl \
-      jq \
+      openvpn \
       oath-toolkit-oathtool \
       su-exec \
    && rm -rf /var/cache/apk/* && chmod 755 /usr/share/easy-rsa/* \
@@ -21,7 +20,6 @@ ADD assets/start.sh /opt/start.sh
 ADD assets/generate_ca_and_server_certs.sh /opt/scripts/generate_ca_and_server_certs.sh
 ADD assets/genclient.sh /opt/scripts/genclient.sh
 ADD assets/revoke.sh /opt/scripts/revoke.sh
-ADD assets/restart.sh /opt/scripts/restart.sh
 ADD assets/rmcert.sh /opt/scripts/rmcert.sh
 ADD assets/remove.sh /opt/scripts/remove.sh
 ADD assets/renew.sh /opt/scripts/renew.sh
