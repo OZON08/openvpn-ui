@@ -1090,6 +1090,19 @@ The two measurements available for dashboards are `openvpn_traffic`
 (per-scrape byte counters per client) and `openvpn_session` (closed
 sessions with final byte counts and duration).
 
+#### Troubleshooting: InfluxDB rejects the token
+
+**Symptoms:** `InfluxDB write failed: the request was not authenticated` in the UI log, 401 Unauthenticated in Grafana, empty dashboards.
+
+Check in this order. **Do not delete the data directory to get a new token, as that loses all history.**
+
+1. **Mount path.** Run `docker logs <influxdb container> | grep "Object Store"`. The `db_dir` it shows must equal the mount target of the volume. `catalog not found, initializing a new one` on an existing install means the mount misses it. Correct the target and recreate the container, and the old catalog and token come back.
+2. **Token saved in the UI.** A token saved in the UI wins over `OPENVPN_UI_INFLUX_TOKEN`. Enter the current token in the InfluxDB form on the Monitor page.
+3. **Token really lost.** Follow the [InfluxDB documentation on regenerating the admin token](https://docs.influxdata.com/influxdb3/core/admin/tokens/admin/regenerate/). This step is not tested with this project, because the test machine cannot run `influxdb3`.
+   1. Temporarily add `--admin-token-recovery-http-bind` to `influxdb3 serve`. This endpoint needs no authentication, so never publish its port (default `127.0.0.1:8182`).
+   2. Inside the container, run `influxdb3 create token --admin --regenerate --host http://127.0.0.1:8182`. The recovery server shuts down after success, and the former token stops working.
+   3. Remove the option again. Update the token in `.env` and in the form on the Monitor page, then recreate the Grafana container.
+
 ### Per-user Certificate Scoping
 
 Starting from `v0.9.7` administrators can restrict which certificates each user may access.
