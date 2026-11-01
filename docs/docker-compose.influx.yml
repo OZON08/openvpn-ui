@@ -93,7 +93,7 @@ services:
 
     influxdb3:
         container_name: influxdb3
-        image: influxdb:3-core
+        image: influxdb:3.12.2-core # fixed version, update it deliberately
         command:
             - influxdb3
             - serve
