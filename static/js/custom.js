@@ -40,6 +40,12 @@ $.MyAPP.Restart = function (sname){
   });
 }
 
+// Language switch, read by the server on the next request
+$('.lang-btn').on('click', function () {
+  document.cookie = 'lang=' + $(this).data('lang') + '; path=/; max-age=31536000; SameSite=Lax';
+  location.reload();
+});
+
 // Copy modal content to clipboard
 $('.copy-modal-data-btn').on('click', function () {
 var $modal = $(this).closest('.modal');

@@ -31,6 +31,7 @@ type NestFinisher interface {
 }
 
 func (c *BaseController) Prepare() {
+	c.Data["Lang"] = lib.PreferredLanguage(c.Ctx.GetCookie("lang"), c.Ctx.Input.Header("Accept-Language"))
 	c.protectCSRF()
 	c.showRedirectFlash()
 	c.SetParams()
@@ -102,6 +103,12 @@ func (c *BaseController) RequireAdmin() {
 		c.Ctx.Redirect(302, c.URLFor("MainController.Get"))
 		c.StopRun()
 	}
+}
+
+// T translates a message of a controller into the language of the request.
+func (c *BaseController) T(text string) string {
+	lang, _ := c.Data["Lang"].(string)
+	return lib.Translate(lang, text)
 }
 
 // redirectWithFlash shows the message on the next page, so a reload cannot repeat the action.

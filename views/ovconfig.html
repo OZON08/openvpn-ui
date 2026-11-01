@@ -1,7 +1,7 @@
 {{ template "layout/base.html" . }}
 
 {{define "head"}}
-<title>Server Settings</title>
+<title>{{t $.Lang "Server Settings"}}</title>
 {{end}}
 
 {{define "body"}}
@@ -16,9 +16,9 @@
   <form role="form" action="{{urlfor "OVConfigController.Post"}}" method="post">
     {{ .xsrfdata }}
     <div class="card-boddy">
-      <button type="button" style="width: 135px;" class="btn btn-primary" data-toggle="modal" data-target="#config-view-modal">Edit config</button> &nbsp; &nbsp;
-      <a href="javascript:$.MyAPP.Restart('SIGUSR1')" class="btn btn-warning btn-primary" style="width: 135px;" title="Conditional Restart (SIGUSR1)">Restart Server</a>
-      <span style="color:grey;"> &nbsp; OpenVPN Server Conditional Restart will apply new configuration and re-initiate all active clients sessions.</span> 
+      <button type="button" style="width: 135px;" class="btn btn-primary" data-toggle="modal" data-target="#config-view-modal">{{t $.Lang "Edit config"}}</button> &nbsp; &nbsp;
+      <a href="javascript:$.MyAPP.Restart('SIGUSR1')" class="btn btn-warning btn-primary" style="width: 135px;" title="{{t $.Lang "Conditional Restart (SIGUSR1)"}}">{{t $.Lang "Restart Server"}}</a>
+      <span style="color:grey;"> &nbsp; {{t $.Lang "OpenVPN Server Conditional Restart will apply new configuration and re-initiate all active clients sessions."}}</span> 
     </div>
       <!-- /.card-body -->
   </form>
@@ -27,7 +27,7 @@
 
 <div class="card card-primary">
   <div class="card-header with-border">
-    <h3 class="card-title">Configuration Template
+    <h3 class="card-title">{{t $.Lang "Configuration Template"}}
     </h3>
     <div class="pull-right card-tools">
       <button type="button" class="btn btn-tool" data-card-widget="collapse">
@@ -37,7 +37,7 @@
   <!-- /.card-header -->
   <!-- form start -->
   <div class="card-body">
-    <p>All options are in the same order as will be saved into the server.conf file.</p>
+    <p>{{t $.Lang "All options are in the same order as will be saved into the server.conf file."}}</p>
   <form id="expert-form" role="form" action="{{urlfor "OVConfigController.Post"}}" method="post">
     <div class="card-body">
 
@@ -54,7 +54,7 @@
          <label for="name">Dev</label>
          <input type="text" selector="vformdata" class="form-control" name="Device" id="Device" placeholder="tun"
           value="{{ .Settings.Device }}">
-         <span class="text-muted"> Which tunnel(tun) or bridge(tap) should OpenVPN use. 
+         <span class="text-muted"> {{t $.Lang "Which tunnel(tun) or bridge(tap) should OpenVPN use."}} 
          <a href="https://community.openvpn.net/openvpn/wiki/HOWTO#Editingtheserverconfigurationfile" target="_blank">Info</a>
          </span>
       </div>
@@ -63,16 +63,16 @@
         <label for="name">Port</label>
         <input type="text" selector="vformdata" class="form-control" name="Port" id="Port" placeholder="1194"
           value="{{ .Settings.Port }}">
-        <span class="text-muted"> Which TCP/UDP port should local OpenVPN Server container listen on. 
+        <span class="text-muted"> {{t $.Lang "Which TCP/UDP port should local OpenVPN Server container listen on."}} 
          <a href="https://community.openvpn.net/openvpn/wiki/HOWTO#Editingtheserverconfigurationfile" target="_blank">Info</a>
        </span>
       </div>
                     
       <div class="form-group">
-        <label for="name">Proto</label>
+        <label for="name">{{t $.Lang "Proto"}}</label>
         <input type="text" selector="vformdata" class="form-control" name="Proto" id="Proto" placeholder="udp"
           value="{{ .Settings.Proto }}">
-        <span class="text-muted"> TCP or UDP server. 
+        <span class="text-muted"> {{t $.Lang "TCP or UDP server."}} 
          <a href="https://community.openvpn.net/openvpn/wiki/HOWTO#Editingtheserverconfigurationfile" target="_blank">Info</a>
        </span>
       </div>
@@ -81,7 +81,7 @@
         <label for="name">Topology</label> <!-- <strong><span style="color:#337ab7" title="New format in this version">!</span></strong> -->
         <input type="text" selector="vformdata" class="form-control" name="OVConfigTopology" id="OVConfigTopology" placeholder="subnet"
          value="{{ .Settings.OVConfigTopology }}">
-        <span class="text-muted"> OpenVPN Topology. 
+        <span class="text-muted"> {{t $.Lang "OpenVPN Topology."}} 
          <a href="https://community.openvpn.net/openvpn/wiki/Topology" target="_blank">Info</a>
         </span>
       </div>
@@ -90,8 +90,7 @@
         <label for="name">Keepalive</label>
         <input type="text" selector="vformdata" class="form-control" name="Keepalive" id="Keepalive" placeholder="10 120"
          value="{{ .Settings.Keepalive }}">
-        <span id="helpBlock" class="text-muted"> The keepalive directive causes ping-like messages to be sent back and forth over
-         the link so that each side knows when the other side has gone down. 
+        <span id="helpBlock" class="text-muted"> {{t $.Lang "The keepalive directive causes ping-like messages to be sent back and forth over the link so that each side knows when the other side has gone down."}} 
          <a href="https://community.openvpn.net/openvpn/wiki/Openvpn24ManPage" target="_blank">Info</a>
         </span>
       </div>
@@ -100,22 +99,22 @@
         <label for="name">MaxClients</label>
         <input type="text" class="form-control" name="MaxClients" id="MaxClients" placeholder="100"
          value="{{ .Settings.MaxClients }}">
-        <span id="helpBlock" class="text-muted"> The maximum allowed number of concurrently connected clients</span>
+        <span id="helpBlock" class="text-muted"> {{t $.Lang "The maximum allowed number of concurrently connected clients"}}</span>
       </div>
 
       <div class="form-group">
-        <label for="name">User</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
+        <label for="name">{{t $.Lang "User"}}</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
         <input type="text" class="form-control" name="OVConfigUser" id="OVConfigUser" placeholder="nobody"
          value="{{ .Settings.OVConfigUser }}">
-        <span id="helpBlock" class="text-muted"> User OpenVPN Server will use (non-Windows only). 
+        <span id="helpBlock" class="text-muted"> {{t $.Lang "User OpenVPN Server will use (non-Windows only)."}} 
          <a href="https://community.openvpn.net/openvpn/wiki/HOWTO#usergroupnon-Windowsonly" target="_blank">Info</a></span>
      </div>
 
      <div class="form-group">
-        <label for="name">Group</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
+        <label for="name">{{t $.Lang "Group"}}</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
         <input type="text" class="form-control" name="OVConfigGroup" id="OVConfigGroup" placeholder="nogroup"
          value="{{ .Settings.OVConfigGroup }}">
-        <span id="helpBlock" class="text-muted"> Group OpenVPN Server will use (non-Windows only). 
+        <span id="helpBlock" class="text-muted"> {{t $.Lang "Group OpenVPN Server will use (non-Windows only)."}} 
          <a href="https://community.openvpn.net/openvpn/wiki/HOWTO#usergroupnon-Windowsonly" target="_blank">Info</a></span>
      </div>
 
@@ -123,7 +122,7 @@
       <label for="name">Client-Config-Dir</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
       <input type="text" class="form-control" name="OVConfigClientConfigDir" id="OVConfigClientConfigDir" placeholder="/etc/openvpn/staticclients"
        value="{{ .Settings.OVConfigClientConfigDir }}">
-      <span id="helpBlock" class="text-muted"> Directory, which the OpenVPN server will scan on every incoming connection, searching for a client-specific configuration file. 
+      <span id="helpBlock" class="text-muted"> {{t $.Lang "Directory, which the OpenVPN server will scan on every incoming connection, searching for a client-specific configuration file."}} 
        <a href="https://community.openvpn.net/openvpn/wiki/HOWTO#Modifyingaliveserverconfiguration" target="_blank">Info</a>
       </span>
     </div>
@@ -132,7 +131,7 @@
        <label for="name">Ifconfig-Pool-Persist</label>
        <input type="text" class="form-control" name="IfconfigPoolPersist" id="IfconfigPoolPersist" placeholder="pki/ipp.txt"
         value="{{ .Settings.IfconfigPoolPersist }}">
-       <span id="helpBlock" class="text-muted"> Maintains a record of client <-> virtual IP address associations. Used for Client static IP configuration. 
+       <span id="helpBlock" class="text-muted"> {{t $.Lang "Maintains a record of client"}} <-> {{t $.Lang "virtual IP address associations. Used for Client static IP configuration."}} 
          <a href="https://community.openvpn.net/openvpn/wiki/Openvpn24ManPage" target="_blank">Info</a>
        </span>
     </div>
@@ -141,27 +140,27 @@
          <label for="name">CA</label>
          <input type="text" class="form-control" name="Ca" id="Ca" placeholder="pki/ca.crt"
           value="{{ .Settings.Ca }}">
-         <span class="text-muted"> The master Certificate Authority (CA) certificate. 
+         <span class="text-muted"> {{t $.Lang "The master Certificate Authority (CA) certificate."}} 
          <a href="https://community.openvpn.net/openvpn/wiki/HOWTO#SettingupyourownCertificateAuthorityCAandgeneratingcertificatesandkeysforanOpenVPNserverandmultipleclients" target="_blank">Info</a>
          </span>
       </div>
                    
       <div class="form-group">
-        <label for="name">Cert</label>
+        <label for="name">{{t $.Lang "Cert"}}</label>
         <input type="text" class="form-control" name="Cert" id="Cert" placeholder="pki/issued/server.crt"
           value="{{ .Settings.Cert }}">
         <span id="helpBlock" class="text-muted"></span>
-        <span class="text-muted"> The Server Certificate. 
+        <span class="text-muted"> {{t $.Lang "The Server Certificate."}} 
          <a href="https://community.openvpn.net/openvpn/wiki/HOWTO#Generatecertificatekeyforserver" target="_blank">Info</a>
         </span>
       </div>
                      
       <div class="form-group">
-        <label for="name">Key</label>
+        <label for="name">{{t $.Lang "Key"}}</label>
         <input type="text" class="form-control" name="Key" id="Key" placeholder="pki/private/server.key"
           value="{{ .Settings.Key }}">
         <span id="helpBlock" class="text-muted"></span>
-        <span class="text-muted"> The Server Key. 
+        <span class="text-muted"> {{t $.Lang "The Server Key."}} 
          <a href="https://community.openvpn.net/openvpn/wiki/HOWTO#Generatecertificatekeyforserver" target="_blank">Info</a>
         </span>
       </div>
@@ -170,7 +169,7 @@
        <label for="name">Crl-verify</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
        <input type="text" class="form-control" name="Crl" id="Crl" placeholder="pki/crl.pem"
         value="{{ .Settings.Crl }}">
-       <span id="helpBlock" class="text-muted"> Certificate Revocation List file. 
+       <span id="helpBlock" class="text-muted"> {{t $.Lang "Certificate Revocation List file."}} 
        <a href="https://community.openvpn.net/openvpn/wiki/HOWTO#Modifyingaliveserverconfiguration" target="_blank">Info</a>
        </span>
       </div>       
@@ -180,21 +179,21 @@
         <input type="text" class="form-control" name="Dh" id="Dh" placeholder="pki/dh.pem"
           value="{{ .Settings.Dh }}">
         <span id="helpBlock" class="text-muted"></span>
-        <span class="text-muted"> Diffie Hellman file. 
+        <span class="text-muted"> {{t $.Lang "Diffie Hellman file."}} 
         <a href="https://community.openvpn.net/openvpn/wiki/HOWTO#GenerateDiffieHellmanparameters" target="_blank">Info</a>
         </span>
       </div>
                
       <div class="form-group">
-        <label for="TLSControlChannel">TLS control channel</label>
+        <label for="TLSControlChannel">{{t $.Lang "TLS control channel"}}</label>
         <select name="TLSControlChannel" id="TLSControlChannel" class="form-control" aria-describedby="TLSControlChannelHelp">
           <option value="tls-crypt pki/ta.key" {{if eq .Settings.TLSControlChannel "tls-crypt pki/ta.key"}}selected{{end}}>tls-crypt: authenticates and encrypts the control channel</option>
           <option value="tls-auth pki/ta.key 0" {{if eq .Settings.TLSControlChannel "tls-auth pki/ta.key 0"}}selected{{end}}>tls-auth: only authenticates the control channel</option>
           {{if and (ne .Settings.TLSControlChannel "tls-crypt pki/ta.key") (ne .Settings.TLSControlChannel "tls-auth pki/ta.key 0")}}
-          <option value="{{ .Settings.TLSControlChannel }}" selected>Current value: {{ .Settings.TLSControlChannel }}</option>
+          <option value="{{ .Settings.TLSControlChannel }}" selected>{{t $.Lang "Current value:"}} {{ .Settings.TLSControlChannel }}</option>
           {{end}}
         </select>
-        <span id="TLSControlChannelHelp" class="text-muted"> New client profiles use the same mode as the server. After a change, existing clients need a newly downloaded profile.
+        <span id="TLSControlChannelHelp" class="text-muted"> {{t $.Lang "New client profiles use the same mode as the server. After a change, existing clients need a newly downloaded profile."}}
         <a href="https://community.openvpn.net/openvpn/wiki/Openvpn24ManPage" target="_blank" rel="noopener">Info</a>
         </span>
       </div>
@@ -203,7 +202,7 @@
         <label for="name">TLS-Version-Min</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
         <input type="text" class="form-control" name="TLSMinVersion" id="TLSMinVersion" placeholder="tls-version-min 1.2"
          value="{{ .Settings.TLSMinVersion }}">
-        <span id="helpBlock" class="text-muted"> Sets the minimum TLS version to accept from the peer. Full format option (to disable - comment with #). 
+        <span id="helpBlock" class="text-muted"> {{t $.Lang "Sets the minimum TLS version to accept from the peer. Full format option (to disable - comment with #)."}} 
         <a href="https://community.openvpn.net/openvpn/wiki/Openvpn24ManPage" target="_blank">Info</a>
         </span>
       </div>
@@ -212,7 +211,7 @@
         <label for="name">Remote-Cert-TLS</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
         <input type="text" class="form-control" name="TLSRemoteCert" id="TLSRemoteCert" placeholder="remote-cert-tls client"
          value="{{ .Settings.TLSRemoteCert }}">
-        <span id="helpBlock" class="text-muted"> Security option for clients, to ensure that the host they connect to is a designated server. Full format option (to disable - comment with #). 
+        <span id="helpBlock" class="text-muted"> {{t $.Lang "Security option for clients, to ensure that the host they connect to is a designated server. Full format option (to disable - comment with #)."}} 
         <a href="https://community.openvpn.net/openvpn/wiki/Openvpn24ManPage" target="_blank">Info</a>
         </span>
       </div>      
@@ -221,7 +220,7 @@
          <label for="name">Cipher</label>
          <input type="text" class="form-control" name="Cipher" id="Cipher" placeholder="AES-256-CBC"
           value="{{ .Settings.Cipher }}">
-         <span id="helpBlock" class="text-muted">Encrypt data channel packets with this cipher algorithm. 
+         <span id="helpBlock" class="text-muted">{{t $.Lang "Encrypt data channel packets with this cipher algorithm."}} 
            <a href="https://community.openvpn.net/openvpn/wiki/Openvpn24ManPage" target="_blank">Info</a>
          </span>
       </div>
@@ -230,7 +229,7 @@
         <label for="name">Ncp-Ciphers</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
         <input type="text" class="form-control" name="OVConfigNcpCiphers" id="OVConfigNcpCiphers" placeholder="AES-256-GCM:AES-192-GCM:AES-128-GCM"
          value="{{ .Settings.OVConfigNcpCiphers }}">
-        <span id="helpBlock" class="text-muted"> The list of ciphers that the client can use. 
+        <span id="helpBlock" class="text-muted"> {{t $.Lang "The list of ciphers that the client can use."}} 
          <a href="https://github.com/OpenVPN/openvpn/blob/master/doc/man-sections/cipher-negotiation.rst" target="_blank">Info</a>
         </span>
       </div>
@@ -243,140 +242,138 @@
       </div>
 
       <div class="form-group">
-        <label for="name" title="New format in this version">Server (Trusted VPN Subnet)</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
+        <label for="name" title="{{t $.Lang "New format in this version"}}">{{t $.Lang "Server (Trusted VPN Subnet)"}}</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
         <input type="text" selector="vformdata" class="form-control" name="Server" id="Server" placeholder="server 10.0.70.0 255.255.255.0"
          value="{{ .Settings.Server }}">
-        <span id="helpBlock" class="text-muted"> In Server mode supplys a Trusted VPN subnet for OpenVPN clients 
-         to draw &quot;VLAN1&quot; addresses from. You can ser server-bridge configuration here for tap mode.
+        <span id="helpBlock" class="text-muted"> {{t $.Lang "In Server mode supplys a Trusted VPN subnet for OpenVPN clients to draw &quot;VLAN1&quot; addresses from. You can ser server-bridge configuration here for tap mode."}}
          <a href="https://community.openvpn.net/openvpn/wiki/HOWTO#Configuringclient-specificrulesandaccesspolicies" target="_blank">Info</a> 
          </span>
      </div>
 
       <div class="form-group">
-        <label for="name">Route (Guest VPN subnet)</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
+        <label for="name">{{t $.Lang "Route (Guest VPN subnet)"}}</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
         <input type="text" selector="vformdata" class="form-control" name="Route" id="Route" placeholder="route 10.0.71.0 255.255.255.0"
           value="{{ .Settings.Route }}">
-        <span id="helpBlock" class="text-muted">Used to route (&quot;route [Guest subnet]&quot;) for Guest Network to for &quot;VLAN2&quot; (Guest Users) subnet clients. 
+        <span id="helpBlock" class="text-muted">{{t $.Lang "Used to route (&quot;route [Guest subnet]&quot;) for Guest Network to for &quot;VLAN2&quot; (Guest Users) subnet clients."}} 
           <a href="https://community.openvpn.net/openvpn/wiki/HOWTO#Configuringclient-specificrulesandaccesspolicies" target="_blank">Info</a> 
           </span>
       </div>
 
       <div class="form-group">
-        <label for="name">Push Route (Your Home subnet)</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
+        <label for="name">{{t $.Lang "Push Route (Your Home subnet)"}}</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
         <input type="text" selector="vformdata" class="form-control" name="PushRoute" id="PushRoute" placeholder="push &quot;route 10.0.60.0 255.255.255.0&quot;"
           value="{{ .Settings.PushRoute }}">
-        <span id="helpBlock" class="text-muted">Used to push route for Home Network to &quot;VLAN1&quot; (Trusted VPN) subnet clients.
+        <span id="helpBlock" class="text-muted">{{t $.Lang "Used to push route for Home Network to &quot;VLAN1&quot; (Trusted VPN) subnet clients."}}
           <a href="https://community.openvpn.net/openvpn/wiki/HOWTO#ExpandingthescopeoftheVPNtoincludeadditionalmachinesoneithertheclientorserversubnet" target="_blank">Info</a>
         </span>
       </div>
 
       <div class="form-group">
-        <label for="name">Push DHCP (DNS Server 1)</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
+        <label for="name">{{t $.Lang "Push DHCP (DNS Server 1)"}}</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
         <input type="text" selector="vformdata" class="form-control" name="DNSServer1" id="DNSServer1" placeholder="push &quot;dhcp-option DNS 8.8.8.8&quot;"
           value="{{ .Settings.DNSServer1 }}">
-        <span class="text-muted">DNS Server 1 configuration for connected Clients. For 'push "dhcp-option DNS [IP of DNS Server]"' configuration.
+        <span class="text-muted">{{t $.Lang "DNS Server 1 configuration for connected Clients. For 'push \"dhcp-option DNS [IP of DNS Server]\"' configuration."}}
           <a href="https://community.openvpn.net/openvpn/wiki/HOWTO#PushingDHCPoptionstoclients" target="_blank">Info</a>
         </span>
       </div>
 
       <div class="form-group">
-        <label for="name">Push DHCP (DNS Server 2)</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
+        <label for="name">{{t $.Lang "Push DHCP (DNS Server 2)"}}</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
         <input type="text" selector="vformdata" class="form-control" name="DNSServer2" id="DNSServer2" placeholder="push &quot;dhcp-option DNS 1.0.0.1&quot;"
           value="{{ .Settings.DNSServer2 }}">
-        <span class="text-muted">DNS Server 2 configuration for connected Clients. For 'push "dhcp-option DNS [IP of DNS Server]"' configuration.
+        <span class="text-muted">{{t $.Lang "DNS Server 2 configuration for connected Clients. For 'push \"dhcp-option DNS [IP of DNS Server]\"' configuration."}}
           <a href="https://community.openvpn.net/openvpn/wiki/HOWTO#PushingDHCPoptionstoclients" target="_blank">Info</a>
         </span>
       </div>
 
       <div class="form-group">
-        <label for="name">Push Redirect-gateway</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
+        <label for="name">{{t $.Lang "Push Redirect-gateway"}}</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
         <input type="text" class="form-control" name="RedirectGW" id="RedirectGW" placeholder="push &quot;redirect-gateway def1 bypass-dhcp&quot;"
           value="{{ .Settings.RedirectGW }}">
-        <span class="text-muted"> When this option uncommented, the OpenVPN server push a default route to the client, which tells client to 
-         route all Internet traffic through the VPN tunnel. 
+        <span class="text-muted"> {{t $.Lang "When this option uncommented, the OpenVPN server push a default route to the client, which tells client to route all Internet traffic through the VPN tunnel."}} 
          <a href="https://community.openvpn.net/openvpn/wiki/HOWTO#Routingallclienttrafficincludingweb-trafficthroughtheVPN" target="_blank">Info</a> </span>
       </div>
 
       <div class="form-group">
-         <label for="name">OpenVPN Server Logfile</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
+         <label for="name">{{t $.Lang "OpenVPN Server Logfile"}}</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
          <input type="text" class="form-control" name="OVConfigLogfile" id="OVConfigLogfile" placeholder="/var/log/openvpn/openvpn.log"
           value="{{ .Settings.OVConfigLogfile }}">
-        <span id="helpBlock" class="text-muted"> This option is used to define the file where OpenVPN Server will save log messages. 
+        <span id="helpBlock" class="text-muted"> {{t $.Lang "This option is used to define the file where OpenVPN Server will save log messages."}} 
         <a href="https://community.openvpn.net/openvpn/wiki/Openvpn24ManPage" target="_blank">Info</a>
         </span>
       </div>
 
       <div class="form-group">
-         <label for="name">OpenVPN Server Logging verbose level</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
+         <label for="name">{{t $.Lang "OpenVPN Server Logging verbose level"}}</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
          <input type="text" class="form-control" id="OVConfigLogVerbose" name="OVConfigLogVerbose" placeholder="3"
           value="{{ .Settings.OVConfigLogVerbose }}">
-          <span id="helpBlock" class="text-muted"> This option is used to set the verbosity level of log messages generated by the OpenVPN server (0 to 4)
+          <span id="helpBlock" class="text-muted"> {{t $.Lang "This option is used to set the verbosity level of log messages generated by the OpenVPN server (0 to 4)"}}
            <a href="https://community.openvpn.net/openvpn/wiki/Openvpn24ManPage" target="_blank">Info</a>
           </span>
       </div>
 
       <div class="form-group">
-         <label for="name">OpenVPN Server Status Log file</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
+         <label for="name">{{t $.Lang "OpenVPN Server Status Log file"}}</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
          <input type="text" class="form-control" name="OVConfigStatusLog" id="OVConfigStatusLog" placeholder="/var/log/openvpn/openvpn-status.log"
           value="{{ .Settings.OVConfigStatusLog }}">
-         <span id="helpBlock" class="text-muted"> This option is used to set the file where OpenVPN Server will report status.
+         <span id="helpBlock" class="text-muted"> {{t $.Lang "This option is used to set the file where OpenVPN Server will report status."}}
           <a href="https://community.openvpn.net/openvpn/wiki/HOWTO#StatusFile" target="_blank">Info</a></span>
         </span>
       </div>
 
       <div class="form-group">
-         <label for="name">OpenVPN Server Status Logging version</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
+         <label for="name">{{t $.Lang "OpenVPN Server Status Logging version"}}</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
          <input type="text" class="form-control" name="OVConfigStatusLogVersion" id="OVConfigStatusLogVersion" placeholder="2"
           value="{{ .Settings.OVConfigStatusLogVersion }}">
-         <span id="helpBlock" class="text-muted"> This option is used to set the version of OpenVPN Status report file. Used for openvpn-exporters. 
+         <span id="helpBlock" class="text-muted"> {{t $.Lang "This option is used to set the version of OpenVPN Status report file. Used for openvpn-exporters."}} 
           <a href="https://community.openvpn.net/openvpn/wiki/Openvpn24ManPage" target="_blank">Info</a>
          </span>
       </div>
 
       <div class="form-group" id="auth-mode">
-        <label>Authentication Mode</label>
+        <label>{{t $.Lang "Authentication Mode"}}</label>
         <select name="FuncMode" id="FuncMode" class="form-control">
-          <option value="0" {{if eq .Settings.FuncMode 0}}selected{{end}}>Classic Authentication (Certificate and optional password)</option>
-          <option value="1" {{if eq .Settings.FuncMode 1}}selected{{end}}>Two Factor Authentication (2FA)</option>
+          <option value="0" {{if eq .Settings.FuncMode 0}}selected{{end}}>{{t $.Lang "Classic Authentication (Certificate and optional password)"}}</option>
+          <option value="1" {{if eq .Settings.FuncMode 1}}selected{{end}}>{{t $.Lang "Two Factor Authentication (2FA)"}}</option>
         </select>
       </div>
 
       <div class="form-group" id="script-sec">
         <label for="ScriptSecurity">Script-security</label>
-        <input type="text" selector="vformdata" class="form-control" name="ScriptSecurity" id="scriptsecurity" placeholder="2FA configuration" 
+        <input type="text" selector="vformdata" class="form-control" name="ScriptSecurity" id="scriptsecurity" placeholder="{{t $.Lang "2FA configuration"}}" 
         value="{{if eq .Settings.FuncMode 0}} {{else}}script-security 2{{ end }}">
       </div>
 
       <div class="form-group" id="auth-user-pass-verify">
         <label for="UserPassVerify">Auth-user-pass-verify</label>
-        <input type="text" selector="vformdata" class="form-control" name="UserPassVerify" id="userpassverify" placeholder="2FA configuration"
+        <input type="text" selector="vformdata" class="form-control" name="UserPassVerify" id="userpassverify" placeholder="{{t $.Lang "2FA configuration"}}"
         value="{{if eq .Settings.FuncMode 0}} {{else}}auth-user-pass-verify /opt/app/bin/oath.sh via-file{{ end }}">
       </div>
 
       <div class="form-group">
-         <label for="name">Custom Option One</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
+         <label for="name">{{t $.Lang "Custom Option One"}}</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
          <input type="text" class="form-control" name="CustomOptOne" id="CustomOptOne" placeholder="#Custom Option One"
           value="{{ .Settings.CustomOptOne }}">
-         <span id="helpBlock" class="text-muted"> Custom Option for Server.conf. Literally anything. Full format option (to disable - comment with #) </span>
+         <span id="helpBlock" class="text-muted"> {{t $.Lang "Custom Option for Server.conf. Literally anything. Full format option (to disable - comment with #)"}} </span>
       </div>
 
       <div class="form-group">
-         <label for="name">Custom Option Two</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
+         <label for="name">{{t $.Lang "Custom Option Two"}}</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
          <textarea class="form-control" name="CustomOptTwo" id="CustomOptTwo" placeholder="#Custom Option Two" 
          rows="2">{{ .Settings.CustomOptTwo }}</textarea>
-         <span id="helpBlock" class="text-muted"> Custom Option for Server.conf. Literally anything. Full format option (to disable - comment with #) </span>
+         <span id="helpBlock" class="text-muted"> {{t $.Lang "Custom Option for Server.conf. Literally anything. Full format option (to disable - comment with #)"}} </span>
       </div>
 
       <div class="form-group">
-         <label for="name">Custom Option Three</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
+         <label for="name">{{t $.Lang "Custom Option Three"}}</label> <!-- strong><span style="color:#337ab7" title="New format in this version">!</span></strong -->
          <textarea class="form-control" name="CustomOptThree" id="CustomOptThree" placeholder="#Custom Option Three" 
          rows="3">{{ .Settings.CustomOptThree }}</textarea>
-         <span id="helpBlock" class="text-muted"> Custom Option for Server.conf. Literally anything. Full format option (to disable - comment with #) </span>
+         <span id="helpBlock" class="text-muted"> {{t $.Lang "Custom Option for Server.conf. Literally anything. Full format option (to disable - comment with #)"}} </span>
       </div>
 
      {{ .xsrfdata }}
 
-      <button type="submit" style="width: 135px;" class="btn btn-primary" onclick="return confirm('Are you sure you want to Save new configuration file?\nCurrent configuration will be overwritten!');">Save Config</button>
+      <button type="submit" style="width: 135px;" class="btn btn-primary" onclick="return confirm('{{t $.Lang "Are you sure you want to Save new configuration file?\nCurrent configuration will be overwritten!"}}');">{{t $.Lang "Save Config"}}</button>
     </div>
     
       <!-- /.card-body -->
@@ -389,7 +386,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h4 class="modal-title">{{ .BeeSettings.OVConfigPath }}/server.conf</h4>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <button type="button" class="close" data-dismiss="modal" aria-label="{{t $.Lang "Close"}}">
           <span aria-hidden="true">&times;</span></button>
       </div>
       <div class="modal-body">
@@ -403,14 +400,14 @@
                     <div class="card-group" id="accordion">
                       <span >
                         <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false" class="collapsed">
-                          <i class="fa fa-fw fa-info-circle" style="color: #f39c12; font-size: 15px;"></i> <b style="color: #f39c12;">Please note</b>
+                          <i class="fa fa-fw fa-info-circle" style="color: #f39c12; font-size: 15px;"></i> <b style="color: #f39c12;">{{t $.Lang "Please note"}}</b>
                         </a>
                       </span>
                     </div>
                     <div id="collapseOne" class="panel-collapse collapse" aria-expanded="false" style="height: 0px;">
                       <div class="card-body">
-                        <span class="text-muted">Manual configuration will not push new changes into OpenVPN UI templates DB.</span><br>
-                        <span class="text-muted">Best practice is update Server configuration with Configuration template.</span><br>
+                        <span class="text-muted">{{t $.Lang "Manual configuration will not push new changes into OpenVPN UI templates DB."}}</span><br>
+                        <span class="text-muted">{{t $.Lang "Best practice is update Server configuration with Configuration template."}}</span><br>
                       </div>
                     </div>
                     <br><textarea type="text" class="form-control my-textarea" name="ServerConfig" id="ServerConfig" spellcheck="false" rows="15">{{ .ServerConfig }}</textarea>
@@ -419,8 +416,8 @@
                 {{ .xsrfdata }}
               </div>
               <div class="card-footer">
-                <button type="button" class="btn btn-default pull-left" style="width: 135px;" data-dismiss="modal">Close</button> &nbsp; &nbsp;
-                <button type="submit" class="btn btn-primary" style="width: 135px;" onclick="return confirm('Are you sure you want to Save manually added configuration file?\nTemplate will not be updated!'); window.location.reload();">Save</button>
+                <button type="button" class="btn btn-default pull-left" style="width: 135px;" data-dismiss="modal">{{t $.Lang "Close"}}</button> &nbsp; &nbsp;
+                <button type="submit" class="btn btn-primary" style="width: 135px;" onclick="return confirm('{{t $.Lang "Are you sure you want to Save manually added configuration file?\nTemplate will not be updated!"}}'); window.location.reload();">{{t $.Lang "Save"}}</button>
               </div>
                  <!-- /.card-body -->
             </form>

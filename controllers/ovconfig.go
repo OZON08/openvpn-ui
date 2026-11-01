@@ -94,10 +94,10 @@ func (c *OVConfigController) Post() {
 	if _, err := o.Update(&cfg); err != nil {
 		flash.Error("%s", err.Error())
 	} else {
-		flash.Success("Post: Config has been updated")
+		flash.Success("%s", c.T("Post: Config has been updated"))
 		client := mi.NewClient(state.GlobalCfg.MINetwork, state.GlobalCfg.MIAddress)
 		if err := client.Signal("SIGTERM"); err != nil {
-			flash.Warning("Config has been updated but OpenVPN server was NOT reloaded: %s", err.Error())
+			flash.Warning(c.T("Config has been updated but OpenVPN server was NOT reloaded: %s"), err.Error())
 		}
 		models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "ovconfig.save", "", "", c.Ctx.Input.IP())
 	}
@@ -106,7 +106,7 @@ func (c *OVConfigController) Post() {
 	serverConf, err := os.ReadFile(destPath)
 	if err != nil {
 		logs.Error("Error reading server config from file:", err)
-		flash.Error("Error reading server config from file")
+		flash.Error("%s", c.T("Error reading server config from file"))
 		return
 	}
 	c.Data["ServerConfig"] = string(serverConf)
@@ -139,17 +139,17 @@ func (c *OVConfigController) Edit() {
 	err := lib.ConfSaveToFile(destPath, c.GetString("ServerConfig"))
 	if err != nil {
 		logs.Error("Error saving server config to file:", err)
-		flash.Error("Error saving server config to file")
+		flash.Error("%s", c.T("Error saving server config to file"))
 		return
 	} else {
 		//logs.Info("Edit: Server config saved to file:", destPath)
-		flash.Success("Config has been updated")
+		flash.Success("%s", c.T("Config has been updated"))
 	}
 
 	serverConf, err := os.ReadFile(destPath)
 	if err != nil {
 		logs.Error("Error reading server config from file:", err)
-		flash.Error("Error reading server config from file")
+		flash.Error("%s", c.T("Error reading server config from file"))
 		return
 	}
 	c.Data["ServerConfig"] = string(serverConf)

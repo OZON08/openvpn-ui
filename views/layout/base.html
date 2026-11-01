@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="{{.Lang}}">
   <head>
     {{template "common/header.html" .}}
     {{template "head" .}}
@@ -16,10 +16,16 @@
         </ul>
         <ul class="navbar-nav ml-auto">
           <li class="nav-item">
+            <div class="theme-switcher" role="group" aria-label="{{t $.Lang "Language"}}">
+              <button type="button" class="theme-btn lang-btn" data-lang="de" lang="de" title="Deutsch" aria-label="Deutsch" aria-pressed="{{if eq .Lang "de"}}true{{else}}false{{end}}">DE</button>
+              <button type="button" class="theme-btn lang-btn" data-lang="en" lang="en" title="English" aria-label="English" aria-pressed="{{if eq .Lang "en"}}true{{else}}false{{end}}">EN</button>
+            </div>
+          </li>
+          <li class="nav-item">
             <div class="theme-switcher">
-              <button class="theme-btn" data-theme="light" title="Light"><i class="fas fa-sun"></i></button>
-              <button class="theme-btn" data-theme="auto"  title="Auto"><i class="fas fa-adjust"></i></button>
-              <button class="theme-btn" data-theme="dark"  title="Dark"><i class="fas fa-moon"></i></button>
+              <button class="theme-btn" data-theme="light" title="{{t $.Lang "Light"}}"><i class="fas fa-sun"></i></button>
+              <button class="theme-btn" data-theme="auto"  title="{{t $.Lang "Auto"}}"><i class="fas fa-adjust"></i></button>
+              <button class="theme-btn" data-theme="dark"  title="{{t $.Lang "Dark"}}"><i class="fas fa-moon"></i></button>
             </div>
           </li>
           <li class="nav-item dropdown user-menu">
@@ -31,9 +37,9 @@
               <span class="d-none d-md-inline">{{ .Userinfo.Name }}</span>
             </a>
             <ul class="dropdown-menu dropdown-menu-right">
-              <li><a href="{{urlfor "ProfileController.Get"}}" class="dropdown-item"><i class="fas fa-user-cog mr-2"></i>Profile</a></li>
+              <li><a href="{{urlfor "ProfileController.Get"}}" class="dropdown-item"><i class="fas fa-user-cog mr-2"></i>{{t $.Lang "Profile"}}</a></li>
               <div class="dropdown-divider"></div>
-              <li><form method="post" action="{{urlfor "LoginController.Logout"}}">{{.xsrfdata}}<button type="submit" class="dropdown-item"><i class="fa fa-sign-out mr-2"></i>Sign out</button></form></li>
+              <li><form method="post" action="{{urlfor "LoginController.Logout"}}">{{.xsrfdata}}<button type="submit" class="dropdown-item"><i class="fa fa-sign-out mr-2"></i>{{t $.Lang "Sign out"}}</button></form></li>
             </ul>
           </li>
         </ul>

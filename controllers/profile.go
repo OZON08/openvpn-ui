@@ -82,7 +82,7 @@ func (c *ProfileController) Post() {
 
 	hash, err := passlib.Hash(user.Password)
 	if err != nil {
-		flash.Error("Unable to hash password")
+		flash.Error("%s", c.T("Unable to hash password"))
 		flash.Store(&c.Controller)
 		return
 	}
@@ -93,7 +93,7 @@ func (c *ProfileController) Post() {
 	if _, err := o.Update(c.Userinfo); err != nil {
 		flash.Error("%s", err.Error())
 	} else {
-		flash.Success("Profile has been updated!")
+		flash.Success("%s", c.T("Profile has been updated!"))
 		models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "user.update", c.Userinfo.Login, "", c.Ctx.Input.IP())
 	}
 	flash.Store(&c.Controller)
@@ -165,7 +165,7 @@ func (c *ProfileController) Create() {
 	var existingUser models.User
 	err := o.QueryTable("user").Filter("Login", user.Login).One(&existingUser)
 	if err == nil {
-		flash.Warning("User with login \"%s\" is already exists!", user.Login)
+		flash.Warning(c.T("User with login \"%s\" is already exists!"), user.Login)
 		flash.Store(&c.Controller)
 		logs.Info("User already exists:", user.Login)
 		c.List()
@@ -177,7 +177,7 @@ func (c *ProfileController) Create() {
 
 	var existingEmailUser models.User
 	if emailErr := o.QueryTable("user").Filter("Email", user.Email).One(&existingEmailUser); emailErr == nil {
-		flash.Warning("A user with email \"%s\" already exists!", user.Email)
+		flash.Warning(c.T("A user with email \"%s\" already exists!"), user.Email)
 		flash.Store(&c.Controller)
 		c.List()
 		return
@@ -208,7 +208,7 @@ func (c *ProfileController) Create() {
 	if created, _, err := o.ReadOrCreate(&newUser, "Name"); err == nil {
 		if created {
 			logs.Info("New user with login \"" + user.Login + "\" created successfully.")
-			flash.Success("New user with login \"%s\" created successfully.", user.Login)
+			flash.Success(c.T("New user with login \"%s\" created successfully."), user.Login)
 			flash.Store(&c.Controller)
 			models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "user.create", user.Login, "", c.Ctx.Input.IP())
 		} else {
@@ -280,7 +280,7 @@ func (c *ProfileController) DeleteUser() {
 	target := c.URLFor("ProfileController.Get")
 	id, err := c.GetInt(":key")
 	if err != nil || id == 1 {
-		flash.Error("This user cannot be deleted")
+		flash.Error("%s", c.T("This user cannot be deleted"))
 		c.redirectWithFlash(flash, target)
 		return
 	}
@@ -289,20 +289,20 @@ func (c *ProfileController) DeleteUser() {
 	user := models.User{Id: int64(id)}
 	if err := o.Read(&user); err != nil {
 		logs.Error("Failed to get user:", err)
-		flash.Error("User not found")
+		flash.Error("%s", c.T("User not found"))
 		c.redirectWithFlash(flash, target)
 		return
 	}
 
 	if _, err := o.Delete(&user); err != nil {
 		logs.Error("Failed to delete user \""+user.Login+"\" profile:", err)
-		flash.Error("Failed to delete user \"%s\" profile", user.Login)
+		flash.Error(c.T("Failed to delete user \"%s\" profile"), user.Login)
 		c.redirectWithFlash(flash, target)
 		return
 	}
 
 	logs.Info("User with login \""+user.Login+"\" deleted. It had user ID: ", id)
-	flash.Success("User \"%s\" deleted successfully.", user.Login)
+	flash.Success(c.T("User \"%s\" deleted successfully."), user.Login)
 	models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "user.delete", user.Login, "", c.Ctx.Input.IP())
 	c.redirectWithFlash(flash, target)
 }
@@ -315,23 +315,23 @@ func (c *ProfileController) AssignCert() {
 	flash := web.NewFlash()
 	userID, err := c.GetInt64("userID")
 	if err != nil {
-		flash.Error("Invalid user ID")
+		flash.Error("%s", c.T("Invalid user ID"))
 		flash.Store(&c.Controller)
 		c.Redirect(c.URLFor("ProfileController.Get"), 302)
 		return
 	}
 	certName := c.GetString("certName")
 	if !lib.SafeNameRegex.MatchString(certName) {
-		flash.Error("Invalid certificate name")
+		flash.Error("%s", c.T("Invalid certificate name"))
 		flash.Store(&c.Controller)
 		c.Redirect(c.URLFor("ProfileController.Get"), 302)
 		return
 	}
 	if err := models.AssignCert(userID, certName); err != nil {
 		logs.Error("AssignCert failed:", err)
-		flash.Error("Failed to assign certificate: %s", err.Error())
+		flash.Error(c.T("Failed to assign certificate: %s"), err.Error())
 	} else {
-		flash.Success("Certificate \"%s\" assigned successfully", certName)
+		flash.Success(c.T("Certificate \"%s\" assigned successfully"), certName)
 		models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "cert.assign", certName, "", c.Ctx.Input.IP())
 	}
 	flash.Store(&c.Controller)
@@ -346,23 +346,23 @@ func (c *ProfileController) RemoveCert() {
 	flash := web.NewFlash()
 	userID, err := c.GetInt64("userID")
 	if err != nil {
-		flash.Error("Invalid user ID")
+		flash.Error("%s", c.T("Invalid user ID"))
 		flash.Store(&c.Controller)
 		c.Redirect(c.URLFor("ProfileController.Get"), 302)
 		return
 	}
 	certName := c.GetString("certName")
 	if !lib.SafeNameRegex.MatchString(certName) {
-		flash.Error("Invalid certificate name")
+		flash.Error("%s", c.T("Invalid certificate name"))
 		flash.Store(&c.Controller)
 		c.Redirect(c.URLFor("ProfileController.Get"), 302)
 		return
 	}
 	if err := models.RemoveCert(userID, certName); err != nil {
 		logs.Error("RemoveCert failed:", err)
-		flash.Error("Failed to remove certificate: %s", err.Error())
+		flash.Error(c.T("Failed to remove certificate: %s"), err.Error())
 	} else {
-		flash.Success("Certificate \"%s\" removed", certName)
+		flash.Success(c.T("Certificate \"%s\" removed"), certName)
 		models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "cert.unassign", certName, "", c.Ctx.Input.IP())
 	}
 	flash.Store(&c.Controller)
@@ -377,30 +377,30 @@ func (c *ProfileController) TransferCert() {
 	flash := web.NewFlash()
 	fromUserID, err := c.GetInt64("fromUserID")
 	if err != nil {
-		flash.Error("Invalid source user ID")
+		flash.Error("%s", c.T("Invalid source user ID"))
 		flash.Store(&c.Controller)
 		c.Redirect(c.URLFor("ProfileController.Get"), 302)
 		return
 	}
 	toUserID, err := c.GetInt64("toUserID")
 	if err != nil {
-		flash.Error("Invalid target user ID")
+		flash.Error("%s", c.T("Invalid target user ID"))
 		flash.Store(&c.Controller)
 		c.Redirect(c.URLFor("ProfileController.Get"), 302)
 		return
 	}
 	certName := c.GetString("certName")
 	if !lib.SafeNameRegex.MatchString(certName) {
-		flash.Error("Invalid certificate name")
+		flash.Error("%s", c.T("Invalid certificate name"))
 		flash.Store(&c.Controller)
 		c.Redirect(c.URLFor("ProfileController.Get"), 302)
 		return
 	}
 	if err := models.TransferCert(fromUserID, toUserID, certName); err != nil {
 		logs.Error("TransferCert failed:", err)
-		flash.Error("Transfer failed: %s", err.Error())
+		flash.Error(c.T("Transfer failed: %s"), err.Error())
 	} else {
-		flash.Success("Certificate \"%s\" transferred successfully", certName)
+		flash.Success(c.T("Certificate \"%s\" transferred successfully"), certName)
 	}
 	flash.Store(&c.Controller)
 	c.Redirect(c.URLFor("ProfileController.Get"), 302)
@@ -415,7 +415,7 @@ func (c *ProfileController) SeedCerts() {
 	pkiIndex := filepath.Join(state.GlobalCfg.OVConfigPath, "pki/index.txt")
 	allCerts, err := lib.ReadCerts(pkiIndex)
 	if err != nil {
-		flash.Error("Could not read PKI: %s", err.Error())
+		flash.Error(c.T("Could not read PKI: %s"), err.Error())
 		flash.Store(&c.Controller)
 		c.Redirect(c.URLFor("ProfileController.Get"), 302)
 		return
@@ -429,9 +429,9 @@ func (c *ProfileController) SeedCerts() {
 	n, err := models.SeedAssignmentsFromLogin(certNames)
 	if err != nil {
 		logs.Error("SeedCerts failed:", err)
-		flash.Error("Seed failed: %s", err.Error())
+		flash.Error(c.T("Seed failed: %s"), err.Error())
 	} else {
-		flash.Success("Seeded %d assignment(s) from login names", n)
+		flash.Success(c.T("Seeded %d assignment(s) from login names"), n)
 	}
 	flash.Store(&c.Controller)
 	c.Redirect(c.URLFor("ProfileController.Get"), 302)
@@ -452,7 +452,7 @@ func (c *ProfileController) EditUser() {
 	user := models.User{Id: int64(id)}
 	if err := o.Read(&user); err != nil {
 		logs.Error("Failed to read user \""+user.Name+"\" profile:", err)
-		flash.Error("Failed to read user \"%s\" profile", user.Name)
+		flash.Error(c.T("Failed to read user \"%s\" profile"), user.Name)
 		return
 	}
 
@@ -469,12 +469,12 @@ func (c *ProfileController) EditUser() {
 
 	if _, err := o.Update(&user); err != nil {
 		logs.Error("Failed to update user \""+user.Name+"\" profile:", err)
-		flash.Error("Failed to update user \"%s\" profile", user.Name)
+		flash.Error(c.T("Failed to update user \"%s\" profile"), user.Name)
 		return
 	}
 
 	logs.Info("Updated user profile with ID", id)
-	flash.Success("User \"%s\" updated successfully", user.Name)
+	flash.Success(c.T("User \"%s\" updated successfully"), user.Name)
 	flash.Store(&c.Controller)
 	c.List()
 }

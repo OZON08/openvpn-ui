@@ -1,7 +1,7 @@
 {{ template "layout/base.html" . }}
 
 {{define "head"}}
-<title>OpenVPN - Settings</title>
+<title>{{t $.Lang "OpenVPN - Settings"}}</title>
 {{end}}
 
 {{define "body"}}
@@ -10,7 +10,7 @@
   <div class="col-md-12">
     <div class="card card-default">
       <div class="card-header">
-        <h3 class="card-title"> {{ if eq (printf "%d" $.SettingsC.FuncMode) "1" }}2FA Authorisation is <b style="color: #00a65a;">Enabled</b></h3>{{else}}<h3 class="card-title"> Client Certificates</h3>{{end}}
+        <h3 class="card-title"> {{ if eq (printf "%d" $.SettingsC.FuncMode) "1" }}{{t $.Lang "2FA Authorisation is"}} <b style="color: #00a65a;">{{t $.Lang "Enabled"}}</b></h3>{{else}}<h3 class="card-title"> {{t $.Lang "Client Certificates"}}</h3>{{end}}
         <div class="card-tools">
           <button type="button" class="btn btn-tool" data-card-widget="collapse">
           <i class="fa fa-minus"></i></button>
@@ -26,13 +26,13 @@
             <thead>
             <tr>
               <th>Name</th>
-              <th>State</th>
-              <th>Static IP</th>
-              <th>Expiration</th>
-              <th>Revocation</th>
+              <th>{{t $.Lang "State"}}</th>
+              <th>{{t $.Lang "Static IP"}}</th>
+              <th>{{t $.Lang "Expiration"}}</th>
+              <th>{{t $.Lang "Revocation"}}</th>
               <!--th>Serial</th-->
-              <th>Details</th>
-              <th>Actions</th>
+              <th>{{t $.Lang "Details"}}</th>
+              <th>{{t $.Lang "Actions"}}</th>
             </tr>
             </thead>
             <tbody>
@@ -104,20 +104,20 @@
                   {{end}}
                   <td class="align-middle">
                   {{ if and (eq .Revocation "") (ne .Details.Name "") }}
-                      <form method="post" action="{{urlfor "CertificatesController.Renew" ":key" .Details.Name ":localip" .Details.LocalIP ":serial" .Serial ":tfaname" .Details.TFAName}}" class="d-inline">{{$.xsrfdata}}<button type="submit" class="btn btn-primary btn-xs" title="Renew" style="font-size: 80%;">Renew</button></form>
+                      <form method="post" action="{{urlfor "CertificatesController.Renew" ":key" .Details.Name ":localip" .Details.LocalIP ":serial" .Serial ":tfaname" .Details.TFAName}}" class="d-inline">{{$.xsrfdata}}<button type="submit" class="btn btn-primary btn-xs" title="{{t $.Lang "Renew"}}" style="font-size: 80%;">{{t $.Lang "Renew"}}</button></form>
                   {{else}}
-                      <a class="btn btn-default btn-xs" disabled>Renew</a>
+                      <a class="btn btn-default btn-xs" disabled>{{t $.Lang "Renew"}}</a>
                   {{end}}
                   {{if $.IsAdmin}}
                   {{ if and (eq .Revocation "") (ne .Details.Name "") }}
-                      <form method="post" action="{{urlfor "CertificatesController.Revoke" ":key" .Details.Name ":serial" .Serial ":tfaname" .Details.TFAName}}" class="d-inline">{{$.xsrfdata}}<button type="submit" class="btn btn-warning btn-xs" title="Revoke" style="font-size: 80%;">Revoke</button></form>
+                      <form method="post" action="{{urlfor "CertificatesController.Revoke" ":key" .Details.Name ":serial" .Serial ":tfaname" .Details.TFAName}}" class="d-inline">{{$.xsrfdata}}<button type="submit" class="btn btn-warning btn-xs" title="{{t $.Lang "Revoke"}}" style="font-size: 80%;">{{t $.Lang "Revoke"}}</button></form>
                   {{else}}
-                      <a class="btn btn-default btn-xs" disabled>Revoke</a>
+                      <a class="btn btn-default btn-xs" disabled>{{t $.Lang "Revoke"}}</a>
                   {{end}}
                   {{ if eq .Revocation ""}}
-                      <a class="btn btn-default btn-xs" disabled>Delete</a>
+                      <a class="btn btn-default btn-xs" disabled>{{t $.Lang "Delete"}}</a>
                   {{else}}
-                      <form method="post" action="{{urlfor "CertificatesController.Burn" ":key" .Details.CN ":serial" .Serial ":tfaname" .Details.TFAName}}" class="d-inline">{{$.xsrfdata}}<button type="submit" class="btn btn-danger btn-xs" title="Burn" style="font-size: 80%;">Delete</button></form>
+                      <form method="post" action="{{urlfor "CertificatesController.Burn" ":key" .Details.CN ":serial" .Serial ":tfaname" .Details.TFAName}}" class="d-inline">{{$.xsrfdata}}<button type="submit" class="btn btn-danger btn-xs" title="{{t $.Lang "Burn"}}" style="font-size: 80%;">{{t $.Lang "Delete"}}</button></form>
                   {{end}}
                   {{end}}
                   </td>
@@ -126,8 +126,8 @@
                 <div class="modal-dialog">
                   <div class="modal-content">
                     <div class="modal-header">
-                      <h4 class="modal-title">{{ .Details.CN }} Details</h4>
-                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <h4 class="modal-title">{{ .Details.CN }} {{t $.Lang "Details"}}</h4>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="{{t $.Lang "Close"}}">
                       <span aria-hidden="true">&times;</span></button>
                     </div>
                     <div class="modal-body">
@@ -136,40 +136,40 @@
                         {{ if eq (printf "%d" $.SettingsC.FuncMode) "1" }}
                         <!--dt class="copy-details">2FA Issuer String: </dt>
                         <dd class="copy-details">{{ $.SettingsC.TFAIssuer }}</dd-->
-                        <dt class="copy-details"><b><h4>2FA Name: </h4></b></dt>
+                        <dt class="copy-details"><b><h4>{{t $.Lang "2FA Name:"}} </h4></b></dt>
                         <dd class="copy-details 2fa-name"><h4 style="color: #3c8dbc">{{ .Details.TFAName }}</h4></dd>
-                        <dt class="copy-details"><b><h5>Certificate Name:</h5></b></dt>
+                        <dt class="copy-details"><b><h5>{{t $.Lang "Certificate Name:"}}</h5></b></dt>
                         <dd class="copy-details cert-name"><h5 style="color: #3c8dbc">{{ .Details.CN }}</h5></dd>
                         {{else}}
                         <dt class="copy-details"><b><h4>Name: </h4></b></dt>
                         <dd class="copy-details cert-name"><h4 style="color: #3c8dbc">{{ .Details.CN }}</h4></dd>
                         {{end}}
-                        <dt class="copy-details">Status: </dt>
-                        <dd class="copy-details">{{if eq .EntryType "V"}}<span class="badge bg-success" style="font-size: 110%;" >Valid</span>{{else if eq .EntryType "R"}}<span class="badge bg-danger" style="font-size: 110%;">Revoked</span>{{else}}Unknown{{end}}</dd>
-                        <dt class="copy-details">Expiration Time: </dt>
-                        <dd class="copy-details exp-time">{{ if and .IsExpiring (eq .Revocation "") (ne .Details.Name "") }}<span class="badge bg-warning" style="font-size: 110%;">{{ dateformat .ExpirationT "2006-01-02 15:04"}} <b> This Certificate will soon expire!</b></span>{{else}}<span class="badge bg-success">{{ dateformat .ExpirationT "2006-01-02 15:04"}}</span>{{end}}</dd>
-                        <dt class="copy-details">Revoke Time: </dt>
-                        <dd class="copy-details">{{if ne .Revocation ""}} <span class="badge bg-warning" style="font-size: 110%;">{{ dateformat .RevocationT "2006-01-02 15:04"}}</span> {{else}}<span id="helpBlock" class="text-muted">Not Revoked</span>{{end}}</dd>
-                        <dt class="copy-details">IP Address: </dt>
+                        <dt class="copy-details">{{t $.Lang "Status:"}} </dt>
+                        <dd class="copy-details">{{if eq .EntryType "V"}}<span class="badge bg-success" style="font-size: 110%;" >{{t $.Lang "Valid"}}</span>{{else if eq .EntryType "R"}}<span class="badge bg-danger" style="font-size: 110%;">{{t $.Lang "Revoked"}}</span>{{else}}{{t $.Lang "Unknown"}}{{end}}</dd>
+                        <dt class="copy-details">{{t $.Lang "Expiration Time:"}} </dt>
+                        <dd class="copy-details exp-time">{{ if and .IsExpiring (eq .Revocation "") (ne .Details.Name "") }}<span class="badge bg-warning" style="font-size: 110%;">{{ dateformat .ExpirationT "2006-01-02 15:04"}} <b> {{t $.Lang "This Certificate will soon expire!"}}</b></span>{{else}}<span class="badge bg-success">{{ dateformat .ExpirationT "2006-01-02 15:04"}}</span>{{end}}</dd>
+                        <dt class="copy-details">{{t $.Lang "Revoke Time:"}} </dt>
+                        <dd class="copy-details">{{if ne .Revocation ""}} <span class="badge bg-warning" style="font-size: 110%;">{{ dateformat .RevocationT "2006-01-02 15:04"}}</span> {{else}}<span id="helpBlock" class="text-muted">{{t $.Lang "Not Revoked"}}</span>{{end}}</dd>
+                        <dt class="copy-details">{{t $.Lang "IP Address:"}} </dt>
                         <dd class="copy-details"><span id="helpBlock" class="text-muted">{{ .Details.LocalIP }}</span></dd>
-                        <dt class="copy-details">Serial: </dt>
+                        <dt class="copy-details">{{t $.Lang "Serial:"}} </dt>
                         <dd class="copy-details"><span id="helpBlock" class="text-muted">{{ .Serial }}</span></dd>
-                        <dt class="copy-details">Registered e-mail: </dt>
+                        <dt class="copy-details">{{t $.Lang "Registered e-mail:"}} </dt>
                         <dd class="copy-details reg-email"><a href="mailto:{{ .Details.Email }}">{{ .Details.Email }}</a></dd>
-                        <dt class="copy-details">Registered Country: </dt>
+                        <dt class="copy-details">{{t $.Lang "Registered Country:"}} </dt>
                         <dd class="copy-details"><span id="helpBlock" class="text-muted">{{ .Details.Country }}</span></dd>
-                        <dt class="copy-details">Registered State/Region: </dt>
+                        <dt class="copy-details">{{t $.Lang "Registered State/Region:"}} </dt>
                         <dd class="copy-details"><span id="helpBlock" class="text-muted">{{ .Details.State }}</span></dd>
-                        <dt class="copy-details">Registered City: </dt>
+                        <dt class="copy-details">{{t $.Lang "Registered City:"}} </dt>
                         <dd class="copy-details"><span id="helpBlock" class="text-muted">{{ .Details.City }}</span></dd>
-                        <dt class="copy-details">Registered Organisation: </dt>
+                        <dt class="copy-details">{{t $.Lang "Registered Organisation:"}} </dt>
                         <dd class="copy-details reg-org"><span id="helpBlock" class="text-muted">{{ .Details.Organisation }}</span></dd>
-                        <dt class="copy-details">Registered Unit: </dt>
+                        <dt class="copy-details">{{t $.Lang "Registered Unit:"}} </dt>
                         <dd class="copy-details"><span id="helpBlock" class="text-muted">{{ .Details.OrganisationUnit }}</span></dd>
                         {{ if eq (printf "%d" $.SettingsC.FuncMode) "1" }}
                         <!--dt class="copy-details">2FA Issuer String: </dt>
                         <dd class="copy-details">{{ $.SettingsC.TFAIssuer }}</dd-->
-                        <dt class="copy-details">Two Factor Authorisation (2FA) QR Code:</dt>
+                        <dt class="copy-details">{{t $.Lang "Two Factor Authorisation (2FA) QR Code:"}}</dt>
                         <dd class="copy-details">
                           {{ if and (eq .EntryType "V") (ne .Details.Name "") }}
                             <div class="text-left qr-code">
@@ -180,9 +180,9 @@
                         {{end}}
                       </dl>
                       <div class="modal-footer justify-content-between">
-                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary copy-btn copy-modal-data-btn" style="width: 135px;">Copy</button>
-                        <button type="button" class="btn btn-success send-email-with-qr-btn" style="width: 135px;">Send Email</button>
+                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal">{{t $.Lang "Close"}}</button>
+                        <button type="submit" class="btn btn-primary copy-btn copy-modal-data-btn" style="width: 135px;">{{t $.Lang "Copy"}}</button>
+                        <button type="button" class="btn btn-success send-email-with-qr-btn" style="width: 135px;">{{t $.Lang "Send Email"}}</button>
                       </div>
                       </div>
                     </div>
@@ -211,7 +211,7 @@
   <div class="col-md-12">
     <div class="card card-primary">
       <div class="card-header with-border">
-        <h3 class="card-title">Create New Client Certificate</h3>
+        <h3 class="card-title">{{t $.Lang "Create New Client Certificate"}}</h3>
         <div class="pull-left card-tools">
           <button type="button" class="btn btn-tool" data-card-widget="collapse">
           <i class="fa fa-minus"></i></button>
@@ -221,7 +221,7 @@
         {{template "common/alert.html" .}}
       <div class="card-body">
         <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-default">
-          Create Certificate
+          {{t $.Lang "Create Certificate"}}
         </button>
         <span class="text-muted"> {{template "common/fvalid.html" field_error_message .validation "Name" }}</span>
       </div>
@@ -235,8 +235,8 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h4 class="modal-title">Create Certificate</h4>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <h4 class="modal-title">{{t $.Lang "Create Certificate"}}</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="{{t $.Lang "Close"}}">
         <span aria-hidden="true">&times;</span></button>
       </div>
       <div class="modal-body" id="FuncMode" value="{{ $.SettingsC.FuncMode }}">
@@ -246,78 +246,78 @@
         <form role="form" action="{{urlfor "CertificatesController.Post"}}" method="post">{{ .xsrfdata }}
           <div class="box-body">
             <div class="form-group has-success {{if field_error_exist .validation "Name" }}has-error{{end}}">
-              <label class="control-label" for="name" title="Name should not have spaces."><i class="fa fa-bell-o"></i>Name</label>
-              <input type="text" class="form-control is-warning" pattern="^[^\s]+$" placeholder="Certificate Name" id="Name" name="Name">
-              <span class="text-muted" title="Name should not have spaces.">Common name of the certificate.<span>
+              <label class="control-label" for="name" title="{{t $.Lang "Name should not have spaces."}}"><i class="fa fa-bell-o"></i>Name</label>
+              <input type="text" class="form-control is-warning" pattern="^[^\s]+$" placeholder="{{t $.Lang "Certificate Name"}}" id="Name" name="Name">
+              <span class="text-muted" title="{{t $.Lang "Name should not have spaces."}}">{{t $.Lang "Common name of the certificate."}}<span>
             </div>
 
             {{ if eq (printf "%d" $.SettingsC.FuncMode) "1" }}
             <div class="form-group has-success {{if field_error_exist .validation "TFAName" }}has-error{{end}}">
-              <label class="control-label" for="tfaname" title="2FAName should not have spaces."><i class="fa fa-bell-o"></i>2FA Name</label>
+              <label class="control-label" for="tfaname" title="{{t $.Lang "2FAName should not have spaces."}}"><i class="fa fa-bell-o"></i>{{t $.Lang "2FA Name"}}</label>
               <input type="text" class="form-control is-warning" pattern="^[^\s]+$" placeholder="alice@wonderland.ua" id="TFAName" name="TFAName">
-              <span class="text-muted" title="Name should not have spaces.">Unique 2FA name of the certificate.<span>
+              <span class="text-muted" title="{{t $.Lang "Name should not have spaces."}}">{{t $.Lang "Unique 2FA name of the certificate."}}<span>
             </div>
 
             <div class="form-group" id="tfa-issuer">
-              <label class="control-label" for="tfaissuer" title="TFAIssuer should have URL format."></i>2FA Issuer String</label>
+              <label class="control-label" for="tfaissuer" title="{{t $.Lang "TFAIssuer should have URL format."}}"></i>{{t $.Lang "2FA Issuer String"}}</label>
               <input type="text" class="form-control" placeholder="MFA%20OpenVPN-UI" id="tfaissuer" name="TFAIssuer" value="{{ $.SettingsC.TFAIssuer }}">
-              <span class="text-muted" title="Name should not have spaces.">2FA Issuer for the QR Code sting.<span>
+              <span class="text-muted" title="{{t $.Lang "Name should not have spaces."}}">{{t $.Lang "2FA Issuer for the QR Code sting."}}<span>
             </div>
             {{end}}
     
             <div class="form-group">
-              <label for="name">Passphrase (Optional)</label>
-              <input type="password" class="form-control" placeholder="Enter Password" id="password-input" id="passphrase" name="passphrase">
-              <a href="#" class="password-control" title="Show or Hide Password"></a>
-              <span class="text-muted">Passphrase is used for privte key protection.</span>
+              <label for="name">{{t $.Lang "Passphrase (Optional)"}}</label>
+              <input type="password" class="form-control" placeholder="{{t $.Lang "Enter Password"}}" id="password-input" id="passphrase" name="passphrase">
+              <a href="#" class="password-control" title="{{t $.Lang "Show or Hide Password"}}"></a>
+              <span class="text-muted">{{t $.Lang "Passphrase is used for privte key protection."}}</span>
             </div>
     
             <div class="form-group">
-              <label for="name" title="IPv4 without subnet">Client Static IP (Optional)</label>
-              <input type="text" class="form-control" placeholder="Enter Static IP" pattern="^(\d{1,3}\.){3}\d{1,3}$" id="staticip" name="staticip">
-              <span class="text-muted">Client Static IP used as a local Client IP for subnet split.</span>
+              <label for="name" title="{{t $.Lang "IPv4 without subnet"}}">{{t $.Lang "Client Static IP (Optional)"}}</label>
+              <input type="text" class="form-control" placeholder="{{t $.Lang "Enter Static IP"}}" pattern="^(\d{1,3}\.){3}\d{1,3}$" id="staticip" name="staticip">
+              <span class="text-muted">{{t $.Lang "Client Static IP used as a local Client IP for subnet split."}}</span>
             </div>
 
             <div class="form-group">
-              <label for="name" title="EASYRSA_REQ_EMAIL">Client Email</label>
-              <input type="email" class="form-control" placeholder="Client Email" id="EasyRSAReqEmail" name="EasyRSAReqEmail" value="{{ .EasyRSA.EasyRSAReqEmail }}">
-              <span class="text-muted">The New Client e-mail address.</span>
+              <label for="name" title="EASYRSA_REQ_EMAIL">{{t $.Lang "Client Email"}}</label>
+              <input type="email" class="form-control" placeholder="{{t $.Lang "Client Email"}}" id="EasyRSAReqEmail" name="EasyRSAReqEmail" value="{{ .EasyRSA.EasyRSAReqEmail }}">
+              <span class="text-muted">{{t $.Lang "The New Client e-mail address."}}</span>
             </div>
 
             <div class="form-group">
-              <label for="name" title="EASYRSA_REQ_COUNTRY">Expired Days</label>
+              <label for="name" title="EASYRSA_REQ_COUNTRY">{{t $.Lang "Expired Days"}}</label>
               <input type="number" min="1" class="form-control" placeholder="825" pattern="^\d{1,6}$" id="EasyRSACertExpire" name="EasyRSACertExpire" value="{{ .EasyRSA.EasyRSACertExpire }}">
-              <span class="text-muted">Number of days until Client certificate expire. The recommended value is 825.</span>
+              <span class="text-muted">{{t $.Lang "Number of days until Client certificate expire. The recommended value is 825."}}</span>
             </div>
 
             <div class="form-group">
-              <label for="name" title="Cert days to expire">Client Country Name</label>
+              <label for="name" title="{{t $.Lang "Cert days to expire"}}">{{t $.Lang "Client Country Name"}}</label>
               <input type="text" class="form-control" placeholder="UA" pattern="^[A-Za-z]{2}$" id="EasyRSAReqCountry" name="EasyRSAReqCountry" value="{{ .EasyRSA.EasyRSAReqCountry }}">
-              <span class="text-muted">The two-letter DN Organisational field for Country Code (e.g. UA).</span>
+              <span class="text-muted">{{t $.Lang "The two-letter DN Organisational field for Country Code (e.g. UA)."}}</span>
             </div>
 
             <div class="form-group">
-              <label for="name" title="EASYRSA_REQ_PROVINCE">Client State or Region Name</label>
+              <label for="name" title="EASYRSA_REQ_PROVINCE">{{t $.Lang "Client State or Region Name"}}</label>
               <input type="text" class="form-control" placeholder="KY" pattern="^[A-Za-z]{2}$" id="EasyRSAReqProvince" name="EasyRSAReqProvince" value="{{ .EasyRSA.EasyRSAReqProvince }}">
-              <span class="text-muted">The two-letter DN Organisational field for province code (e.g. KY for "Kyiv region").</span>
+              <span class="text-muted">{{t $.Lang "The two-letter DN Organisational field for province code (e.g. KY for \"Kyiv region\")."}}</span>
             </div>
 
             <div class="form-group">
-              <label for="name" title="EASYRSA_REQ_CITY">Client City Name</label>
+              <label for="name" title="EASYRSA_REQ_CITY">{{t $.Lang "Client City Name"}}</label>
               <input type="text" class="form-control" placeholder="Kyiv" id="EasyRSAReqCity" name="EasyRSAReqCity" value="{{ .EasyRSA.EasyRSAReqCity }}">
-              <span class="text-muted">The city of DN Organisation.</span>
+              <span class="text-muted">{{t $.Lang "The city of DN Organisation."}}</span>
             </div>
 
             <div class="form-group">
-              <label for="name" title="EASYRSA_REQ_ORG">Client Organisation</label>
+              <label for="name" title="EASYRSA_REQ_ORG">{{t $.Lang "Client Organisation"}}</label>
               <input type="text" class="form-control" placeholder="SweetHome" id="EasyRSAReqOrg" name="EasyRSAReqOrg" value="{{ .EasyRSA.EasyRSAReqOrg }}">
-              <span class="text-muted">The Client name of DN Organisation.</span>
+              <span class="text-muted">{{t $.Lang "The Client name of DN Organisation."}}</span>
             </div>
 
             <div class="form-group">
-              <label for="name" title="EASYRSA_REQ_OU">Client Organisation Unit Name</label>
+              <label for="name" title="EASYRSA_REQ_OU">{{t $.Lang "Client Organisation Unit Name"}}</label>
               <input type="text" class="form-control" placeholder="GarageVPN" id="EasyRSAReqOu" name="EasyRSAReqOu" value="{{ .EasyRSA.EasyRSAReqOu }}">
-              <span class="text-muted">The Client Organisational Unit of DN Organisation.</span>
+              <span class="text-muted">{{t $.Lang "The Client Organisational Unit of DN Organisation."}}</span>
             </div>
 
 
@@ -326,8 +326,8 @@
           <!-- /.box-body -->
 
           <div class="modal-footer justify-content-between">
-            <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
-            <button type="submit" class="btn btn-primary">Create</button>
+            <button type="button" class="btn btn-default pull-left" data-dismiss="modal">{{t $.Lang "Close"}}</button>
+            <button type="submit" class="btn btn-primary">{{t $.Lang "Create"}}</button>
           </div>
 
         </form>
@@ -340,7 +340,7 @@
 {{if .IsAdmin}}
 <div class="card card-default">
   <div class="card-header with-border">
-    <h3 class="card-title">OpenVPN Server Control</h3>
+    <h3 class="card-title">{{t $.Lang "OpenVPN Server Control"}}</h3>
     <div class="pull-left card-tools">
       <button type="button" class="btn btn-tool" data-card-widget="collapse">
       <i class="fa fa-minus"></i></button>
@@ -348,11 +348,11 @@
   </div>
   <!-- /.box-header -->
   <div class="card-body">
-    <span id="helpBlock" class="text-muted">If you are revoking Certificate, don't forget to restart OpenVPN Server to disconnect all active client sessions and make revocation to take the effect.<br/></span><br>
-    <a href="javascript:$.MyAPP.Restart('SIGUSR1')"  class="btn btn-warning btn-primary" style="width: 145px;" title="Conditional Restart (SIGUSR1)">Restart Server</a>
-    &nbsp; OpenVPN Server Conditional Restart to reinitiate all active client sessions. <br><br>
-    <form method="post" action="{{urlfor "CertificatesController.Restart"}}" class="d-inline">{{.xsrfdata}}<button type="submit" class="btn btn-danger btn-primary" style="width: 145px;" title="Restart OpenVPN container">Restart Container</button></form> 
-    &nbsp; OpenVPN Container Restart to re-apply Firewall rules and restart OpenVPN Server. Will take more time than regular Restart. 
+    <span id="helpBlock" class="text-muted">{{t $.Lang "If you are revoking Certificate, don't forget to restart OpenVPN Server to disconnect all active client sessions and make revocation to take the effect."}}<br/></span><br>
+    <a href="javascript:$.MyAPP.Restart('SIGUSR1')"  class="btn btn-warning btn-primary" style="width: 145px;" title="{{t $.Lang "Conditional Restart (SIGUSR1)"}}">{{t $.Lang "Restart Server"}}</a>
+    &nbsp; {{t $.Lang "OpenVPN Server Conditional Restart to reinitiate all active client sessions."}} <br><br>
+    <form method="post" action="{{urlfor "CertificatesController.Restart"}}" class="d-inline">{{.xsrfdata}}<button type="submit" class="btn btn-danger btn-primary" style="width: 145px;" title="{{t $.Lang "Restart OpenVPN container"}}">{{t $.Lang "Restart Container"}}</button></form> 
+    &nbsp; {{t $.Lang "OpenVPN Container Restart to re-apply Firewall rules and restart OpenVPN Server. Will take more time than regular Restart."}} 
   </div>
   <!-- /.box-footer -->
 </div>

@@ -31,7 +31,7 @@ func (c *DangerController) DeletePKI() {
 		logs.Error(err)
 		flash.Error("%s", err.Error())
 	} else {
-		flash.Success("Success! The \"%s\" has been deleted", name)
+		flash.Success(c.T("Success! The \"%s\" has been deleted"), name)
 		models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "pki.delete", name, "", c.Ctx.Input.IP())
 	}
 	c.redirectWithFlash(flash, c.URLFor("DangerController.Get"))
@@ -46,7 +46,7 @@ func (c *DangerController) InitPKI() {
 		logs.Error(err)
 		flash.Error("%s", err.Error())
 	} else {
-		flash.Success("Success! The \"%s\" has been initialized.", name)
+		flash.Success(c.T("Success! The \"%s\" has been initialized."), name)
 	}
 	c.redirectWithFlash(flash, c.URLFor("DangerController.Get"))
 }
@@ -61,7 +61,7 @@ func (c *DangerController) RestartContainer() {
 		//	logs.Error("Stack trace:", string(debug.Stack()))
 		flash.Error("%s", err.Error())
 	} else {
-		flash.Success("Success! Container \"%s\" has been restarted", name)
+		flash.Success(c.T("Success! Container \"%s\" has been restarted"), name)
 	}
 	c.redirectWithFlash(flash, c.URLFor("DangerController.Get"))
 }

@@ -107,7 +107,7 @@ func (c *LoginController) Login() {
 		flash.Store(&c.Controller)
 		return
 	}
-	flash.Success("Successfully logged in")
+	flash.Success("%s", c.T("Successfully logged in"))
 	flash.Store(&c.Controller)
 
 	c.SetLogin(user)
@@ -121,7 +121,7 @@ func (c *LoginController) Logout() {
 	}
 	c.DelLogin()
 	flash := web.NewFlash()
-	flash.Success("Successfully logged out")
+	flash.Success("%s", c.T("Successfully logged out"))
 	flash.Store(&c.Controller)
 
 	c.Ctx.Redirect(302, c.URLFor("LoginController.Login"))
@@ -241,7 +241,7 @@ func (c *LoginController) GoogleCallback() {
 	models.WriteAuditLog(user.Id, user.Login, "login", "", "", c.Ctx.Input.IP())
 
 	flash := web.NewFlash()
-	flash.Success("Successfully logged in with Google")
+	flash.Success("%s", c.T("Successfully logged in with Google"))
 	flash.Store(&c.Controller)
 
 	c.Redirect(c.URLFor("MainController.Get"), 302)

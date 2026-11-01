@@ -10,10 +10,10 @@
 <div class="card">
   <div class="card-header d-flex p-0">
     <ul class="nav nav-pills ml-left p-2">
-      <li class="nav-item"><a class="nav-link active" href="#tab_1" data-toggle="tab">Edit own Profile</a></li>
-      {{ if .Userinfo.IsAdmin }} <li class="nav-item"><a class="nav-link" href="#tab_2" data-toggle="tab">Creating new Profiles</a></li> {{ else }}{{ end }}
-      {{ if .Userinfo.IsAdmin }} <li class="nav-item"><a class="nav-link" href="#tab_3" data-toggle="tab">Managing Profiles</a></li> {{ else }}{{ end }}
-      {{ if .Userinfo.IsAdmin }} <li class="nav-item"><a class="nav-link" href="#tab_4" data-toggle="tab">Certificate Assignments</a></li> {{ end }}
+      <li class="nav-item"><a class="nav-link active" href="#tab_1" data-toggle="tab">{{t $.Lang "Edit own Profile"}}</a></li>
+      {{ if .Userinfo.IsAdmin }} <li class="nav-item"><a class="nav-link" href="#tab_2" data-toggle="tab">{{t $.Lang "Creating new Profiles"}}</a></li> {{ else }}{{ end }}
+      {{ if .Userinfo.IsAdmin }} <li class="nav-item"><a class="nav-link" href="#tab_3" data-toggle="tab">{{t $.Lang "Managing Profiles"}}</a></li> {{ else }}{{ end }}
+      {{ if .Userinfo.IsAdmin }} <li class="nav-item"><a class="nav-link" href="#tab_4" data-toggle="tab">{{t $.Lang "Certificate Assignments"}}</a></li> {{ end }}
     </ul>
   </div>
   <div class="card-body">
@@ -21,13 +21,13 @@
 
       <!--TAB1-->
       <div class="tab-pane active" id="tab_1">
-        <h3>Editing {{ .Userinfo.Name }}'s profile</h3>{{ if .Userinfo.IsAdmin }}<span class="text-muted"> You are administrator. Wow!</span> {{ else }}{{ end }}
+        <h3>{{t $.Lang "Editing"}} {{ .Userinfo.Name }}{{t $.Lang "'s profile"}}</h3>{{ if .Userinfo.IsAdmin }}<span class="text-muted"> {{t $.Lang "You are administrator. Wow!"}}</span> {{ else }}{{ end }}
         {{template "common/alert.html" .}}
         <form id="ProfileEdit" role="form" action="{{urlfor "ProfileController.Post"}}" method="post">
           <div class="card-body">
 
             <div class="form-group">
-              <label class="col-form-label" for="login">Login</label>
+              <label class="col-form-label" for="login">{{t $.Lang "Login"}}</label>
               <div class="input-group mb-3">
                 <div class="input-group-prepend">
                   <span class="input-group-text"><i class="fas fa-user"></i></span>
@@ -42,40 +42,40 @@
                 <div class="input-group-prepend">
                   <span class="input-group-text"><i class="fas fa-user-plus"></i></span>
                 </div>
-                <input type="text" class="form-control" id="name" name="Name" placeholder="Enter name" value="{{ .profile.Name }}">
+                <input type="text" class="form-control" id="name" name="Name" placeholder="{{t $.Lang "Enter name"}}" value="{{ .profile.Name }}">
                 <span class="text-muted"> {{template "common/fvalid.html" field_error_message .validation "Name" }}</span>
               </div>
             </div>
 
             <div class="form-group {{if field_error_exist .validation "Email" }}has-error{{end}}">
-              <label class="col-form-label" for="email">Email address</label>
+              <label class="col-form-label" for="email">{{t $.Lang "Email address"}}</label>
               <div class="input-group mb-3">
                 <div class="input-group-prepend">
                   <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                 </div>
-                <input type="email" class="form-control" id="email" name="Email" placeholder="Enter email" value="{{ .profile.Email }}">
+                <input type="email" class="form-control" id="email" name="Email" placeholder="{{t $.Lang "Enter email"}}" value="{{ .profile.Email }}">
                 <span class="text-muted"> {{template "common/fvalid.html" field_error_message .validation "Email" }}</span>
               </div>
             </div>
 
             <div class="form-group {{if field_error_exist .validation "Password" }}has-error{{end}}">
-              <label class="col-form-label" for="password">New Password</label>
+              <label class="col-form-label" for="password">{{t $.Lang "New Password"}}</label>
               <div class="input-group mb-3">
                 <div class="input-group-prepend">
                   <span class="input-group-text"><i class="fas fa-lock"></i></span>
                 </div>
-                <input type="password" class="form-control" id="password" name="Password" placeholder="Enter password">
+                <input type="password" class="form-control" id="password" name="Password" placeholder="{{t $.Lang "Enter password"}}">
                 <span class="text-muted"> {{template "common/fvalid.html" field_error_message .validation "Password" }}</span>
               </div>
             </div>
 
             <div class="form-group {{if field_error_exist .validation "Repassword" }}has-error{{end}}">
-              <label class="col-form-label" for="Repassword">Repeat password</label>
+              <label class="col-form-label" for="Repassword">{{t $.Lang "Repeat password"}}</label>
               <div class="input-group mb-3">
                 <div class="input-group-prepend">
                   <span class="input-group-text"><i class="fas fa-lock"></i></span>
                 </div>
-                <input type="password" class="form-control" id="Repassword" name="Repassword" placeholder="Repeat password">
+                <input type="password" class="form-control" id="Repassword" name="Repassword" placeholder="{{t $.Lang "Repeat password"}}">
                 <span class="text-muted"> {{template "common/fvalid.html" field_error_message .validation "Repassword" }}</span>
               </div>
             </div>
@@ -84,7 +84,7 @@
           </div>
 
           <div class="modal-footer justify-content-between">
-            <button type="submit" class="btn btn-primary" form="ProfileEdit" style="width: 135px;">Save Profile</button>
+            <button type="submit" class="btn btn-primary" form="ProfileEdit" style="width: 135px;">{{t $.Lang "Save Profile"}}</button>
           </div>
         </form>
       </div>
@@ -92,25 +92,25 @@
 
       <!--TAB2-->
       <div class="tab-pane" id="tab_2">
-        <h3>Create new profile</h3>
+        <h3>{{t $.Lang "Create new profile"}}</h3>
         {{template "common/alert.html" .}}
         <form id="ProfileCreate" role="form" action="{{urlfor "ProfileController.Create"}}" method="post">
           <div class="card-body">
 
             <div class="form-group">
-              <label class="col-form-label" for="newlogin">Login</label>
+              <label class="col-form-label" for="newlogin">{{t $.Lang "Login"}}</label>
               <div class="input-group mb-3">
                 <div class="input-group-prepend">
                   <span class="input-group-text"><i class="fas fa-user"></i></span>
                 </div>
-                <input type="text" class="form-control" id="newlogin" name="NewLogin" placeholder="Enter login">
+                <input type="text" class="form-control" id="newlogin" name="NewLogin" placeholder="{{t $.Lang "Enter login"}}">
               </div>
             </div>
 
             <div class="custom-control custom-checkbox form-group {{if field_error_exist .validation "IsAdmin" }}has-error{{end}}">
               <input class="custom-control-input custom-control-input-danger" type="checkbox" id="isadmin" name="IsAdmin">
-              <label for="isadmin" class="custom-control-label" style="color: #dd4b39;">This user is Admin.</label> <span class="text-muted"> 
-                &nbsp; Not Admins can maintain Certificates, view Logs and Connections. Server configuration and User management is not accessible.</span>
+              <label for="isadmin" class="custom-control-label" style="color: #dd4b39;">{{t $.Lang "This user is Admin."}}</label> <span class="text-muted"> 
+                &nbsp; {{t $.Lang "Not Admins can maintain Certificates, view Logs and Connections. Server configuration and User management is not accessible."}}</span>
             </div>
 
             <div class="form-group {{if field_error_exist .validation "NewName" }}has-error{{end}}">
@@ -119,46 +119,46 @@
                 <div class="input-group-prepend">
                   <span class="input-group-text"><i class="fas fa-user-plus"></i></span>
                 </div>
-                <input type="text" class="form-control" id="newname" name="NewName" placeholder="Enter name">
+                <input type="text" class="form-control" id="newname" name="NewName" placeholder="{{t $.Lang "Enter name"}}">
                 <span class="text-muted"> {{template "common/fvalid.html" field_error_message .validation "NewName" }}</span>
               </div>
             </div>
 
             <div class="form-group {{if field_error_exist .validation "NewEmail" }}has-error{{end}}">
-              <label class="col-form-label" for="email">Email address</label>
+              <label class="col-form-label" for="email">{{t $.Lang "Email address"}}</label>
               <div class="input-group mb-3">
                 <div class="input-group-prepend">
                   <span class="input-group-text"><i class="fa fa-envelope"></i></span>
                 </div>
-                <input type="email" class="form-control" id="newemail" name="NewEmail" placeholder="Enter email">
+                <input type="email" class="form-control" id="newemail" name="NewEmail" placeholder="{{t $.Lang "Enter email"}}">
                 <span class="text-muted"> {{template "common/fvalid.html" field_error_message .validation "NewEmail" }}</span>
               </div>
             </div>
 
             <div class="form-group {{if field_error_exist .validation "NewPassword" }}has-error{{end}}">
-              <label class="col-form-label" for="newpassword">Enter user password</label>
+              <label class="col-form-label" for="newpassword">{{t $.Lang "Enter user password"}}</label>
               <div class="input-group mb-3">
                 <div class="input-group-prepend">
                   <span class="input-group-text"><i class="fas fa-lock"></i></span>
                 </div>
-                <input type="password" class="form-control" id="newpassword" name="NewPassword" placeholder="Enter new user password">
+                <input type="password" class="form-control" id="newpassword" name="NewPassword" placeholder="{{t $.Lang "Enter new user password"}}">
                 <span class="text-muted"> {{template "common/fvalid.html" field_error_message .validation "NewPassword" }}</span>
               </div>
             </div>
             <div class="form-group {{if field_error_exist .validation "NewRepassword" }}has-error{{end}}">
-              <label class="col-form-label" for="newrepassword">Repeat user password</label>
+              <label class="col-form-label" for="newrepassword">{{t $.Lang "Repeat user password"}}</label>
               <div class="input-group mb-3">
                 <div class="input-group-prepend">
                   <span class="input-group-text"><i class="fas fa-lock"></i></span>
                 </div>
-                <input type="password" class="form-control" id="newrepassword" name="NewRepassword" placeholder="Repeat new user password">
+                <input type="password" class="form-control" id="newrepassword" name="NewRepassword" placeholder="{{t $.Lang "Repeat new user password"}}">
                 <span class="text-muted"> {{template "common/fvalid.html" field_error_message .validation "NewRepassword" }}</span>
               </div>
             </div>
           </div>
 
           <div class="modal-footer justify-content-between">
-            <button type="submit" class="btn btn-primary" style="width: 135px;">Create Profile</button>
+            <button type="submit" class="btn btn-primary" style="width: 135px;">{{t $.Lang "Create Profile"}}</button>
           </div>
 
         </form>
@@ -167,21 +167,21 @@
 
       <!--TAB3-->
       <div class="tab-pane" id="tab_3">
-        <h3>Profiles management</h3>
+        <h3>{{t $.Lang "Profiles management"}}</h3>
         {{template "common/alert.html" .}}
         <div class="table-responsive">
           <table class="table no-margin">
             <thead>
             <tr>
               <th>Id</th>
-              <th>Admin</th>
-              <th>Login</th>
+              <th>{{t $.Lang "Admin"}}</th>
+              <th>{{t $.Lang "Login"}}</th>
               <th>Name</th>
-              <th>Email</th>
-              <th>Created</th>
-              <th>Last Login</th>
-              <th>Updated</th>
-              <th>Action</th>
+              <th>{{t $.Lang "Email"}}</th>
+              <th>{{t $.Lang "Created"}}</th>
+              <th>{{t $.Lang "Last Login"}}</th>
+              <th>{{t $.Lang "Updated"}}</th>
+              <th>{{t $.Lang "Action"}}</th>
             </tr>
             </thead>
             <tbody>
@@ -221,7 +221,7 @@
                     {{ $lastLoginTime := dateformat .Lastlogintime "2006-01-02 15:04" }}
                     {{if eq $lastLoginTime "0001-01-01 00:00"}}
                     <td>
-                     Not used
+                     {{t $.Lang "Not used"}}
                     </td>
                     {{else}}
                     <td>
@@ -234,14 +234,14 @@
                     </td>
                     <td>
                       {{ if eq .Id 1 }}
-                      <a class="btn btn-default btn-xs" disabled>Update</a>
+                      <a class="btn btn-default btn-xs" disabled>{{t $.Lang "Update"}}</a>
                       {{else}}
-                      <input type="submit" class="btn btn-primary btn-xs" title="Update User" style="font-size: 70%;" value="Update">
+                      <input type="submit" class="btn btn-primary btn-xs" title="{{t $.Lang "Update User"}}" style="font-size: 70%;" value="Update">
                       {{end}}
                       {{ if eq .Id 1 }}
-                      <a class="btn btn-default btn-xs" disabled>Delete</a>
+                      <a class="btn btn-default btn-xs" disabled>{{t $.Lang "Delete"}}</a>
                       {{else}}
-                      <button type="submit" formaction="{{urlfor "ProfileController.DeleteUser" ":key" .Id}}" class="btn btn-danger btn-xs" title="Delete" style="font-size: 70%" onclick="return confirm('Are you sure you want to delete this user?');">Delete</button>
+                      <button type="submit" formaction="{{urlfor "ProfileController.DeleteUser" ":key" .Id}}" class="btn btn-danger btn-xs" title="{{t $.Lang "Delete"}}" style="font-size: 70%" onclick="return confirm('{{t $.Lang "Are you sure you want to delete this user?"}}');">{{t $.Lang "Delete"}}</button>
                       {{end}}
                     </td>
                 </tr>
@@ -260,26 +260,25 @@
         {{template "common/alert.html" .}}
 
         <div class="d-flex align-items-center mb-4">
-          <h3 class="mr-4 mb-0">Certificate Assignments</h3>
+          <h3 class="mr-4 mb-0">{{t $.Lang "Certificate Assignments"}}</h3>
           <form method="post" action="/profile/cert/seed">
             {{.xsrfdata}}
             <button type="submit" class="btn btn-secondary btn-sm"
-                    onclick="return confirm('Auto-assign certs to users whose login name matches a cert CN?\nExisting assignments are kept.')">
-              <i class="fa fa-magic mr-1"></i>Seed from Login Names
+                    onclick="return confirm('{{t $.Lang "Auto-assign certs to users whose login name matches a cert CN?\nExisting assignments are kept."}}')">
+              <i class="fa fa-magic mr-1"></i>{{t $.Lang "Seed from Login Names"}}
             </button>
           </form>
         </div>
         <p class="text-muted">
-          "Seed from Login Names" auto-assigns each cert to the user whose login matches the cert CN.
-          Use this once after upgrading from a version without cert scoping.
+          {{t $.Lang "\"Seed from Login Names\" auto-assigns each cert to the user whose login matches the cert CN. Use this once after upgrading from a version without cert scoping."}}
         </p>
 
-        <h4>Assign Certificate</h4>
+        <h4>{{t $.Lang "Assign Certificate"}}</h4>
         <form method="post" action="/profile/cert/assign">
           {{.xsrfdata}}
           <div class="form-row align-items-end mb-3">
             <div class="form-group col-md-4">
-              <label>User</label>
+              <label>{{t $.Lang "User"}}</label>
               <select name="userID" class="form-control">
                 {{range .users}}
                 <option value="{{.Id}}">{{.Name}} ({{.Login}})</option>
@@ -287,7 +286,7 @@
               </select>
             </div>
             <div class="form-group col-md-4">
-              <label>Certificate</label>
+              <label>{{t $.Lang "Certificate"}}</label>
               <select name="certName" class="form-control">
                 {{range .allCertNames}}
                 <option value="{{.}}">{{.}}</option>
@@ -295,15 +294,15 @@
               </select>
             </div>
             <div class="form-group col-md-2">
-              <button type="submit" class="btn btn-primary">Assign</button>
+              <button type="submit" class="btn btn-primary">{{t $.Lang "Assign"}}</button>
             </div>
           </div>
         </form>
 
-        <h4>Current Assignments</h4>
+        <h4>{{t $.Lang "Current Assignments"}}</h4>
         <table class="table table-bordered">
           <thead>
-            <tr><th>User</th><th>Login</th><th>Assigned Certificates</th></tr>
+            <tr><th>{{t $.Lang "User"}}</th><th>{{t $.Lang "Login"}}</th><th>{{t $.Lang "Assigned Certificates"}}</th></tr>
           </thead>
           <tbody>
             {{range .userCertAssignments}}
@@ -318,13 +317,13 @@
                   {{$.xsrfdata}}
                   <input type="hidden" name="userID" value="{{$row.User.Id}}">
                   <input type="hidden" name="certName" value="{{.}}">
-                  <button type="submit" class="btn btn-link text-danger p-0" title="Remove"
+                  <button type="submit" class="btn btn-link text-danger p-0" title="{{t $.Lang "Remove"}}"
                           onclick="return confirm('Remove {{.}} from {{$row.User.Name}}?')">
                     <i class="fa fa-times"></i>
                   </button>
                 </form>
                 {{else}}
-                <span class="text-muted">none</span>
+                <span class="text-muted">{{t $.Lang "none"}}</span>
                 {{end}}
               </td>
             </tr>
@@ -332,13 +331,13 @@
           </tbody>
         </table>
 
-        <h4 class="mt-4">Transfer Certificate</h4>
-        <p class="text-muted">Moves a cert from one user to another in one atomic step.</p>
+        <h4 class="mt-4">{{t $.Lang "Transfer Certificate"}}</h4>
+        <p class="text-muted">{{t $.Lang "Moves a cert from one user to another in one atomic step."}}</p>
         <form method="post" action="/profile/cert/transfer">
           {{.xsrfdata}}
           <div class="form-row align-items-end mb-3">
             <div class="form-group col-md-3">
-              <label>From User</label>
+              <label>{{t $.Lang "From User"}}</label>
               <select name="fromUserID" class="form-control">
                 {{range .users}}
                 <option value="{{.Id}}">{{.Name}} ({{.Login}})</option>
@@ -346,7 +345,7 @@
               </select>
             </div>
             <div class="form-group col-md-3">
-              <label>Certificate</label>
+              <label>{{t $.Lang "Certificate"}}</label>
               <select name="certName" class="form-control">
                 {{range .assignedCertNames}}
                 <option value="{{.}}">{{.}}</option>
@@ -354,7 +353,7 @@
               </select>
             </div>
             <div class="form-group col-md-3">
-              <label>To User</label>
+              <label>{{t $.Lang "To User"}}</label>
               <select name="toUserID" class="form-control">
                 {{range .users}}
                 <option value="{{.Id}}">{{.Name}} ({{.Login}})</option>
@@ -362,7 +361,7 @@
               </select>
             </div>
             <div class="form-group col-md-2">
-              <button type="submit" class="btn btn-warning">Transfer</button>
+              <button type="submit" class="btn btn-warning">{{t $.Lang "Transfer"}}</button>
             </div>
           </div>
         </form>

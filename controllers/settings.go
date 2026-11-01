@@ -45,7 +45,7 @@ func (c *SettingsController) Post() {
 	if _, err := o.Update(&settings); err != nil {
 		flash.Error("%s", err.Error())
 	} else {
-		flash.Success("Settings has been updated")
+		flash.Success("%s", c.T("Settings has been updated"))
 		state.GlobalCfgMu.Lock()
 		state.GlobalCfg = settings
 		state.GlobalCfgMu.Unlock()

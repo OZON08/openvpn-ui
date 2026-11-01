@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"html/template"
 	"bytes"
 	"fmt"
 	"strconv"
@@ -11,6 +12,10 @@ import (
 
 // AddFuncMaps .
 func AddFuncMaps() {
+	// t translates text written in a template, which is trusted and may hold HTML entities.
+	_ = web.AddFuncMap("t", func(lang, text string) template.HTML {
+		return template.HTML(Translate(lang, text))
+	})
 	_ = web.AddFuncMap("field_error_message", func(v map[string]map[string]string, key string) map[string]string {
 		if val, ok := v[key]; ok {
 			return val

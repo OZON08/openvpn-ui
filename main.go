@@ -47,6 +47,10 @@ func main() {
 	// Browsers leave the session cookie out of forged cross-site POST requests.
 	web.BConfig.WebConfig.Session.SessionCookieSameSite = http.SameSiteLaxMode
 
+	if err := lib.LoadTranslations(filepath.Join(*configDir, "locale")); err != nil {
+		logs.Warn("Translations not loaded, using English: %v", err)
+	}
+
 	routers.Init(*configDir)
 
 	lib.AddFuncMaps()

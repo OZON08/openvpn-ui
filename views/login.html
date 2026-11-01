@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="{{.Lang}}">
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>OpenVPN UI | Log in</title>
+  <title>{{t $.Lang "OpenVPN UI | Log in"}}</title>
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <link rel="stylesheet" href="/static/css/font-awesome.min.css">
@@ -22,29 +22,29 @@
 
   <div class="card">
     <div class="card-body login-card-body">
-      <p class="login-box-msg"><small>Sign in to start your session</small></p>
+      <p class="login-box-msg"><small>{{t $.Lang "Sign in to start your session"}}</small></p>
 
       {{if .error}}<div class="alert alert-danger" role="alert">{{.error}}</div>{{end}}
 
       <form action="{{urlfor "LoginController.Login"}}" method="post">
         <div class="input-group mb-3">
-          <input type="text" class="form-control" name="login" placeholder="Login">
+          <input type="text" class="form-control" name="login" placeholder="{{t $.Lang "Login"}}">
           <div class="input-group-append"><div class="input-group-text"><span class="fas fa-user"></span></div></div>
         </div>
         <div class="input-group mb-3">
-          <input type="password" class="form-control" name="password" placeholder="Password">
+          <input type="password" class="form-control" name="password" placeholder="{{t $.Lang "Password"}}">
           <div class="input-group-append"><div class="input-group-text"><span class="fas fa-lock"></span></div></div>
         </div>
         {{ .xsrfdata }}
         <button type="submit" class="btn btn-primary btn-block">
-          <i class="fas fa-sign-in-alt mr-2"></i>Sign In
+          <i class="fas fa-sign-in-alt mr-2"></i>{{t $.Lang "Sign In"}}
         </button>
       </form>
       <hr>
       <a href="{{urlfor "LoginController.GoogleLogin"}}" class="btn btn-block btn-default">
-        <i class="fab fa-google"></i> &nbsp;Sign in with Google
+        <i class="fab fa-google"></i> &nbsp;{{t $.Lang "Sign in with Google"}}
       </a>
-      <p class="login-box-msg mt-3"><small><a href="https://github.com/OZON08/openvpn-ui?tab=readme-ov-file#authentication-with-google-apis-oauth-20" target="_blank">How to sign in</a> with Google</small></p>
+      <p class="login-box-msg mt-3"><small><a href="https://github.com/OZON08/openvpn-ui?tab=readme-ov-file#authentication-with-google-apis-oauth-20" target="_blank">{{t $.Lang "How to sign in"}}</a> {{t $.Lang "with Google"}}</small></p>
     </div>
   </div>
 </div>

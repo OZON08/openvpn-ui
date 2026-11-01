@@ -80,10 +80,10 @@ func (c *OVClientConfigController) Post() {
 	if _, err := o.Update(&cfg); err != nil {
 		flash.Error("%s", err.Error())
 	} else {
-		flash.Success("Post: Config has been updated")
+		flash.Success("%s", c.T("Post: Config has been updated"))
 		client := mi.NewClient(state.GlobalCfg.MINetwork, state.GlobalCfg.MIAddress)
 		if err := client.Signal("SIGTERM"); err != nil {
-			flash.Warning("Config has been updated but OpenVPN server was NOT reloaded: %s", err.Error())
+			flash.Warning(c.T("Config has been updated but OpenVPN server was NOT reloaded: %s"), err.Error())
 		}
 	}
 
@@ -91,7 +91,7 @@ func (c *OVClientConfigController) Post() {
 	clientTemplate, err := os.ReadFile(destPath)
 	if err != nil {
 		logs.Error("Error reading Client template from file:", err)
-		flash.Error("Error reading Client template from file")
+		flash.Error("%s", c.T("Error reading Client template from file"))
 		return
 	}
 	c.Data["ClientTemplate"] = string(clientTemplate)
@@ -124,17 +124,17 @@ func (c *OVClientConfigController) Edit() {
 	err := lib.ConfSaveToFile(destPath, c.GetString("ClientTemplate"))
 	if err != nil {
 		logs.Error("Error saving Client template to file:", err)
-		flash.Error("Error saving Client template to file")
+		flash.Error("%s", c.T("Error saving Client template to file"))
 		return
 	} else {
 		//logs.Info("Edit: Client template saved to file:", destPath)
-		flash.Success("Client template has been updated")
+		flash.Success("%s", c.T("Client template has been updated"))
 	}
 
 	clientTempl, err := os.ReadFile(destPath)
 	if err != nil {
 		logs.Error("Error reading Client template from file:", err)
-		flash.Error("Error reading Client template from file")
+		flash.Error("%s", c.T("Error reading Client template from file"))
 		return
 	}
 	c.Data["ClientTemplate"] = string(clientTempl)

@@ -42,7 +42,7 @@ func (c *BaseController) protectCSRF() {
 		}
 		if !validCSRFToken(token, got) {
 			c.Ctx.Output.SetStatus(http.StatusForbidden)
-			_ = c.Ctx.Output.Body([]byte("Invalid or missing CSRF token. Reload the page and try again."))
+			_ = c.Ctx.Output.Body([]byte(c.T("Invalid or missing CSRF token. Reload the page and try again.")))
 			c.StopRun()
 		}
 	}
