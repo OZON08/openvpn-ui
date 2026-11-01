@@ -55,7 +55,7 @@ To use another GID, set `OPENVPN_MI_GID` to the same value on both services. Rec
 
 `start.sh` gives the group `openvpn-ui` (GID 61195) read and write access to `server.conf`, `config/`, `clients/`, `staticclients/` and `pki/`. It removes group write from everything else except `run` and `log`, also where earlier versions added it.
 
-The web user has UID and GID 61195, because 1000 often belongs to the host user. `start.sh` gives files of UID 1000 in the managed paths and in `db` to the web user, so **a host user with UID 1000 loses access to them**. No host account should use UID or GID 61195, because it can read the PKI.
+The web user has UID and GID 61195, because 1000 often belongs to the host user. `start.sh` gives files of UID 1000 in the managed paths and in `db` to the web user, so **a host user with UID 1000 loses access to them**. No host account should use UID or GID 61195, because it can read the PKI. `OPENVPN_MI_GID` must not be 61195 either, and the UI stops at startup if it is.
 
 The certificate scripts need to read `pki/private/ca.key`. It belongs to root with mode `0640`, so the web process cannot change it.
 
@@ -143,6 +143,4 @@ The UI has no access to `docker.sock`, which would give it control over the host
 
 1. A server config saved with TCP settings opens an unauthenticated port on the stored IP address. This only applies to settings an administrator kept on TCP. Host names are rejected, so saving fails until such settings use an IP address or the socket. This also applies when the `run` volume is still missing.
 2. `conf/app.conf` and installs without containers point at the socket, but only the server image creates `run`. There, set the address and network in the settings.
-3. Saving through the form renders `server.conf` from the template, so lines added by hand are lost. Use the custom options for them.
-4. `tls-crypt-v2` is not supported, because it needs a key per client.
-5. An Influx token saved in the UI takes precedence over `OPENVPN_UI_INFLUX_TOKEN`, and the form cannot clear it.
+3. `tls-crypt-v2` is not supported, because it needs a key per client.

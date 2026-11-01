@@ -58,6 +58,7 @@ func (c *OVConfigController) Post() {
 	flash := web.NewFlash()
 	cfg := models.OVConfig{Profile: "default"}
 	_ = cfg.Read("Profile")
+	previous := cfg.Config
 
 	logs.Info("Post: Parsing form data")
 	if err := c.ParseForm(&cfg); err != nil {
@@ -74,7 +75,7 @@ func (c *OVConfigController) Post() {
 	management, err := state.GlobalCfg.ManagementDirective()
 	if err == nil {
 		cfg.Management = management
-		err = config.SaveToFile(filepath.Join(c.ConfigDir, "openvpn-server-config.tpl"), cfg.Config, destPath)
+		err = saveServerConfig(filepath.Join(c.ConfigDir, "openvpn-server-config.tpl"), previous, cfg.Config, destPath)
 	}
 	if err != nil {
 		logs.Warning(err)
@@ -148,4 +149,32 @@ func (c *OVConfigController) Edit() {
 	c.Data["ServerConfig"] = string(serverConf)
 
 	flash.Store(&c.Controller)
+}
+
+// saveServerConfig renders server.conf and keeps the lines that no form field renders.
+func saveServerConfig(tplPath string, previous, cfg config.Config, destPath string) error {
+	current, err := os.ReadFile(destPath)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	tpl, err := os.ReadFile(tplPath)
+	if err != nil {
+		return err
+	}
+	previousText, err := config.GetText(string(tpl), previous)
+	if err != nil {
+		return err
+	}
+	if err := config.SaveToFile(tplPath, cfg, destPath); err != nil {
+		return err
+	}
+	rendered, err := os.ReadFile(destPath)
+	if err != nil {
+		return err
+	}
+	kept := lib.HandLines(string(rendered), previousText, string(current))
+	if kept == "" {
+		return nil
+	}
+	return lib.WritePrivateFile(destPath, string(rendered)+"\n"+lib.HandLinesHeader+"\n"+kept+"\n")
 }

@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Restart Server button** — it called a route that does not exist.
 - **Log page** — the UI now mounts the log directory.
 - **Drop DB** — it looked in the wrong directory.
+- **Saving the form keeps lines added by hand** — they were lost, such as the `client-disconnect` hook, which silently stopped the session data. A directive the form sets stays with the form.
 - **Creating client certificates** — the web user can now read the PKI, and `genclient.sh` no longer stops at a `chmod` it may not run.
 - **Static client addresses** — the files get mode `0644`, so that OpenVPN can read them without a server restart.
 - **Profile from `genclient.sh`** — the certificate keeps its PEM lines. OpenVPN could not load this file before.

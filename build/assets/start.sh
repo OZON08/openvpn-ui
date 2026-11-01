@@ -73,6 +73,10 @@ find "$OPENVPN_DIR/server.conf" "$OPENVPN_DIR/config/client.conf" "$OPENVPN_DIR/
 # OPENVPN_MI_GID must match the value on the openvpn service.
 # A group that already has this GID is reused. A changed GID replaces the old group.
 MI_GID=${OPENVPN_MI_GID:-61194}
+if [ "$MI_GID" = "$(id -g openvpn-ui)" ]; then
+  echo "ERROR: OPENVPN_MI_GID must differ from the group of the web user ($MI_GID), which can read the PKI." >&2
+  exit 1
+fi
 MI_GROUP=$(awk -F: -v gid="$MI_GID" '$3 == gid { print $1; exit }' /etc/group)
 if [ -z "$MI_GROUP" ]; then
   ! grep -q '^openvpn-mi:' /etc/group || delgroup openvpn-mi

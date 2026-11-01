@@ -925,6 +925,10 @@ container restart**. Leaving the token field blank keeps the existing
 secret untouched; clearing the URL turns the export off until it is
 set again.
 
+A token saved here also wins over a changed `OPENVPN_UI_INFLUX_TOKEN`. If
+writes fail with `the request was not authenticated` after a token change,
+enter the new token in this form. The form cannot remove a saved token.
+
 #### Configuration
 
 All monitor settings live in `app.conf` and can be overridden via Docker
@@ -977,7 +981,7 @@ When `InfluxEnabled=true`, the UI writes two measurements:
 
 #### OpenVPN `client-disconnect` webhook (optional, recommended)
 
-Saving the form on the OpenVPN Server page renders `server.conf` from the template, so lines added by hand are lost. Put the hook lines into the custom options on that page.
+Saving the form on the OpenVPN Server page keeps lines added to `server.conf` by hand, at the end of the file, unless a form field sets the same directive. Then the form wins. `push`, `route`, `iroute` and `setenv` can repeat, so these are kept next to the form's line. Remove a kept line in the config editor on that page.
 
 The scraper alone closes stale sessions with ~60s lag. For authoritative,
 real-time session-end data (exact final byte counts and duration), wire
