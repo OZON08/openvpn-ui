@@ -1,11 +1,14 @@
 $.MyAPP = {};
 
+// The API rejects changes without the token of this session
+$.ajaxSetup({ headers: { 'X-Xsrftoken': $('meta[name="xsrf-token"]').attr('content') } });
+
 $.MyAPP.Disconnect = function (cname){
   console.log(cname)
   $.ajax({
     type: "DELETE",
     dataType: "json",
-    url: "api/v1/session",
+    url: "/api/v1/session",
     data: JSON.stringify({ "cname": cname }),
     success: function(data) {
       location.reload();
@@ -21,9 +24,10 @@ $.MyAPP.Disconnect = function (cname){
 $.MyAPP.Restart = function (sname){
   console.log(sname)
   $.ajax({
-    type: "DELETE",
+    type: "POST",
     dataType: "json",
-    url: "/signal",
+    contentType: "application/json",
+    url: "/api/v1/signal",
     data: JSON.stringify({ "sname": sname }),
     success: function(data) {
       location.reload();
@@ -35,6 +39,12 @@ $.MyAPP.Restart = function (sname){
     }
   });
 }
+
+// Language switch, read by the server on the next request
+$('.lang-btn').on('click', function () {
+  document.cookie = 'lang=' + $(this).data('lang') + '; path=/; max-age=31536000; SameSite=Lax';
+  location.reload();
+});
 
 // Copy modal content to clipboard
 $('.copy-modal-data-btn').on('click', function () {

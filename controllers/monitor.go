@@ -24,7 +24,7 @@ type MonitorController struct {
 func (c *MonitorController) NestPrepare() {
 	if !c.IsLogin {
 		c.Ctx.Redirect(302, c.LoginPath())
-		return
+		c.StopRun()
 	}
 	if !c.Userinfo.IsAdmin {
 		c.Ctx.Redirect(302, c.URLFor("MainController.Get"))
@@ -162,7 +162,7 @@ func loadInfluxStatus() (*InfluxStatusView, *InfluxConfigView) {
 func (c *MonitorController) SaveInflux() {
 	if !c.IsLogin {
 		c.Ctx.Redirect(302, c.LoginPath())
-		return
+		c.StopRun()
 	}
 	if c.Userinfo == nil || !c.Userinfo.IsAdmin {
 		c.Data["error"] = "admin privileges required"
@@ -407,7 +407,7 @@ func (c *APIMonitorHookController) Post() {
 	var session *models.VpnSession
 	if payload.ConnectedAt > 0 {
 		connectedAt := time.Unix(payload.ConnectedAt, 0).UTC()
-		session, _ = models.FindActiveSession(payload.CommonName, connectedAt)
+		session, _ = models.FindActiveSession(payload.CommonName, payload.RealIP, connectedAt)
 	}
 	if session == nil {
 		// Fall back: close the newest active session for this CN.

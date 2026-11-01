@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"html/template"
 	"os"
 	"path/filepath"
 
@@ -41,7 +40,6 @@ func (c *OVConfigController) Get() {
 		return
 	}
 	c.Data["ServerConfig"] = string(serverConf)
-	c.Data["xsrfdata"] = template.HTML(c.XSRFFormHTML())
 	cfg := models.OVConfig{Profile: "default"}
 	_ = cfg.Read("Profile")
 	// The file is what OpenVPN uses, and saving must not change the mode by accident
@@ -60,29 +58,24 @@ func (c *OVConfigController) Post() {
 	flash := web.NewFlash()
 	cfg := models.OVConfig{Profile: "default"}
 	_ = cfg.Read("Profile")
+	previous := cfg.Config
 
 	logs.Info("Post: Parsing form data")
-	logs.Info("Form data before parsing: %v", c.Ctx.Request.Form)
 	if err := c.ParseForm(&cfg); err != nil {
 		logs.Warning(err)
 		flash.Error("%s", err.Error())
 		flash.Store(&c.Controller)
 		return
 	}
-	logs.Info("Form data after parsing: %v", c.Ctx.Request.Form)
 
-	logs.Info("Post: Dumping configuration data")
-	logs.Info("Configuration data: %v", cfg)
-	lib.Dump(cfg)
 	c.Data["Settings"] = &cfg
-	logs.Info("Settings data: %v", c.Data["Settings"])
 
 	destPath := filepath.Join(state.GlobalCfg.OVConfigPath, "server.conf")
 	logs.Info("Post: Saving configuration to file according to template")
 	management, err := state.GlobalCfg.ManagementDirective()
 	if err == nil {
 		cfg.Management = management
-		err = config.SaveToFile(filepath.Join(c.ConfigDir, "openvpn-server-config.tpl"), cfg.Config, destPath)
+		err = saveServerConfig(filepath.Join(c.ConfigDir, "openvpn-server-config.tpl"), previous, cfg.Config, destPath)
 	}
 	if err != nil {
 		logs.Warning(err)
@@ -96,10 +89,10 @@ func (c *OVConfigController) Post() {
 	if _, err := o.Update(&cfg); err != nil {
 		flash.Error("%s", err.Error())
 	} else {
-		flash.Success("Post: Config has been updated")
+		flash.Success("%s", c.T("Post: Config has been updated"))
 		client := mi.NewClient(state.GlobalCfg.MINetwork, state.GlobalCfg.MIAddress)
 		if err := client.Signal("SIGTERM"); err != nil {
-			flash.Warning("Config has been updated but OpenVPN server was NOT reloaded: %s", err.Error())
+			flash.Warning(c.T("Config has been updated but OpenVPN server was NOT reloaded: %s"), err.Error())
 		}
 		models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "ovconfig.save", "", "", c.Ctx.Input.IP())
 	}
@@ -108,7 +101,7 @@ func (c *OVConfigController) Post() {
 	serverConf, err := os.ReadFile(destPath)
 	if err != nil {
 		logs.Error("Error reading server config from file:", err)
-		flash.Error("Error reading server config from file")
+		flash.Error("%s", c.T("Error reading server config from file"))
 		return
 	}
 	c.Data["ServerConfig"] = string(serverConf)
@@ -132,7 +125,6 @@ func (c *OVConfigController) Edit() {
 	}
 
 	//logs.Info("Post: Dumping configuration data")
-	lib.Dump(cfg)
 	c.Data["Settings"] = &cfg
 
 	//logs.Info("Starting Edit method in OVConfigController")
@@ -141,20 +133,48 @@ func (c *OVConfigController) Edit() {
 	err := lib.ConfSaveToFile(destPath, c.GetString("ServerConfig"))
 	if err != nil {
 		logs.Error("Error saving server config to file:", err)
-		flash.Error("Error saving server config to file")
+		flash.Error("%s", c.T("Error saving server config to file"))
 		return
 	} else {
 		//logs.Info("Edit: Server config saved to file:", destPath)
-		flash.Success("Config has been updated")
+		flash.Success("%s", c.T("Config has been updated"))
 	}
 
 	serverConf, err := os.ReadFile(destPath)
 	if err != nil {
 		logs.Error("Error reading server config from file:", err)
-		flash.Error("Error reading server config from file")
+		flash.Error("%s", c.T("Error reading server config from file"))
 		return
 	}
 	c.Data["ServerConfig"] = string(serverConf)
 
 	flash.Store(&c.Controller)
+}
+
+// saveServerConfig renders server.conf and keeps the lines that no form field renders.
+func saveServerConfig(tplPath string, previous, cfg config.Config, destPath string) error {
+	current, err := os.ReadFile(destPath)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	tpl, err := os.ReadFile(tplPath)
+	if err != nil {
+		return err
+	}
+	previousText, err := config.GetText(string(tpl), previous)
+	if err != nil {
+		return err
+	}
+	if err := config.SaveToFile(tplPath, cfg, destPath); err != nil {
+		return err
+	}
+	rendered, err := os.ReadFile(destPath)
+	if err != nil {
+		return err
+	}
+	kept := lib.HandLines(string(rendered), previousText, string(current))
+	if kept == "" {
+		return nil
+	}
+	return lib.WritePrivateFile(destPath, string(rendered)+"\n"+lib.HandLinesHeader+"\n"+kept+"\n")
 }

@@ -76,6 +76,10 @@ It includes all the files in its main directory, as well.
 
 #### Running this image with `docker-compose.yml` file
 
+Before the first start, create the files that are mounted singly: `touch server.conf`. Keep `restart: always`, because the restart buttons end the process and rely on it. The web process runs with UID and GID 61195, and does not need `privileged` or `docker.sock`.
+
+A container with `network_mode: service:openvpn` loses its network when `openvpn` restarts, so restart it afterwards. `OPENVPN_MI_GID` must not be 61195, and no host account should use UID or GID 61195.
+
 ```yaml
     openvpn-ui:
        container_name: openvpn-ui
@@ -83,14 +87,19 @@ It includes all the files in its main directory, as well.
        environment:
            - OPENVPN_ADMIN_USERNAME={{ ovpnui_user }}
            - OPENVPN_ADMIN_PASSWORD={{ ovpnui_password }}
-       privileged: true
        ports:
            - "8080:8080/tcp"
        volumes:
-           - ./:/etc/openvpn
+           - ./server.conf:/etc/openvpn/server.conf
+           - ./config:/etc/openvpn/config
+           - ./clients:/etc/openvpn/clients
+           - ./staticclients:/etc/openvpn/staticclients
+           - ./pki:/etc/openvpn/pki
+           - ./run:/etc/openvpn/run
+           - ./log:/etc/openvpn/log:ro
+           - ./log:/var/log/openvpn:ro
            - ./db:/opt/openvpn-ui/db
            - ./pki:/usr/share/easy-rsa/pki
-           - /var/run/docker.sock:/var/run/docker.sock:ro
        restart: always
 ```
 ---
@@ -105,7 +114,6 @@ services:
     openvpn:
        container_name: openvpn
        image: OZON08/openvpn-server:latest
-       privileged: true
        ports: 
           - "1194:1194/udp"
        environment:
@@ -123,6 +131,10 @@ services:
            - ./run:/etc/openvpn/run
        cap_add:
            - NET_ADMIN
+         devices:
+           - /dev/net/tun:/dev/net/tun
+         sysctls:
+           net.ipv4.ip_forward: "1"
        restart: always
 
     openvpn-ui:
@@ -131,14 +143,19 @@ services:
        environment:
            - OPENVPN_ADMIN_USERNAME=admin
            - OPENVPN_ADMIN_PASSWORD=gagaZush
-       privileged: true
        ports:
            - "8080:8080/tcp"
        volumes:
-           - ./:/etc/openvpn
+           - ./server.conf:/etc/openvpn/server.conf
+           - ./config:/etc/openvpn/config
+           - ./clients:/etc/openvpn/clients
+           - ./staticclients:/etc/openvpn/staticclients
+           - ./pki:/etc/openvpn/pki
+           - ./run:/etc/openvpn/run
+           - ./log:/etc/openvpn/log:ro
+           - ./log:/var/log/openvpn:ro
            - ./db:/opt/openvpn-ui/db
            - ./pki:/usr/share/easy-rsa/pki
-           - /var/run/docker.sock:/var/run/docker.sock:ro
        restart: always
 ``` 
 
@@ -203,15 +220,20 @@ iptables -A FORWARD -d 10.0.70.77 -s 10.0.70.88 -j DROP
 Run the OpenVPN-UI image
 ```shell
 docker run \
--v /home/pi/openvpn:/etc/openvpn \
+-v /home/pi/openvpn/server.conf:/etc/openvpn/server.conf \
+-v /home/pi/openvpn/config:/etc/openvpn/config \
+-v /home/pi/openvpn/clients:/etc/openvpn/clients \
+-v /home/pi/openvpn/staticclients:/etc/openvpn/staticclients \
+-v /home/pi/openvpn/pki:/etc/openvpn/pki \
+-v /home/pi/openvpn/run:/etc/openvpn/run \
+-v /home/pi/openvpn/log:/etc/openvpn/log:ro \
 -v /home/pi/openvpn/db:/opt/openvpn-ui/db \
 -v /home/pi/openvpn/pki:/usr/share/easy-rsa/pki \
--v /home/pi/openvpn/log:/var/log/openvpn \
--v /var/run/docker.sock:/var/run/docker.sock \
+-v /home/pi/openvpn/log:/var/log/openvpn:ro \
 -e OPENVPN_ADMIN_USERNAME='admin' \
 -e OPENVPN_ADMIN_PASSWORD='gagaZush' \
 -p 8080:8080/tcp \
---privileged OZON08/openvpn-ui:latest
+OZON08/openvpn-ui:latest
 ```
 
 Run the OpenVPN Server image:
@@ -233,7 +255,7 @@ docker run  --interactive --tty --rm \
   -v ./fw-rules.sh:/opt/app/fw-rules.sh \
   -v ./server.conf:/etc/openvpn/server.conf \
   -v ./run:/etc/openvpn/run \
-  --privileged OZON08/openvpn-server:latest
+  --device /dev/net/tun --sysctl net.ipv4.ip_forward=1 OZON08/openvpn-server:latest
 ```
   </details>
 
@@ -331,6 +353,8 @@ After build and installation is complete:
 5. Update `OpenVpnPath` and `EasyRsaPath` with real location of your OpenVPN server config (`/etc/openvpn`) and EasyRSA (`/usr/share/easy-rsa`) in main application config file - `./conf/app.conf` file. 
 6. Set `EnableAdmin = false` and `RunMode = prod` in the same file, if you don't need to run BeeGo in development mode and don't need BeeGo admin console to run (in most cases you don't need it).
 7. On the first run set `OPENVPN_ADMIN_USERNAME` and `OPENVPN_ADMIN_PASSWORD` environment variables to create admin user with secret password:
+
+   These values only apply when the database is created. Later changes to them have no effect, so change the password on the Profile page.
 ```bash
 export OPENVPN_ADMIN_USERNAME=admin
 export OPENVPN_ADMIN_PASSWORD=$3kR3tPa$Sw0rd
@@ -862,7 +886,7 @@ a retention policy and can optionally be pushed to an external
 **InfluxDB v3** instance for Grafana dashboards or other analytics tools.
 
 > [!NOTE]
-> The InfluxDB v3 writer has been verified against **InfluxDB 3 Core** (`influxdb:3-core`).
+> The InfluxDB v3 writer has been verified against **InfluxDB 3 Core** (`influxdb:3.12.2-core`).
 > SQLite remains the source of truth; InfluxDB is a best-effort export channel for Grafana.
 
 #### What is collected
@@ -902,6 +926,10 @@ variables and the live writer is **hot-reconfigured without a
 container restart**. Leaving the token field blank keeps the existing
 secret untouched; clearing the URL turns the export off until it is
 set again.
+
+A token saved here also wins over a changed `OPENVPN_UI_INFLUX_TOKEN`. If
+writes fail with `the request was not authenticated` after a token change,
+enter the new token in this form. The form cannot remove a saved token.
 
 #### Configuration
 
@@ -955,6 +983,8 @@ When `InfluxEnabled=true`, the UI writes two measurements:
 
 #### OpenVPN `client-disconnect` webhook (optional, recommended)
 
+Saving the form on the OpenVPN Server page keeps lines added to `server.conf` by hand, at the end of the file, unless a form field sets the same directive. Then the form wins. `push`, `route`, `iroute` and `setenv` can repeat, so these are kept next to the form's line. Remove a kept line in the config editor on that page.
+
 The scraper alone closes stale sessions with ~60s lag. For authoritative,
 real-time session-end data (exact final byte counts and duration), wire
 the bundled `client-disconnect.sh` hook into your OpenVPN server:
@@ -1001,7 +1031,16 @@ three dashboards at container start:
 Add a Grafana service and InfluxDB 3 Core to your compose stack:
 
 ```yaml
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+
 openvpn-ui:
+  networks:
+    default:
+      ipv4_address: 172.30.0.10   # the only address Grafana trusts, see below
   environment:
     - OPENVPN_UI_GRAFANA_URL=http://grafana:3000   # internal Docker address
     - OPENVPN_UI_INFLUX_URL=http://influxdb:8181
@@ -1009,10 +1048,10 @@ openvpn-ui:
     - OPENVPN_UI_INFLUX_DATABASE=openvpn
 
 influxdb:
-  image: influxdb:3-core
+  image: influxdb:3.12.2-core   # fixed version, update it deliberately
   command: serve --node-id influxdb --query-file-limit 1000
   volumes:
-    - influxdb-data:/home/influxdb3/.influxdb
+    - influxdb-data:/home/influxdb3/.influxdb3 # INFLUXDB3_DATA_DIR of the image
 
 grafana:
   image: grafana/grafana:latest
@@ -1021,7 +1060,7 @@ grafana:
     - GF_AUTH_PROXY_ENABLED=true
     - GF_AUTH_PROXY_HEADER_NAME=X-WEBAUTH-USER
     - GF_AUTH_PROXY_AUTO_SIGN_UP=true
-    - GF_AUTH_PROXY_WHITELIST=172.16.0.0/12    # restrict to Docker network
+    - GF_AUTH_PROXY_WHITELIST=172.30.0.10      # only the UI may set the header
     - GF_USERS_AUTO_ASSIGN_ORG_ROLE=Admin
     - GF_SECURITY_ALLOW_EMBEDDING=true
     - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/grafana
@@ -1031,6 +1070,10 @@ grafana:
     - grafana-data:/var/lib/grafana
     - ./grafana/provisioning:/etc/grafana/provisioning:ro
 ```
+
+Installs that mounted `/home/influxdb3/.influxdb` have their data in the container, not in the volume, because the image writes to `.influxdb3`. Copy it out before you recreate the container, otherwise the catalog and the token are gone.
+
+Do not publish the Grafana port. Grafana trusts the login header only from the address in `GF_AUTH_PROXY_WHITELIST`, so a wider range would let other containers and VPN clients sign in as any user.
 
 The `INFLUX_TOKEN` environment variable must be set in your shell or a
 `.env` file. The provisioning directory configures the datasource
@@ -1048,6 +1091,19 @@ Once running, a **Grafana** entry appears in the openvpn-ui sidebar.
 The two measurements available for dashboards are `openvpn_traffic`
 (per-scrape byte counters per client) and `openvpn_session` (closed
 sessions with final byte counts and duration).
+
+#### Troubleshooting: InfluxDB rejects the token
+
+**Symptoms:** `InfluxDB write failed: the request was not authenticated` in the UI log, 401 Unauthenticated in Grafana, empty dashboards.
+
+Check in this order. **Do not delete the data directory to get a new token, as that loses all history.**
+
+1. **Mount path.** Run `docker logs <influxdb container> | grep "Object Store"`. The `db_dir` it shows must equal the mount target of the volume. `catalog not found, initializing a new one` on an existing install means the mount misses it. Correct the target and recreate the container, and the old catalog and token come back.
+2. **Token saved in the UI.** A token saved in the UI wins over `OPENVPN_UI_INFLUX_TOKEN`. Enter the current token in the InfluxDB form on the Monitor page.
+3. **Token really lost.** Follow the [InfluxDB documentation on regenerating the admin token](https://docs.influxdata.com/influxdb3/core/admin/tokens/admin/regenerate/). This step is not tested with this project, because the test machine cannot run `influxdb3`.
+   1. Temporarily add `--admin-token-recovery-http-bind` to `influxdb3 serve`. This endpoint needs no authentication, so never publish its port (default `127.0.0.1:8182`).
+   2. Inside the container, run `influxdb3 create token --admin --regenerate --host http://127.0.0.1:8182`. The recovery server shuts down after success, and the former token stops working.
+   3. Remove the option again. Update the token in `.env` and in the form on the Monitor page, then recreate the Grafana container.
 
 ### Per-user Certificate Scoping
 
@@ -1099,7 +1155,6 @@ is a one-shot privileged init service in your `docker-compose.yml`:
 ```yaml
 pki-chmod:
   image: busybox
-  privileged: true
   volumes:
     - /your/openvpn/data/pki:/pki
   command: sh -c "chmod -R g+rX /pki && echo 'PKI permissions fixed'"

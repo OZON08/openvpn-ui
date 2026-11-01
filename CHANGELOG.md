@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- **Password hash and passphrases no longer in the log** — the log held the hash of the admin password on every start, passphrases of new certificates and full configurations. Debug output is off with `RunMode = prod`.
+- **The web user has its own UID and GID 61195** — UID and GID 1000 often belong to the host user, who could read and change the PKI, including `ca.key`. `start.sh` takes over files of UID 1000 in the managed paths, so that host user loses access to them. `ca.key` now belongs to root with mode `0640`.
+- **`docker.sock` removed** — access to it gives control over the host. Restart buttons now end the process and rely on `restart: always`. The web process could not reach the socket anyway, so these buttons and the TA key step had stopped working. The image has `openvpn` for the TA key, and no longer has `curl` and `jq`.
+- **The UI container mounts only the paths it manages** — it no longer sees `fw-rules.sh` and `.env`.
+- **Forged requests are rejected** — forms and API calls carry a token of the session, and the session cookie is `SameSite=Lax`. Scripts using the session API must send the token as `X-Xsrftoken`. The disconnect hook keeps its own token.
+- **Actions use `POST`** — renew, revoke, remove, PKI and container actions, deleting users and logout. A link can no longer trigger them, and they redirect, so a reload cannot repeat them.
+- **User management needs an administrator** — any logged-in user could create an administrator, and edit or delete users. Restarting the container needed no administrator either. The first user cannot be deleted.
+- **Profiles from `genclient.sh` have mode `0600`** — they hold the private key.
 - **Management interface moved to a Unix socket** — `server.conf` no longer opens TCP port 2080. The UI connects through `/etc/openvpn/run/mi.sock`, and stored TCP settings with port 2080 are migrated at startup. Requires `openvpn-server` v0.6.4 and the `./run:/etc/openvpn/run` volume in `docker-compose.yml`. The web process stays unprivileged and reaches the socket through the group `openvpn-mi` (GID 61194, `OPENVPN_MI_GID`).
 - **Dependency security updates** — `golang.org/x/net` v0.62.0, `golang.org/x/text` v0.43.0, `google.golang.org/grpc` v1.85.0, `github.com/Azure/go-ntlmssp` v0.1.1 and `github.com/klauspost/compress` v1.20.3. `govulncheck` reports no vulnerabilities in called code.
 
@@ -28,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **German and English** — the top bar switches the language, which otherwise follows the browser. Texts are in `conf/locale/de.json`.
 - **The installer chooses the TLS mode** — a new field on the OpenVPN Server page selects `tls-crypt` or `tls-auth`. Client profiles follow the active line in `server.conf`, so downloaded profiles match the server without saving the config first, and saving no longer switches the mode by accident.
 - **`build/build.sh` rejects armv5 and armv6** — the script stops with an error on these architectures. The armv6 path already failed before, because `arm32v5/golang` has no current image.
 - **`management` line comes from the settings** — `server.conf` now uses the stored management address and network.
@@ -36,6 +45,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Monitor tracks each connection** — connections with `duplicate-cn` were merged and shown with one IP address, and a new session opened on each scrape. Real addresses no longer include `udp4:`.
+- **Restart Server button** — it called a route that does not exist.
+- **Log page** — the UI now mounts the log directory.
+- **Drop DB** — it looked in the wrong directory.
+- **Saving the form keeps lines added by hand** — they were lost, such as the `client-disconnect` hook, which silently stopped the session data. A directive the form sets stays with the form.
 - **Creating client certificates** — the web user can now read the PKI, and `genclient.sh` no longer stops at a `chmod` it may not run.
 - **Static client addresses** — the files get mode `0644`, so that OpenVPN can read them without a server restart.
 - **Profile from `genclient.sh`** — the certificate keeps its PEM lines. OpenVPN could not load this file before.

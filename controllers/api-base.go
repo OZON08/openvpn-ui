@@ -23,11 +23,6 @@ func NewJSONResponse() *JSONResponse {
 	return response
 }
 
-func (c *APIBaseController) Prepare() {
-	c.EnableXSRF = false
-	c.BaseController.Prepare()
-}
-
 func (c *APIBaseController) NestPrepare() {
 	if !c.IsLogin {
 		c.ServeJSONError("You are not authorized")

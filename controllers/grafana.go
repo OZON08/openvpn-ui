@@ -43,7 +43,7 @@ func (c *GrafanaController) Get() {
 func (c *GrafanaController) Proxy() {
 	if !c.IsLogin || c.Userinfo == nil {
 		c.Ctx.Redirect(302, c.LoginPath())
-		return
+		c.StopRun()
 	}
 
 	rawURL := web.AppConfig.DefaultString("GrafanaURL", os.Getenv("OPENVPN_UI_GRAFANA_URL"))

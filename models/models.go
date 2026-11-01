@@ -73,8 +73,6 @@ func CreateDefaultUsers() {
 	if created, _, err := o.ReadOrCreate(&user, "Name"); err == nil {
 		if created {
 			logs.Info("Default admin account created")
-		} else {
-			logs.Debug(user)
 		}
 	}
 }
@@ -190,8 +188,6 @@ func CreateDefaultOVConfig(configDir string, ovConfigPath string, address string
 	if created, _, err := o.ReadOrCreate(&c, "Profile"); err == nil {
 		if created {
 			logs.Info("New settings profile created")
-		} else {
-			logs.Debug(c)
 		}
 		serverConfig := filepath.Join(ovConfigPath, "server.conf")
 		// start.sh prepares an empty file, because the web user cannot create it
@@ -244,8 +240,6 @@ func CreateDefaultOVClientConfig(configDir string, ovConfigPath string, address 
 	if created, _, err := o.ReadOrCreate(&c, "Profile"); err == nil {
 		if created {
 			logs.Info("New settings profile created")
-		} else {
-			logs.Debug(c)
 		}
 		clientConfig := filepath.Join(ovConfigPath, "config/client.conf")
 		if _, err = os.Stat(clientConfig); os.IsNotExist(err) {
@@ -281,8 +275,6 @@ func CreateDefaultEasyRSAConfig(configDir string, easyRSAPath string, address st
 	if created, _, err := o.ReadOrCreate(&c, "Profile"); err == nil {
 		if created {
 			logs.Info("New settings profile created")
-		} else {
-			logs.Debug(c)
 		}
 		easyRSAConfig := filepath.Join(easyRSAPath, "pki/vars")
 		if _, err = os.Stat(easyRSAConfig); os.IsNotExist(err) {

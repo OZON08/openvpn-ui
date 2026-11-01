@@ -9,9 +9,9 @@
   <div class="col-12">
     <div class="card card-default">
       <div class="card-header">
-        <h3 class="card-title">Audit Log</h3>
+        <h3 class="card-title">{{t $.Lang "Audit Log"}}</h3>
         <div class="card-tools">
-          <span class="text-muted">Page {{.Page}} of {{.TotalPages}}</span>
+          <span class="text-muted">{{t $.Lang "Page"}} {{.Page}} {{t $.Lang "of"}} {{.TotalPages}}</span>
         </div>
       </div>
       <div class="card-body p-0">
@@ -20,11 +20,11 @@
           <table class="table table-sm table-hover no-margin">
             <thead>
               <tr>
-                <th>Time (UTC)</th>
-                <th>User</th>
-                <th>Action</th>
-                <th>Target</th>
-                <th>Detail</th>
+                <th>{{t $.Lang "Time (UTC)"}}</th>
+                <th>{{t $.Lang "User"}}</th>
+                <th>{{t $.Lang "Action"}}</th>
+                <th>{{t $.Lang "Target"}}</th>
+                <th>{{t $.Lang "Detail"}}</th>
                 <th>IP</th>
               </tr>
             </thead>
@@ -43,16 +43,16 @@
           </table>
         </div>
         {{else}}
-        <p class="p-3 text-muted">No audit log entries yet.</p>
+        <p class="p-3 text-muted">{{t $.Lang "No audit log entries yet."}}</p>
         {{end}}
       </div>
       {{if gt .TotalPages 1}}
       <div class="card-footer clearfix">
         {{if .HasPrev}}
-        <a href="?page={{.PrevPage}}" class="btn btn-sm btn-default float-left">&larr; Previous</a>
+        <a href="?page={{.PrevPage}}" class="btn btn-sm btn-default float-left">{{t $.Lang "&larr; Previous"}}</a>
         {{end}}
         {{if .HasNext}}
-        <a href="?page={{.NextPage}}" class="btn btn-sm btn-default float-right">Next &rarr;</a>
+        <a href="?page={{.NextPage}}" class="btn btn-sm btn-default float-right">{{t $.Lang "Next &rarr;"}}</a>
         {{end}}
       </div>
       {{end}}

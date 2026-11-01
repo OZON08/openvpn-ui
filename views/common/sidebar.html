@@ -11,26 +11,26 @@
     <nav class="mt-2">
       <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
 
-        <li class="nav-header">Overview</li>
+        <li class="nav-header">{{t $.Lang "Overview"}}</li>
 
         <li class="nav-item">
           <a href="{{urlfor "MainController.Get"}}" class="nav-link {{if compare .RouterPattern "/"}}active{{end}}">
             <i class="nav-icon fa fa-home"></i>
-            <p>Home</p>
+            <p>{{t $.Lang "Home"}}</p>
           </a>
         </li>
 
         <li class="nav-item">
           <a href="{{urlfor "CertificatesController.Get"}}" class="nav-link {{if compare .RouterPattern "/certificates"}}active{{end}}">
             <i class="nav-icon fa fa-certificate"></i>
-            <p>Certificates</p>
+            <p>{{t $.Lang "Certificates"}}</p>
           </a>
         </li>
 
         <li class="nav-item">
           <a href="{{urlfor "LogsController.Get"}}" class="nav-link {{if compare .RouterPattern "/logs"}}active{{end}}">
             <i class="nav-icon fa fa-file-text-o"></i>
-            <p>Logs</p>
+            <p>{{t $.Lang "Logs"}}</p>
           </a>
         </li>
 
@@ -61,11 +61,11 @@
         <li class="nav-item">
           <a href="{{urlfor "AuditLogController.Get"}}" class="nav-link {{if compare .RouterPattern "/auditlog"}}active{{end}}">
             <i class="nav-icon fa fa-list-alt"></i>
-            <p>Audit Log</p>
+            <p>{{t $.Lang "Audit Log"}}</p>
           </a>
         </li>
 
-        <li class="nav-header">Configuration</li>
+        <li class="nav-header">{{t $.Lang "Configuration"}}</li>
 
         <li class="nav-item">
           <a href="{{urlfor "SettingsController.Get"}}" class="nav-link {{if compare .RouterPattern "/settings"}}active{{end}}">
@@ -91,14 +91,14 @@
         <li class="nav-item">
           <a href="{{urlfor "EasyRSAConfigController.Get"}}" class="nav-link {{if compare .RouterPattern "/easyrsa/config"}}active{{end}}">
             <i class="nav-icon fa fa-key"></i>
-            <p>EasyRSA vars</p>
+            <p>{{t $.Lang "EasyRSA vars"}}</p>
           </a>
         </li>
 
         <li class="nav-item">
           <a href="{{urlfor "DangerController.Get"}}" class="nav-link {{if compare .RouterPattern "/dangerzone"}}active{{end}}">
             <i class="nav-icon fa fa-wrench"></i>
-            <p>Maintenance</p>
+            <p>{{t $.Lang "Maintenance"}}</p>
           </a>
         </li>
         {{end}}

@@ -75,7 +75,7 @@ func init() {
 			web.ControllerComments{
 				Method:           "Revoke",
 				Router:           `/certificates/revoke/:key/:serial/:tfaname`,
-				AllowHTTPMethods: []string{"get"},
+				AllowHTTPMethods: []string{"post"},
 				Params:           nil})
 
 	web.GlobalControllerRouter["github.com/OZON08/openvpn-ui/controllers:CertificatesController"] =
@@ -83,7 +83,7 @@ func init() {
 			web.ControllerComments{
 				Method:           "Restart",
 				Router:           `/certificates/restart`,
-				AllowHTTPMethods: []string{"get"},
+				AllowHTTPMethods: []string{"post"},
 				Params:           nil})
 
 	web.GlobalControllerRouter["github.com/OZON08/openvpn-ui/controllers:CertificatesController"] =
@@ -91,7 +91,7 @@ func init() {
 			web.ControllerComments{
 				Method:           "Burn",
 				Router:           `/certificates/burn/:key/:serial/:tfaname`,
-				AllowHTTPMethods: []string{"get"},
+				AllowHTTPMethods: []string{"post"},
 				Params:           nil})
 
 	web.GlobalControllerRouter["github.com/OZON08/openvpn-ui/controllers:CertificatesController"] =
@@ -99,7 +99,7 @@ func init() {
 			web.ControllerComments{
 				Method:           "Renew",
 				Router:           `/certificates/renew/:key/:localip/:serial/:tfaname`,
-				AllowHTTPMethods: []string{"get"},
+				AllowHTTPMethods: []string{"post"},
 				Params:           nil})
 
 	web.GlobalControllerRouter["github.com/OZON08/openvpn-ui/controllers:DangerController"] =
@@ -107,7 +107,7 @@ func init() {
 			web.ControllerComments{
 				Method:           "DeletePKI",
 				Router:           `/pki/delete/:key`,
-				AllowHTTPMethods: []string{"get"},
+				AllowHTTPMethods: []string{"post"},
 				Params:           nil})
 
 	web.GlobalControllerRouter["github.com/OZON08/openvpn-ui/controllers:DangerController"] =
@@ -115,7 +115,7 @@ func init() {
 			web.ControllerComments{
 				Method:           "InitPKI",
 				Router:           `/pki/init/:key`,
-				AllowHTTPMethods: []string{"get"},
+				AllowHTTPMethods: []string{"post"},
 				Params:           nil})
 
 	web.GlobalControllerRouter["github.com/OZON08/openvpn-ui/controllers:DangerController"] =
@@ -123,7 +123,7 @@ func init() {
 			web.ControllerComments{
 				Method:           "RestartContainer",
 				Router:           `/container/restart/:key`,
-				AllowHTTPMethods: []string{"get"},
+				AllowHTTPMethods: []string{"post"},
 				Params:           nil})
 
 	web.GlobalControllerRouter["github.com/OZON08/openvpn-ui/controllers:OVConfigController"] =
@@ -187,7 +187,7 @@ func init() {
 			web.ControllerComments{
 				Method:           "DeleteUser",
 				Router:           `/profile/delete/:key`,
-				AllowHTTPMethods: []string{"get"},
+				AllowHTTPMethods: []string{"post"},
 				Params:           nil})
 
 	web.GlobalControllerRouter["github.com/OZON08/openvpn-ui/controllers:ProfileController"] =

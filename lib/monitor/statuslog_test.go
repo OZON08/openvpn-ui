@@ -241,3 +241,42 @@ func TestFormatAddr(t *testing.T) {
 		}
 	}
 }
+
+// With duplicate-cn, several connections share one common name.
+func TestParseStatusLog_DuplicateCN(t *testing.T) {
+	for _, name := range []string{"v2-duplicate-cn.log", "v3-duplicate-cn.log"} {
+		clients, err := ParseStatusLog(testdata(name))
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		if len(clients) != 2 {
+			t.Fatalf("%s: expected 2 clients, got %d: %+v", name, len(clients), clients)
+		}
+		got := map[string]StatusClient{}
+		for _, c := range clients {
+			got[c.RealIP] = c
+		}
+		first, second := got["203.0.113.10"], got["203.0.113.11"]
+		if first.VirtualIP != "10.0.70.2" || first.BytesReceived != 100 {
+			t.Errorf("%s: first client: %+v", name, first)
+		}
+		if second.VirtualIP != "10.0.70.3" || second.BytesReceived != 300 {
+			t.Errorf("%s: second client: %+v", name, second)
+		}
+	}
+}
+
+// OpenVPN 2.6 and later put the protocol in front of the address.
+func TestSplitHostPort_ProtocolPrefix(t *testing.T) {
+	for in, want := range map[string][2]string{
+		"udp4:172.18.0.5:51929":      {"172.18.0.5", "51929"},
+		"tcp4-server:203.0.113.1:80": {"203.0.113.1", "80"},
+		"udp6:[2001:db8::1]:1194":    {"2001:db8::1", "1194"},
+		"udp:203.0.113.2:1":          {"203.0.113.2", "1"},
+	} {
+		host, port := splitHostPort(in)
+		if host != want[0] || port != want[1] {
+			t.Errorf("%q: got %q %q, want %q", in, host, port, want)
+		}
+	}
+}

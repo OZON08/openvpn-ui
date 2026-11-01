@@ -8,18 +8,17 @@
 
 {{if not .MonitorEnabled}}
 <div class="alert alert-warning">
-  Monitoring is disabled. Set <code>MonitoringEnabled = true</code> in
-  <code>app.conf</code> (or <code>OPENVPN_UI_MONITORING_ENABLED=true</code>) and
-  restart the service.
+  {{t $.Lang "Monitoring is disabled. Set"}} <code>MonitoringEnabled = true</code> {{t $.Lang "in"}}
+  <code>app.conf</code> {{t $.Lang "(or"}} <code>OPENVPN_UI_MONITORING_ENABLED=true</code>{{t $.Lang ") and restart the service."}}
 </div>
 {{end}}
 
 <div class="row">
   <div class="col-12">
     <ul class="nav nav-tabs mb-3" id="monitorTabs" role="tablist">
-      <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab-sessions" role="tab"><i class="fa fa-plug mr-1"></i>Sessions</a></li>
-      <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-users" role="tab"><i class="fa fa-users mr-1"></i>Users</a></li>
-      <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-retention" role="tab"><i class="fa fa-database mr-1"></i>Retention</a></li>
+      <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab-sessions" role="tab"><i class="fa fa-plug mr-1"></i>{{t $.Lang "Sessions"}}</a></li>
+      <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-users" role="tab"><i class="fa fa-users mr-1"></i>{{t $.Lang "Users"}}</a></li>
+      <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-retention" role="tab"><i class="fa fa-database mr-1"></i>{{t $.Lang "Retention"}}</a></li>
       <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-influx" role="tab"><i class="fa fa-bolt mr-1"></i>InfluxDB</a></li>
     </ul>
 
@@ -28,11 +27,11 @@
       <!-- ============= SESSIONS ============= -->
       <div class="tab-pane fade show active" id="tab-sessions" role="tabpanel">
         <div class="card card-default">
-          <div class="card-header"><h3 class="card-title">Active sessions</h3></div>
+          <div class="card-header"><h3 class="card-title">{{t $.Lang "Active sessions"}}</h3></div>
           <div class="card-body">
             {{if .ActiveSessions}}
             <div class="table-responsive"><table class="table no-margin">
-              <thead><tr><th>Common Name</th><th>Real IP</th><th>Virtual IP</th><th>Connected Since (UTC)</th><th class="text-right">KB In</th><th class="text-right">KB Out</th><th>History</th></tr></thead>
+              <thead><tr><th>Common Name</th><th>{{t $.Lang "Real IP"}}</th><th>{{t $.Lang "Virtual IP"}}</th><th>{{t $.Lang "Connected Since (UTC)"}}</th><th class="text-right">{{t $.Lang "KB In"}}</th><th class="text-right">{{t $.Lang "KB Out"}}</th><th>{{t $.Lang "History"}}</th></tr></thead>
               <tbody>
                 {{range .ActiveSessions}}
                 <tr>
@@ -42,26 +41,26 @@
                   <td>{{dateformat .ConnectedAt "2006-01-02 15:04:05"}}</td>
                   <td class="text-right">{{printkb .BytesIn}}</td>
                   <td class="text-right">{{printkb .BytesOut}}</td>
-                  <td><a href="#" class="btn btn-xs btn-info btn-flat" data-cn="{{.CommonName}}" onclick="showUserTraffic(this); return false;">Show</a></td>
+                  <td><a href="#" class="btn btn-xs btn-info btn-flat" data-cn="{{.CommonName}}" onclick="showUserTraffic(this); return false;">{{t $.Lang "Show"}}</a></td>
                 </tr>
                 {{end}}
               </tbody>
             </table></div>
-            {{else}}<p class="text-muted">No active sessions.</p>{{end}}
+            {{else}}<p class="text-muted">{{t $.Lang "No active sessions."}}</p>{{end}}
           </div>
         </div>
 
         <div class="card card-default">
-          <div class="card-header"><h3 class="card-title">Recent sessions (last 50)</h3></div>
+          <div class="card-header"><h3 class="card-title">{{t $.Lang "Recent sessions (last 50)"}}</h3></div>
           <div class="card-body">
             {{if .RecentSessions}}
             <div class="table-responsive"><table class="table no-margin">
-              <thead><tr><th>CN</th><th>Status</th><th>Real IP</th><th>VPN IP</th><th>Connected</th><th>Disconnected</th><th class="text-right">Duration</th><th class="text-right">KB In</th><th class="text-right">KB Out</th></tr></thead>
+              <thead><tr><th>CN</th><th>Status</th><th>{{t $.Lang "Real IP"}}</th><th>{{t $.Lang "VPN IP"}}</th><th>{{t $.Lang "Connected"}}</th><th>{{t $.Lang "Disconnected"}}</th><th class="text-right">{{t $.Lang "Duration"}}</th><th class="text-right">{{t $.Lang "KB In"}}</th><th class="text-right">{{t $.Lang "KB Out"}}</th></tr></thead>
               <tbody>
                 {{range .RecentSessions}}
                 <tr>
                   <td><b>{{.CommonName}}</b></td>
-                  <td>{{if eq .Status "active"}}<span class="badge bg-success">active</span>{{else}}<span class="badge bg-secondary">closed</span>{{end}}</td>
+                  <td>{{if eq .Status "active"}}<span class="badge bg-success">{{t $.Lang "active"}}</span>{{else}}<span class="badge bg-secondary">{{t $.Lang "closed"}}</span>{{end}}</td>
                   <td>{{.RealIP}}</td>
                   <td>{{.VirtualIP}}</td>
                   <td>{{dateformat .ConnectedAt "2006-01-02 15:04:05"}}</td>
@@ -73,7 +72,7 @@
                 {{end}}
               </tbody>
             </table></div>
-            {{else}}<p class="text-muted">No sessions recorded yet.</p>{{end}}
+            {{else}}<p class="text-muted">{{t $.Lang "No sessions recorded yet."}}</p>{{end}}
           </div>
         </div>
       </div>
@@ -81,11 +80,11 @@
       <!-- ============= USERS ============= -->
       <div class="tab-pane fade" id="tab-users" role="tabpanel">
         <div class="card card-default">
-          <div class="card-header"><h3 class="card-title">Per-user traffic aggregates</h3></div>
+          <div class="card-header"><h3 class="card-title">{{t $.Lang "Per-user traffic aggregates"}}</h3></div>
           <div class="card-body">
             {{if .UserAggregates}}
             <div class="table-responsive"><table class="table no-margin">
-              <thead><tr><th>Common Name</th><th class="text-right">Sessions</th><th class="text-right">Total KB In</th><th class="text-right">Total KB Out</th><th>Last seen</th><th></th></tr></thead>
+              <thead><tr><th>Common Name</th><th class="text-right">{{t $.Lang "Sessions"}}</th><th class="text-right">{{t $.Lang "Total KB In"}}</th><th class="text-right">{{t $.Lang "Total KB Out"}}</th><th>{{t $.Lang "Last seen"}}</th><th></th></tr></thead>
               <tbody>
                 {{range .UserAggregates}}
                 <tr>
@@ -94,24 +93,24 @@
                   <td class="text-right">{{printkb .BytesIn}}</td>
                   <td class="text-right">{{printkb .BytesOut}}</td>
                   <td>{{dateformat .LastSeen "2006-01-02 15:04"}}</td>
-                  <td><a href="#" class="btn btn-xs btn-info btn-flat" data-cn="{{.CommonName}}" onclick="showUserTraffic(this); return false;">History</a></td>
+                  <td><a href="#" class="btn btn-xs btn-info btn-flat" data-cn="{{.CommonName}}" onclick="showUserTraffic(this); return false;">{{t $.Lang "History"}}</a></td>
                 </tr>
                 {{end}}
               </tbody>
             </table></div>
-            {{else}}<p class="text-muted">No aggregated data yet. Users appear after their first session.</p>{{end}}
+            {{else}}<p class="text-muted">{{t $.Lang "No aggregated data yet. Users appear after their first session."}}</p>{{end}}
           </div>
         </div>
 
         <div class="card card-default" id="trafficHistoryRow" style="display:none;">
           <div class="card-header">
-            <h3 class="card-title">Traffic history — <span id="trafficCN"></span></h3>
+            <h3 class="card-title">{{t $.Lang "Traffic history —"}} <span id="trafficCN"></span></h3>
             <div class="card-tools">
               <select id="trafficRange" class="form-control form-control-sm" onchange="loadTrafficHistory()">
-                <option value="7d">Last 7 days</option>
-                <option value="30d" selected>Last 30 days</option>
-                <option value="90d">Last 90 days</option>
-                <option value="365d">Last year</option>
+                <option value="7d">{{t $.Lang "Last 7 days"}}</option>
+                <option value="30d" selected>{{t $.Lang "Last 30 days"}}</option>
+                <option value="90d">{{t $.Lang "Last 90 days"}}</option>
+                <option value="365d">{{t $.Lang "Last year"}}</option>
               </select>
             </div>
           </div>
@@ -124,10 +123,10 @@
       <!-- ============= RETENTION ============= -->
       <div class="tab-pane fade" id="tab-retention" role="tabpanel">
         <div class="card card-default">
-          <div class="card-header"><h3 class="card-title">Aggregation pipeline</h3></div>
+          <div class="card-header"><h3 class="card-title">{{t $.Lang "Aggregation pipeline"}}</h3></div>
           <div class="card-body">
             <div class="table-responsive"><table class="table no-margin">
-              <thead><tr><th>Stage</th><th>Granularity</th><th class="text-right">Rows</th><th class="text-right">Size</th><th>Retention</th></tr></thead>
+              <thead><tr><th>{{t $.Lang "Stage"}}</th><th>{{t $.Lang "Granularity"}}</th><th class="text-right">{{t $.Lang "Rows"}}</th><th class="text-right">{{t $.Lang "Size"}}</th><th>{{t $.Lang "Retention"}}</th></tr></thead>
               <tbody>
                 {{if .RetentionStages}}
                   {{range .RetentionStages}}
@@ -140,11 +139,11 @@
                   </tr>
                   {{end}}
                 {{else}}
-                  <tr><td colspan="5" class="text-muted">Retention stages will appear after the first scrape.</td></tr>
+                  <tr><td colspan="5" class="text-muted">{{t $.Lang "Retention stages will appear after the first scrape."}}</td></tr>
                 {{end}}
               </tbody>
             </table></div>
-            <p class="text-muted mt-3">Configure retention windows via <code>app.conf</code> (or the matching <code>OPENVPN_UI_*</code> env vars): <code>MonitoringSampleRetentionDays</code>, <code>MonitoringHourlyRetentionDays</code>, <code>MonitoringScrapeIntervalS</code>. The retention GC runs once per hour.</p>
+            <p class="text-muted mt-3">{{t $.Lang "Configure retention windows via"}} <code>app.conf</code> {{t $.Lang "(or the matching"}} <code>OPENVPN_UI_*</code> {{t $.Lang "env vars):"}} <code>MonitoringSampleRetentionDays</code>, <code>MonitoringHourlyRetentionDays</code>, <code>MonitoringScrapeIntervalS</code>{{t $.Lang ". The retention GC runs once per hour."}}</p>
           </div>
         </div>
       </div>
@@ -156,35 +155,35 @@
           <div class="card-body">
             {{if .InfluxStatus}}
             <div class="row">
-              <div class="col-md-4"><div class="info-box"><div class="info-box-content"><span class="info-box-text">Buffered points</span><span class="info-box-number">{{.InfluxStatus.Buffered}}</span></div></div></div>
-              <div class="col-md-4"><div class="info-box"><div class="info-box-content"><span class="info-box-text">Flushed (24 h)</span><span class="info-box-number">{{.InfluxStatus.Flushed24h}}</span></div></div></div>
-              <div class="col-md-4"><div class="info-box"><div class="info-box-content"><span class="info-box-text">Errors (24 h)</span><span class="info-box-number">{{.InfluxStatus.Errors24h}}</span></div></div></div>
+              <div class="col-md-4"><div class="info-box"><div class="info-box-content"><span class="info-box-text">{{t $.Lang "Buffered points"}}</span><span class="info-box-number">{{.InfluxStatus.Buffered}}</span></div></div></div>
+              <div class="col-md-4"><div class="info-box"><div class="info-box-content"><span class="info-box-text">{{t $.Lang "Flushed (24 h)"}}</span><span class="info-box-number">{{.InfluxStatus.Flushed24h}}</span></div></div></div>
+              <div class="col-md-4"><div class="info-box"><div class="info-box-content"><span class="info-box-text">{{t $.Lang "Errors (24 h)"}}</span><span class="info-box-number">{{.InfluxStatus.Errors24h}}</span></div></div></div>
             </div>
-            {{else}}<p class="text-muted">InfluxDB is not configured. See form below.</p>{{end}}
+            {{else}}<p class="text-muted">{{t $.Lang "InfluxDB is not configured. See form below."}}</p>{{end}}
           </div>
         </div>
 
         <div class="card card-default">
-          <div class="card-header"><h3 class="card-title">Connection</h3></div>
+          <div class="card-header"><h3 class="card-title">{{t $.Lang "Connection"}}</h3></div>
           <div class="card-body">
             <form method="post" action="/monitor/influx">
               {{ .xsrfdata }}
               <div class="form-group"><label>URL</label><input type="text" class="form-control" name="InfluxURL" value="{{if .InfluxConfig}}{{.InfluxConfig.URL}}{{end}}" placeholder="http://influxdb3:8181"></div>
-              <div class="form-group"><label>Database</label><input type="text" class="form-control" name="InfluxDatabase" value="{{if .InfluxConfig}}{{.InfluxConfig.Database}}{{end}}" placeholder="openvpn"></div>
-              <div class="form-group"><label>Token</label><input type="password" class="form-control" name="InfluxToken" placeholder="leave blank to keep existing"></div>
-              <button type="submit" class="btn btn-primary">Save</button>
-              <p class="text-muted mt-2 mb-0"><small>Saved values take precedence over <code>app.conf</code> / env vars. The live writer is reconfigured without restart.</small></p>
+              <div class="form-group"><label>{{t $.Lang "Database"}}</label><input type="text" class="form-control" name="InfluxDatabase" value="{{if .InfluxConfig}}{{.InfluxConfig.Database}}{{end}}" placeholder="openvpn"></div>
+              <div class="form-group"><label>Token</label><input type="password" class="form-control" name="InfluxToken" placeholder="{{t $.Lang "leave blank to keep existing"}}"></div>
+              <button type="submit" class="btn btn-primary">{{t $.Lang "Save"}}</button>
+              <p class="text-muted mt-2 mb-0"><small>{{t $.Lang "Saved values take precedence over"}} <code>app.conf</code> {{t $.Lang "/ env vars. The live writer is reconfigured without restart."}}</small></p>
             </form>
           </div>
         </div>
 
         <div class="card card-default">
-          <div class="card-header"><h3 class="card-title">client-disconnect webhook</h3></div>
+          <div class="card-header"><h3 class="card-title">{{t $.Lang "client-disconnect webhook"}}</h3></div>
           <div class="card-body">
-            <p>OpenVPN calls this script on every disconnect, posting final byte counts to <code>/api/v1/monitor/disconnect</code> (authenticated via <code>X-Monitor-Token</code>). Pre-built script: <a href="https://github.com/OZON08/openvpn-ui/blob/main/build/assets/client-disconnect.sh" target="_blank"><code>build/assets/client-disconnect.sh</code></a>. Wire it into <code>server.conf</code> with:</p>
+            <p>{{t $.Lang "OpenVPN calls this script on every disconnect, posting final byte counts to"}} <code>/api/v1/monitor/disconnect</code> {{t $.Lang "(authenticated via"}} <code>X-Monitor-Token</code>{{t $.Lang "). Pre-built script:"}} <a href="https://github.com/OZON08/openvpn-ui/blob/main/build/assets/client-disconnect.sh" target="_blank"><code>build/assets/client-disconnect.sh</code></a>{{t $.Lang ". Wire it into"}} <code>server.conf</code> {{t $.Lang "with:"}}</p>
 <pre>script-security 2
 client-disconnect /etc/openvpn/scripts/client-disconnect.sh</pre>
-            <p class="mb-0">Then set <code>OPENVPN_UI_HOOK_TOKEN</code> on the openvpn container and <code>OPENVPN_UI_MONITORING_HOOK_TOKEN</code> (same value) on the openvpn-ui container.</p>
+            <p class="mb-0">{{t $.Lang "Then set"}} <code>OPENVPN_UI_HOOK_TOKEN</code> {{t $.Lang "on the openvpn container and"}} <code>OPENVPN_UI_MONITORING_HOOK_TOKEN</code> {{t $.Lang "(same value) on the openvpn-ui container."}}</p>
           </div>
         </div>
       </div>

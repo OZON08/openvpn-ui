@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"html/template"
 	"os"
 	"path/filepath"
 
@@ -38,7 +37,6 @@ func (c *EasyRSAConfigController) Get() {
 	}
 	c.Data["EasyRSAConf"] = string(easyRSAConfig)
 
-	c.Data["xsrfdata"] = template.HTML(c.XSRFFormHTML())
 	cfg := models.EasyRSAConfig{Profile: "default"}
 	_ = cfg.Read("Profile")
 	c.Data["Settings"] = &cfg
@@ -81,10 +79,10 @@ func (c *EasyRSAConfigController) Post() {
 	if _, err := o.Update(&cfg); err != nil {
 		flash.Error("%s", err.Error())
 	} else {
-		flash.Success("Config has been updated")
+		flash.Success("%s", c.T("Config has been updated"))
 		client := mi.NewClient(state.GlobalCfg.MINetwork, state.GlobalCfg.MIAddress)
 		if err := client.Signal("SIGTERM"); err != nil {
-			flash.Warning("Config has been updated but OpenVPN server was NOT reloaded: %s", err.Error())
+			flash.Warning(c.T("Config has been updated but OpenVPN server was NOT reloaded: %s"), err.Error())
 		}
 	}
 

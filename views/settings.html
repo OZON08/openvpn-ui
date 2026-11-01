@@ -1,13 +1,13 @@
 {{ template "layout/base.html" . }}
 
 {{define "head"}}
-<title>UI Settings</title>
+<title>{{t $.Lang "UI Settings"}}</title>
 {{end}}
 
 {{define "body"}}
 <div class="card card-default">
   <div class="card-header with-border">
-    <h3 class="card-title">OpenVPN UI settings</h3>
+    <h3 class="card-title">{{t $.Lang "OpenVPN UI settings"}}</h3>
     <div class="pull-right card-tools">
       <button type="button" class="btn btn-tool" data-card-widget="collapse">
         <i class="fa fa-minus"></i></button>
@@ -27,48 +27,48 @@
       </div>
       Disabled profile -->
       <div class="form-group">
-        <label class="col-form-label" for="name">Management interface address</label>
+        <label class="col-form-label" for="name">{{t $.Lang "Management interface address"}}</label>
         <div class="input-group mb-3">
           <div class="input-group-prepend">
             <span class="input-group-text"><i class="fas fa-gear"></i></span>
           </div>
-          <input type="text" class="form-control" id="MIAddress" title="OpenVPN management interface address."  name="MIAddress" placeholder="/etc/openvpn/run/mi.sock" value="{{ .Settings.MIAddress }}">
+          <input type="text" class="form-control" id="MIAddress" title="{{t $.Lang "OpenVPN management interface address."}}"  name="MIAddress" placeholder="/etc/openvpn/run/mi.sock" value="{{ .Settings.MIAddress }}">
         </div>
       </div>
 
       <div class="form-group">
-        <label class="col-form-label" for="name">Management interface protocol</label>
+        <label class="col-form-label" for="name">{{t $.Lang "Management interface protocol"}}</label>
         <div class="input-group mb-3">
           <div class="input-group-prepend">
             <span class="input-group-text"><i class="fa fa-exchange"></i></span>
           </div>
-          <input type="text" class="form-control" id="MINetwork" title="OpenVPN management interface protocol." name="MINetwork" placeholder="unix" value="{{ .Settings.MINetwork }}">
+          <input type="text" class="form-control" id="MINetwork" title="{{t $.Lang "OpenVPN management interface protocol."}}" name="MINetwork" placeholder="unix" value="{{ .Settings.MINetwork }}">
         </div>
       </div>
 
       <div class="form-group">
-        <label class="col-form-label" for="name">OpenVPN ConfigPath</label>
+        <label class="col-form-label" for="name">{{t $.Lang "OpenVPN ConfigPath"}}</label>
         <div class="input-group mb-3">
           <div class="input-group-prepend">
             <span class="input-group-text"><i class="fas fa-folder"></i></span>
           </div>
-          <input type="text" class="form-control" id="OVConfigPath" name="OVConfigPath" title="OpenVPN configuration path." placeholder="/etc/openvpn" value="{{ .Settings.OVConfigPath }}">
+          <input type="text" class="form-control" id="OVConfigPath" name="OVConfigPath" title="{{t $.Lang "OpenVPN configuration path."}}" placeholder="/etc/openvpn" value="{{ .Settings.OVConfigPath }}">
         </div>
       </div>
 
       <div class="form-group">
-        <label class="col-form-label" for="name">EasyRSA ConfigPath</label> <strong><span style="color:#337ab7" title="New format in this version">!</span></strong>
+        <label class="col-form-label" for="name">{{t $.Lang "EasyRSA ConfigPath"}}</label> <strong><span style="color:#337ab7" title="{{t $.Lang "New format in this version"}}">!</span></strong>
         <div class="input-group mb-3">
           <div class="input-group-prepend">
             <span class="input-group-text"><i class="fas fa-folder"></i></span>
           </div>
-          <input type="text" class="form-control" id="EasyRSAPath" name="EasyRSAPath" title="EasyRSA configuration path." placeholder="/usr/share/easy-rsa" value="{{ .Settings.EasyRSAPath }}">
+          <input type="text" class="form-control" id="EasyRSAPath" name="EasyRSAPath" title="{{t $.Lang "EasyRSA configuration path."}}" placeholder="/usr/share/easy-rsa" value="{{ .Settings.EasyRSAPath }}">
         </div>
       </div>
 
       {{ .xsrfdata }}
 
-      <button type="submit" class="btn btn-primary" style="width: 125px;">Save Config</button>  
+      <button type="submit" class="btn btn-primary" style="width: 125px;">{{t $.Lang "Save Config"}}</button>  
     </div>
         <!-- /.card-body -->
   </form>

@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"net/http"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -38,7 +39,7 @@ type CertificatesController struct {
 func (c *CertificatesController) NestPrepare() {
 	if !c.IsLogin {
 		c.Ctx.Redirect(302, c.LoginPath())
-		return
+		c.StopRun()
 	}
 	c.Data["breadcrumbs"] = &BreadCrumbs{
 		Title: "Certificates",
@@ -185,13 +186,13 @@ func (c *CertificatesController) Post() {
 				c.showCerts()
 				return
 			}
-			logs.Info("Controller: Creating certificate with parameters: Name=%s, Staticip=%s, Passphrase=%s, ExpireDays=%s, Email=%s, Country=%s, Province=%s, City=%s, Org=%s, OrgUnit=%s, TFAName=%s, TFAIssuer=%s", cParams.Name, cParams.Staticip, cParams.Passphrase, cParams.ExpireDays, cParams.Email, cParams.Country, cParams.Province, cParams.City, cParams.Org, cParams.OrgUnit, cParams.TFAName, cParams.TFAIssuer)
+			logs.Info("Controller: Creating certificate %s", cParams.Name)
 			if err := lib.CreateCertificate(cParams.Name, cParams.Staticip, cParams.Passphrase, cParams.ExpireDays, cParams.Email, cParams.Country, cParams.Province, cParams.City, cParams.Org, cParams.OrgUnit, cParams.TFAName, cParams.TFAIssuer); err != nil {
 				logs.Error(err)
 				flash.Error("%s", err.Error())
 				flash.Store(&c.Controller)
 			} else {
-				flash.Success("Success! Certificate for the name \"%s\" has been created", cParams.Name)
+				flash.Success(c.T("Success! Certificate for the name \"%s\" has been created"), cParams.Name)
 				flash.Store(&c.Controller)
 				models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "cert.create", cParams.Name, "", c.Ctx.Input.IP())
 			}
@@ -204,9 +205,8 @@ func (c *CertificatesController) Post() {
 	c.showCerts()
 }
 
-// @router /certificates/revoke/:key [get]
+// @router /certificates/revoke/:key/:serial/:tfaname [post]
 func (c *CertificatesController) Revoke() {
-	c.TplName = "certificates.html"
 	flash := web.NewFlash()
 	if !c.Userinfo.IsAdmin {
 		c.Redirect(c.URLFor("CertificatesController.Get"), 302)
@@ -220,23 +220,23 @@ func (c *CertificatesController) Revoke() {
 		//flash.Error(err.Error())
 		//flash.Store(&c.Controller)
 	} else {
-		flash.Success("Success! Certificate for the name \"%s\" and serial \"%s\" has been revoked", name, serial)
-		flash.Store(&c.Controller)
+		flash.Success(c.T("Success! Certificate for the name \"%s\" and serial \"%s\" has been revoked"), name, serial)
 		models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "cert.revoke", name, "", c.Ctx.Input.IP())
 	}
-	c.showCerts()
+	c.redirectWithFlash(flash, c.URLFor("CertificatesController.Get"))
 }
 
-// @router /certificates/restart [get]
+// @router /certificates/restart [post]
 func (c *CertificatesController) Restart() {
-	lib.Restart()
-	c.Redirect(c.URLFor("CertificatesController.Get"), 302)
-	// return
+	c.RequireAdmin()
+	if err := lib.RestartContainer(lib.ContainerServer); err != nil {
+		logs.Error(err)
+	}
+	c.Redirect(c.URLFor("CertificatesController.Get"), http.StatusSeeOther)
 }
 
-// @router /certificates/burn/:key/:serial/:tfaname [get]
+// @router /certificates/burn/:key/:serial/:tfaname [post]
 func (c *CertificatesController) Burn() {
-	c.TplName = "certificates.html"
 	flash := web.NewFlash()
 	if !c.Userinfo.IsAdmin {
 		c.Redirect(c.URLFor("CertificatesController.Get"), 302)
@@ -251,19 +251,17 @@ func (c *CertificatesController) Burn() {
 		//flash.Error(err.Error())
 		//flash.Store(&c.Controller)
 	} else {
-		flash.Success("Success! Certificate for the name \"%s\" and serial \"%s\" has been removed", CN, serial)
-		flash.Store(&c.Controller)
+		flash.Success(c.T("Success! Certificate for the name \"%s\" and serial \"%s\" has been removed"), CN, serial)
 		models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "cert.burn", CN, "", c.Ctx.Input.IP())
 		if err := clearFreeCertName(CN); err != nil {
 			logs.Error(err)
 		}
 	}
-	c.showCerts()
+	c.redirectWithFlash(flash, c.URLFor("CertificatesController.Get"))
 }
 
-// @router /certificates/revoke/:key [get]
+// @router /certificates/renew/:key/:localip/:serial/:tfaname [post]
 func (c *CertificatesController) Renew() {
-	c.TplName = "certificates.html"
 	flash := web.NewFlash()
 	name := c.GetString(":key")
 	if !c.canAccessCert(name) {
@@ -278,11 +276,10 @@ func (c *CertificatesController) Renew() {
 		//flash.Error(err.Error())
 		//flash.Store(&c.Controller)
 	} else {
-		flash.Success("Success! Certificate for the name \"%s\" and IP \"%s\" and Serial \"%s\" has been renewed", name, localip, serial)
-		flash.Store(&c.Controller)
+		flash.Success(c.T("Success! Certificate for the name \"%s\" and IP \"%s\" and Serial \"%s\" has been renewed"), name, localip, serial)
 		models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "cert.renew", name, "", c.Ctx.Input.IP())
 	}
-	c.showCerts()
+	c.redirectWithFlash(flash, c.URLFor("CertificatesController.Get"))
 }
 
 func validateCertParams(cert NewCertParams) map[string]map[string]string {

@@ -68,10 +68,16 @@ services:
         ports:
             - "8080:8080/tcp"
         volumes:
-            - ./:/etc/openvpn
+            - ./server.conf:/etc/openvpn/server.conf
+            - ./config:/etc/openvpn/config
+            - ./clients:/etc/openvpn/clients
+            - ./staticclients:/etc/openvpn/staticclients
+            - ./pki:/etc/openvpn/pki
+            - ./run:/etc/openvpn/run
+            - ./log:/etc/openvpn/log:ro
+            - ./log:/var/log/openvpn:ro
             - ./db:/opt/openvpn-ui/db
             - ./pki:/usr/share/easy-rsa/pki
-            - /var/run/docker.sock:/var/run/docker.sock:ro
         restart: always
         healthcheck:
             test: ["CMD", "wget", "-qO/dev/null", "http://localhost:8080"]
@@ -87,7 +93,7 @@ services:
 
     influxdb3:
         container_name: influxdb3
-        image: influxdb:3-core
+        image: influxdb:3.12.2-core # fixed version, update it deliberately
         command:
             - influxdb3
             - serve

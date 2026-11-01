@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -22,7 +23,7 @@ type StatusClient struct {
 	BytesReceived int64
 	BytesSent     int64
 	ConnectedAt   time.Time
-	// VirtualIP is populated from the ROUTING TABLE section, keyed by CommonName.
+	// VirtualIP comes from the client line or the ROUTING TABLE section.
 	VirtualIP string
 }
 
@@ -73,16 +74,12 @@ func ParseStatusLog(path string) ([]StatusClient, error) {
 			continue
 		case strings.HasPrefix(line, "CLIENT_LIST,"):
 			if c := parseV3ClientLine(line); c != nil {
-				clients[c.CommonName] = c
+				clients[c.connectionKey()] = c
 			}
 			continue
 		case strings.HasPrefix(line, "ROUTING_TABLE,"):
-			vip, cn := parseV3RoutingLine(line)
-			if cn != "" {
-				if c, ok := clients[cn]; ok && c.VirtualIP == "" {
-					c.VirtualIP = vip
-				}
-			}
+			vip, cn, addr := parseV3RoutingLine(line)
+			setVirtualIP(clients, vip, cn, addr)
 			continue
 		}
 
@@ -93,18 +90,14 @@ func ParseStatusLog(path string) ([]StatusClient, error) {
 				continue
 			}
 			if c := parseV2ClientLine(line); c != nil {
-				clients[c.CommonName] = c
+				clients[c.connectionKey()] = c
 			}
 		case "routing-v2":
 			if strings.HasPrefix(line, "Virtual Address,") {
 				continue
 			}
-			vip, cn := parseV2RoutingLine(line)
-			if cn != "" {
-				if c, ok := clients[cn]; ok && c.VirtualIP == "" {
-					c.VirtualIP = vip
-				}
-			}
+			vip, cn, addr := parseV2RoutingLine(line)
+			setVirtualIP(clients, vip, cn, addr)
 		}
 	}
 	if err := scanner.Err(); err != nil {
@@ -116,6 +109,20 @@ func ParseStatusLog(path string) ([]StatusClient, error) {
 		out = append(out, *c)
 	}
 	return out, nil
+}
+
+// connectionKey identifies one connection. With duplicate-cn a name has several.
+func (c *StatusClient) connectionKey() string {
+	return c.CommonName + "\x00" + FormatAddr(c.RealIP, c.RealPort)
+}
+
+// setVirtualIP keeps the first address of a connection, since iroutes follow it.
+func setVirtualIP(clients map[string]*StatusClient, virtualIP, commonName, realAddress string) {
+	host, port := splitHostPort(realAddress)
+	key := (&StatusClient{CommonName: commonName, RealIP: host, RealPort: port}).connectionKey()
+	if c, ok := clients[key]; ok && c.VirtualIP == "" {
+		c.VirtualIP = virtualIP
+	}
 }
 
 // parseV2ClientLine parses:
@@ -143,12 +150,12 @@ func parseV2ClientLine(line string) *StatusClient {
 
 // parseV2RoutingLine parses:
 //   Virtual Address,Common Name,Real Address,Last Ref[,Last Ref (time_t)]
-func parseV2RoutingLine(line string) (virtualIP, commonName string) {
+func parseV2RoutingLine(line string) (virtualIP, commonName, realAddress string) {
 	fields := strings.Split(line, ",")
 	if len(fields) < 3 {
-		return "", ""
+		return "", "", ""
 	}
-	return fields[0], fields[1]
+	return fields[0], fields[1], fields[2]
 }
 
 // parseV3ClientLine parses:
@@ -175,12 +182,12 @@ func parseV3ClientLine(line string) *StatusClient {
 
 // parseV3RoutingLine parses:
 //   ROUTING_TABLE,Virtual Address,Common Name,Real Address,Last Ref,Last Ref (time_t)
-func parseV3RoutingLine(line string) (virtualIP, commonName string) {
+func parseV3RoutingLine(line string) (virtualIP, commonName, realAddress string) {
 	fields := strings.Split(line, ",")
 	if len(fields) < 4 {
-		return "", ""
+		return "", "", ""
 	}
-	return fields[1], fields[2]
+	return fields[1], fields[2], fields[3]
 }
 
 // parseConnectedSince accepts OpenVPN's textual timestamp, e.g.
@@ -206,10 +213,13 @@ func parseConnectedSince(s string) time.Time {
 	return time.Time{}
 }
 
+// protocolPrefix matches what OpenVPN 2.6 and later put in front of an address.
+var protocolPrefix = regexp.MustCompile(`^(udp|tcp)[46]?(-server|-client)?:`)
+
 // splitHostPort handles both "1.2.3.4:54321" and "[::1]:54321", as well as
 // bare hostnames. It is tolerant of missing ports.
 func splitHostPort(s string) (host, port string) {
-	s = strings.TrimSpace(s)
+	s = protocolPrefix.ReplaceAllString(strings.TrimSpace(s), "")
 	if s == "" {
 		return "", ""
 	}

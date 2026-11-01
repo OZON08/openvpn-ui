@@ -271,19 +271,6 @@ func RevokeCertificate(name string, serial string, tfaname string) error {
 	return nil
 }
 
-func Restart() error {
-	cmd := exec.Command("/bin/bash", "/opt/scripts/restart.sh")
-	cmd.Dir = state.GlobalCfg.OVConfigPath
-	cmd.Env = buildOpenVPNEnv()
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		logs.Debug(string(output))
-		logs.Error(err)
-		return err
-	}
-	return nil
-}
-
 func BurnCertificate(CN string, serial string, tfaname string) error {
 	logs.Info("Lib: Burning certificate: CN=%s, serial=%s", CN, serial)
 

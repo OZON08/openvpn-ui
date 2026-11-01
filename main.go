@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
 	"path/filepath"
 
 	"github.com/beego/beego/v2/core/logs"
@@ -25,6 +26,11 @@ func main() {
 		panic(err)
 	}
 
+	// Debug output holds user records and full configurations.
+	if web.BConfig.RunMode == web.PROD {
+		logs.SetLevel(logs.LevelInformational)
+	}
+
 	models.InitDB()
 	models.CreateDefaultUsers()
 	defaultSettings, err := models.CreateDefaultSettings()
@@ -42,6 +48,13 @@ func main() {
 	models.CreateDefaultOVClientConfig(*configDir, defaultSettings.OVConfigPath, defaultSettings.MIAddress, defaultSettings.MINetwork)
 	models.CreateDefaultEasyRSAConfig(*configDir, defaultSettings.EasyRSAPath, defaultSettings.MIAddress, defaultSettings.MINetwork)
 	state.GlobalCfg = *defaultSettings
+
+	// Browsers leave the session cookie out of forged cross-site POST requests.
+	web.BConfig.WebConfig.Session.SessionCookieSameSite = http.SameSiteLaxMode
+
+	if err := lib.LoadTranslations(filepath.Join(*configDir, "locale")); err != nil {
+		logs.Warn("Translations not loaded, using English: %v", err)
+	}
 
 	routers.Init(*configDir)
 

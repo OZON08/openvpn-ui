@@ -1,23 +1,23 @@
 {{if .flash}}
     {{if (index .flash "warning")}}
         <div class="alert alert-warning" role="alert">
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <button type="button" class="close" data-dismiss="alert" aria-label="{{t $.Lang "Close"}}"><span aria-hidden="true">&times;</span></button>
             <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-            <span class="sr-only">Warning:</span>
+            <span class="sr-only">{{t $.Lang "Warning:"}}</span>
             {{index .flash "warning"}}
         </div>
     {{else if (index .flash "error")}}
         <div class="alert alert-danger" role="alert">
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <button type="button" class="close" data-dismiss="alert" aria-label="{{t $.Lang "Close"}}"><span aria-hidden="true">&times;</span></button>
             <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-            <span class="sr-only">Error:</span>
+            <span class="sr-only">{{t $.Lang "Error:"}}</span>
             {{index .flash "error"}}
         </div>
     {{else if (index .flash "success")}}
         <div class="alert alert-success" role="alert">
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <button type="button" class="close" data-dismiss="alert" aria-label="{{t $.Lang "Close"}}"><span aria-hidden="true">&times;</span></button>
             <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-            <span class="sr-only">Success:</span>
+            <span class="sr-only">{{t $.Lang "Success:"}}</span>
             {{index .flash "success"}}
         </div>
     {{end}}
