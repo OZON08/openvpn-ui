@@ -1,6 +1,6 @@
 # Management interface over a Unix socket
 
-Status: 2026-10-31. The change is committed on the branch `feat/management-unix-socket` and not merged. The complete stack was tested with commit `e3920ec`, built from `Dockerfile.ci`, against `ozon08/openvpn-server:dev` with OpenVPN 2.7.7 and easy-rsa 3.2.5.
+Status: 2026-10-31. The change is merged into `main`. The complete stack was tested with commit `bbea9d5`, built from `Dockerfile.ci`, against `ozon08/openvpn-server:dev` with OpenVPN 2.7.7 and easy-rsa 3.2.5.
 
 ## Goal
 
@@ -106,7 +106,7 @@ The UI keeps its TCP settings until the `run` directory exists, so it stays on t
 
 A custom GID through `.env` was tested on both services.
 
-Commit `e3920ec` was tested with 59 checks and no failures, once with a copied PKI and once with a new PKI from easy-rsa 3.2.5. The stack used the compose file of the commit, without `docker.sock`:
+Commit `bbea9d5` was tested with 71 checks and no failures, once with a copied PKI and once with a new PKI from easy-rsa 3.2.5. The stack used the compose file of the commit, without `docker.sock`:
 
 - Certificates created, renewed and revoked through the web interface, with real client connections. Revoked certificates are rejected, also after a removal and a new CRL.
 - Anonymous requests and other users are refused on the configuration pages and the signal API. Their `POST` requests change nothing.
@@ -117,6 +117,8 @@ Commit `e3920ec` was tested with 59 checks and no failures, once with a copied P
 - Stored settings with `vpn:2080` and `tcp4` move to the socket. A missing `server.conf` is recreated with the socket, also when the database holds the former value.
 - The monitoring logs no `status.log` errors.
 - A hardlink to `/opt/start.sh` keeps its group, where the previous version changed it.
+- A downloaded profile follows the TLS mode of `server.conf` and connects. After switching to `tls-crypt`, the old `tls-auth` profile is rejected, and a new download and a `genclient.sh` profile connect.
+- Other users cannot create a certificate. A new certificate drops the assignment of an old one with the same name, and a duplicate name keeps its assignment.
 
 ## Not tested
 
