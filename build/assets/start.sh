@@ -56,7 +56,7 @@ find "${MANAGED[@]}" /usr/share/easy-rsa "${UNLINKED[@]}" -exec chgrp openvpn-ui
 
 # Earlier versions used UID and GID 1000, which often belong to the host user. The
 # web user now has an ID without a host account, so the host user loses this access.
-find db "${MANAGED[@]}" "${UNLINKED[@]}" -uid 1000 -exec chown openvpn-ui {} + ||
+find db "${MANAGED[@]}" "${UNLINKED[@]}" -user 1000 -exec chown openvpn-ui {} + ||
   echo "WARNING: could not take over files of UID 1000"
 
 # The web process signs with the CA key, but cannot change it.
