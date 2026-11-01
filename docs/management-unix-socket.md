@@ -1,6 +1,6 @@
 # Management interface over a Unix socket
 
-Status: 2026-10-31. The change is merged into `main`. The complete stack was tested with commit `bbea9d5`, built from `Dockerfile.ci`, against `ozon08/openvpn-server:dev` with OpenVPN 2.7.7 and easy-rsa 3.2.5.
+Status: 2026-10-31. The change is merged into `main`. The complete stack was tested with commit `a631c34`, built from `Dockerfile.ci`, against `ozon08/openvpn-server:dev` with OpenVPN 2.7.7 and easy-rsa 3.2.5.
 
 ## Goal
 
@@ -110,7 +110,7 @@ The UI keeps its TCP settings until the `run` directory exists, so it stays on t
 
 A custom GID through `.env` was tested on both services.
 
-Commit `bbea9d5` was tested with 71 checks and no failures, once with a copied PKI and once with a new PKI from easy-rsa 3.2.5. The stack used the compose file of the commit, without `docker.sock`:
+Commit `a631c34` was tested with 145 checks and no failures, once with a copied PKI and once with a new PKI from easy-rsa 3.2.5. The stack used the compose file of the commit, without `docker.sock`:
 
 - Certificates created, renewed and revoked through the web interface, with real client connections. Revoked certificates are rejected, also after a removal and a new CRL.
 - Anonymous requests and other users are refused on the configuration pages and the signal API. Their `POST` requests change nothing.
@@ -124,9 +124,22 @@ Commit `bbea9d5` was tested with 71 checks and no failures, once with a copied P
 - A downloaded profile follows the TLS mode of `server.conf` and connects. After switching to `tls-crypt`, the old `tls-auth` profile is rejected, and a new download and a `genclient.sh` profile connect.
 - Other users cannot create a certificate. A new certificate drops the assignment of an old one with the same name, and a duplicate name keeps its assignment.
 
+Also covered by that test:
+
+- Forged requests get 403 without a token, also with the token of another session, and `GET` changes nothing. The disconnect hook keeps working without a session.
+- Other users cannot create, edit or delete users, or restart containers.
+- Every page answers in German, and the language follows the cookie, then the browser.
+- Restart buttons and `gen_ta` work without `docker.sock`, and the log page shows the log.
+- Two clients with one name under `duplicate-cn` stay two active sessions with two virtual addresses.
+- Upgrade from files of UID and GID 1000: nothing managed stays with UID 1000, `ca.key` has `0:61195` and mode `0640`, and `nobody` reads `crl.pem` after a revoke.
+- A hand-added `client-disconnect` line stays once after two saves, with one `management` and one TLS line.
+- The log holds no password hash and no debug lines.
+
 ## Restart and TA key
 
 The UI has no access to `docker.sock`, which would give it control over the host. Restarting the server sends `SIGTERM` over the management socket, and restarting the UI ends its process. The services need `restart: always`. The image creates `ta.key` with its own `openvpn` binary.
+
+A container with `network_mode: service:openvpn` is not restarted with `openvpn`. It keeps running, but has only `lo` afterwards, so it has no network until you restart it yourself.
 
 ## Not tested
 

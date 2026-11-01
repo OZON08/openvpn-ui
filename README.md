@@ -78,6 +78,8 @@ It includes all the files in its main directory, as well.
 
 Before the first start, create the files that are mounted singly: `touch server.conf`. Keep `restart: always`, because the restart buttons end the process and rely on it. The web process runs with UID and GID 61195, and does not need `privileged` or `docker.sock`.
 
+A container with `network_mode: service:openvpn` loses its network when `openvpn` restarts, so restart it afterwards. `OPENVPN_MI_GID` must not be 61195, and no host account should use UID or GID 61195.
+
 ```yaml
     openvpn-ui:
        container_name: openvpn-ui
