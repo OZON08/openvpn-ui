@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
 	"path/filepath"
 
 	"github.com/beego/beego/v2/core/logs"
@@ -42,6 +43,9 @@ func main() {
 	models.CreateDefaultOVClientConfig(*configDir, defaultSettings.OVConfigPath, defaultSettings.MIAddress, defaultSettings.MINetwork)
 	models.CreateDefaultEasyRSAConfig(*configDir, defaultSettings.EasyRSAPath, defaultSettings.MIAddress, defaultSettings.MINetwork)
 	state.GlobalCfg = *defaultSettings
+
+	// Browsers leave the session cookie out of forged cross-site POST requests.
+	web.BConfig.WebConfig.Session.SessionCookieSameSite = http.SameSiteLaxMode
 
 	routers.Init(*configDir)
 

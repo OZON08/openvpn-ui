@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
-	"html/template"
 	"log"
 	"os"
 	"strings"
@@ -80,7 +79,6 @@ func (c *LoginController) Login() {
 	}
 
 	c.TplName = "login.html"
-	c.Data["xsrfdata"] = template.HTML(c.XSRFFormHTML())
 	if !c.Ctx.Input.IsPost() {
 		return
 	}

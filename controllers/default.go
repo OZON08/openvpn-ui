@@ -16,7 +16,7 @@ type MainController struct {
 func (c *MainController) NestPrepare() {
 	if !c.IsLogin {
 		c.Ctx.Redirect(302, c.LoginPath())
-		return
+		c.StopRun()
 	}
 	c.Data["breadcrumbs"] = &BreadCrumbs{
 		Title: "Status",

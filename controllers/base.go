@@ -1,14 +1,19 @@
 package controllers
 
 import (
+	"net/http"
 	"os"
 	"slices"
+	"strings"
 
 	mi "github.com/OZON08/openvpn-server-config/server/mi"
+	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web"
 	"github.com/OZON08/openvpn-ui/lib"
 	"github.com/OZON08/openvpn-ui/models"
 )
+
+const flashSessionKey = "flash"
 
 type BaseController struct {
 	web.Controller
@@ -26,6 +31,8 @@ type NestFinisher interface {
 }
 
 func (c *BaseController) Prepare() {
+	c.protectCSRF()
+	c.showRedirectFlash()
 	c.SetParams()
 
 	userID := c.GetSession("userinfo")
@@ -94,6 +101,26 @@ func (c *BaseController) RequireAdmin() {
 	if c.Userinfo == nil || !c.Userinfo.IsAdmin {
 		c.Ctx.Redirect(302, c.URLFor("MainController.Get"))
 		c.StopRun()
+	}
+}
+
+// redirectWithFlash shows the message on the next page, so a reload cannot repeat the action.
+func (c *BaseController) redirectWithFlash(flash *web.FlashData, target string) {
+	if err := c.SetSession(flashSessionKey, flash.Data); err != nil {
+		logs.Error(err)
+	}
+	c.Redirect(target, http.StatusSeeOther)
+}
+
+func (c *BaseController) showRedirectFlash() {
+	if strings.HasPrefix(c.Ctx.Input.URL(), "/api/") {
+		return
+	}
+	if data, ok := c.GetSession(flashSessionKey).(map[string]string); ok {
+		c.Data["flash"] = data
+		if err := c.DelSession(flashSessionKey); err != nil {
+			logs.Error(err)
+		}
 	}
 }
 

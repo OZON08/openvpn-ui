@@ -104,20 +104,20 @@
                   {{end}}
                   <td class="align-middle">
                   {{ if and (eq .Revocation "") (ne .Details.Name "") }}
-                      <a href="{{urlfor "CertificatesController.Renew" ":key" .Details.Name ":localip" .Details.LocalIP ":serial" .Serial ":tfaname" .Details.TFAName}}" class="btn btn-primary btn-xs" title="Renew" style="font-size: 80%;">Renew</a>
+                      <form method="post" action="{{urlfor "CertificatesController.Renew" ":key" .Details.Name ":localip" .Details.LocalIP ":serial" .Serial ":tfaname" .Details.TFAName}}" class="d-inline">{{$.xsrfdata}}<button type="submit" class="btn btn-primary btn-xs" title="Renew" style="font-size: 80%;">Renew</button></form>
                   {{else}}
                       <a class="btn btn-default btn-xs" disabled>Renew</a>
                   {{end}}
                   {{if $.IsAdmin}}
                   {{ if and (eq .Revocation "") (ne .Details.Name "") }}
-                      <a href="{{urlfor "CertificatesController.Revoke" ":key" .Details.Name ":serial" .Serial ":tfaname" .Details.TFAName}}" class="btn btn-warning btn-xs" title="Revoke" style="font-size: 80%;">Revoke</a>
+                      <form method="post" action="{{urlfor "CertificatesController.Revoke" ":key" .Details.Name ":serial" .Serial ":tfaname" .Details.TFAName}}" class="d-inline">{{$.xsrfdata}}<button type="submit" class="btn btn-warning btn-xs" title="Revoke" style="font-size: 80%;">Revoke</button></form>
                   {{else}}
                       <a class="btn btn-default btn-xs" disabled>Revoke</a>
                   {{end}}
                   {{ if eq .Revocation ""}}
                       <a class="btn btn-default btn-xs" disabled>Delete</a>
                   {{else}}
-                      <a href="{{urlfor "CertificatesController.Burn" ":key" .Details.CN ":serial" .Serial ":tfaname" .Details.TFAName}}" class="btn btn-danger btn-xs" title="Burn" style="font-size: 80%;">Delete</a>
+                      <form method="post" action="{{urlfor "CertificatesController.Burn" ":key" .Details.CN ":serial" .Serial ":tfaname" .Details.TFAName}}" class="d-inline">{{$.xsrfdata}}<button type="submit" class="btn btn-danger btn-xs" title="Burn" style="font-size: 80%;">Delete</button></form>
                   {{end}}
                   {{end}}
                   </td>
@@ -243,7 +243,7 @@
         <!-- /.box-header -->
         <!-- form start -->
        {{template "common/alert.html" .}}
-        <form role="form" action="{{urlfor "CertificatesController.Post"}}" method="post">
+        <form role="form" action="{{urlfor "CertificatesController.Post"}}" method="post">{{ .xsrfdata }}
           <div class="box-body">
             <div class="form-group has-success {{if field_error_exist .validation "Name" }}has-error{{end}}">
               <label class="control-label" for="name" title="Name should not have spaces."><i class="fa fa-bell-o"></i>Name</label>
@@ -351,7 +351,7 @@
     <span id="helpBlock" class="text-muted">If you are revoking Certificate, don't forget to restart OpenVPN Server to disconnect all active client sessions and make revocation to take the effect.<br/></span><br>
     <a href="javascript:$.MyAPP.Restart('SIGUSR1')"  class="btn btn-warning btn-primary" style="width: 145px;" title="Conditional Restart (SIGUSR1)">Restart Server</a>
     &nbsp; OpenVPN Server Conditional Restart to reinitiate all active client sessions. <br><br>
-    <a href="{{urlfor "CertificatesController.Restart"}}" class="btn btn-danger btn-primary" style="width: 145px;" title="Restart OpenVPN container">Restart Container</a> 
+    <form method="post" action="{{urlfor "CertificatesController.Restart"}}" class="d-inline">{{.xsrfdata}}<button type="submit" class="btn btn-danger btn-primary" style="width: 145px;" title="Restart OpenVPN container">Restart Container</button></form> 
     &nbsp; OpenVPN Container Restart to re-apply Firewall rules and restart OpenVPN Server. Will take more time than regular Restart. 
   </div>
   <!-- /.box-footer -->

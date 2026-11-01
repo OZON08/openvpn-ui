@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"html/template"
 	"os"
 	"path/filepath"
 
@@ -41,7 +40,6 @@ func (c *OVConfigController) Get() {
 		return
 	}
 	c.Data["ServerConfig"] = string(serverConf)
-	c.Data["xsrfdata"] = template.HTML(c.XSRFFormHTML())
 	cfg := models.OVConfig{Profile: "default"}
 	_ = cfg.Read("Profile")
 	// The file is what OpenVPN uses, and saving must not change the mode by accident

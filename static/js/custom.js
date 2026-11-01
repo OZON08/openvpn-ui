@@ -1,11 +1,14 @@
 $.MyAPP = {};
 
+// The API rejects changes without the token of this session
+$.ajaxSetup({ headers: { 'X-Xsrftoken': $('meta[name="xsrf-token"]').attr('content') } });
+
 $.MyAPP.Disconnect = function (cname){
   console.log(cname)
   $.ajax({
     type: "DELETE",
     dataType: "json",
-    url: "api/v1/session",
+    url: "/api/v1/session",
     data: JSON.stringify({ "cname": cname }),
     success: function(data) {
       location.reload();
@@ -21,9 +24,10 @@ $.MyAPP.Disconnect = function (cname){
 $.MyAPP.Restart = function (sname){
   console.log(sname)
   $.ajax({
-    type: "DELETE",
+    type: "POST",
     dataType: "json",
-    url: "/signal",
+    contentType: "application/json",
+    url: "/api/v1/signal",
     data: JSON.stringify({ "sname": sname }),
     success: function(data) {
       location.reload();

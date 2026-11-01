@@ -22,48 +22,37 @@ func (c *DangerController) Get() {
 	}
 }
 
-// @router /pki/delete/:key [DeletePKI]
+// @router /pki/delete/:key [post]
 func (c *DangerController) DeletePKI() {
-	c.TplName = "maintenance.html"
 	flash := web.NewFlash()
 	name := c.GetString(":key")
 	//logs.Info("Controller: Deleting:", name)
 	if err := lib.DeletePKI(name); err != nil {
 		logs.Error(err)
 		flash.Error("%s", err.Error())
-		flash.Store(&c.Controller)
 	} else {
 		flash.Success("Success! The \"%s\" has been deleted", name)
-		flash.Store(&c.Controller)
 		models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "pki.delete", name, "", c.Ctx.Input.IP())
 	}
-	c.Data["Flash"] = flash.Data
-	//logs.Info("Flash message stored:", flash.Data)
-	//	c.Redirect(c.URLFor("DangerController.Get"), 302)
+	c.redirectWithFlash(flash, c.URLFor("DangerController.Get"))
 }
 
-// @router /pki/init/:key [InitPKI]
+// @router /pki/init/:key [post]
 func (c *DangerController) InitPKI() {
-	c.TplName = "maintenance.html"
 	flash := web.NewFlash()
 	name := c.GetString(":key")
 	//logs.Info("Controller: Runing init for:", name)
 	if err := lib.InitPKI(name); err != nil {
 		logs.Error(err)
 		flash.Error("%s", err.Error())
-		flash.Store(&c.Controller)
 	} else {
 		flash.Success("Success! The \"%s\" has been initialized.", name)
-		flash.Store(&c.Controller)
 	}
-	c.Data["Flash"] = flash.Data
-	//logs.Info("Flash message stored:", flash.Data)
-	//	c.Redirect(c.URLFor("DangerController.Get"), 302)
+	c.redirectWithFlash(flash, c.URLFor("DangerController.Get"))
 }
 
-// @router /container/restart [RestartContainer]
+// @router /container/restart/:key [post]
 func (c *DangerController) RestartContainer() {
-	c.TplName = "maintenance.html"
 	flash := web.NewFlash()
 	name := c.GetString(":key")
 	//logs.Info("Controller: Restarting:", name)
@@ -71,11 +60,8 @@ func (c *DangerController) RestartContainer() {
 		logs.Error("Error restarting container:", err)
 		//	logs.Error("Stack trace:", string(debug.Stack()))
 		flash.Error("%s", err.Error())
-		flash.Store(&c.Controller)
 	} else {
 		flash.Success("Success! Container \"%s\" has been restarted", name)
-		flash.Store(&c.Controller)
 	}
-	c.Data["Flash"] = flash.Data
-	//logs.Info("Flash message stored:", flash.Data)
+	c.redirectWithFlash(flash, c.URLFor("DangerController.Get"))
 }

@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"html/template"
 	"os"
 	"path/filepath"
 
@@ -40,7 +39,6 @@ func (c *OVClientConfigController) Get() {
 		return
 	}
 	c.Data["ClientTemplate"] = string(clientTemplate)
-	c.Data["xsrfdata"] = template.HTML(c.XSRFFormHTML())
 	cfg := models.OVClientConfig{Profile: "default"}
 	_ = cfg.Read("Profile")
 	c.Data["Settings"] = &cfg

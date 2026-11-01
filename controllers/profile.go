@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"html/template"
 	"path/filepath"
 
 	passlib "gopkg.in/hlandau/passlib.v1"
@@ -36,7 +35,7 @@ type ProfileController struct {
 func (c *ProfileController) NestPrepare() {
 	if !c.IsLogin {
 		c.Ctx.Redirect(302, c.LoginPath())
-		return
+		c.StopRun()
 	}
 	c.Data["breadcrumbs"] = &BreadCrumbs{
 		Title: "Profile configuration",
@@ -44,7 +43,6 @@ func (c *ProfileController) NestPrepare() {
 }
 
 func (c *ProfileController) Get() {
-	c.Data["xsrfdata"] = template.HTML(c.XSRFFormHTML())
 	c.Data["profile"] = c.Userinfo
 	c.TplName = "profile.html"
 
@@ -130,6 +128,7 @@ func validateNewUser(nuser NewUser) map[string]map[string]string {
 
 // @router /profile/create [Create]
 func (c *ProfileController) Create() {
+	c.RequireAdmin()
 	c.TplName = "profile.html"
 	c.Data["profile"] = c.Userinfo
 	flash := web.NewFlash()
@@ -225,6 +224,10 @@ func (c *ProfileController) Create() {
 
 // @router /profile [post]
 func (c *ProfileController) List() {
+	c.TplName = "profile.html"
+	if !c.Userinfo.IsAdmin {
+		return
+	}
 	o := orm.NewOrm()
 	var users []*models.User
 	if _, err := o.QueryTable("user").All(&users); err != nil {
@@ -232,10 +235,7 @@ func (c *ProfileController) List() {
 		return
 	}
 	c.Data["users"] = users
-	c.TplName = "profile.html"
-	if c.Userinfo != nil && c.Userinfo.IsAdmin {
-		c.populateAdminCertData(users)
-	}
+	c.populateAdminCertData(users)
 }
 
 func (c *ProfileController) populateAdminCertData(users []*models.User) {
@@ -273,37 +273,38 @@ func (c *ProfileController) populateAdminCertData(users []*models.User) {
 	c.Data["assignedCertNames"] = assignedCertNames
 }
 
-// @router /profile/delete/:key [get]
+// @router /profile/delete/:key [post]
 func (c *ProfileController) DeleteUser() {
-	c.TplName = "profile.html"
+	c.RequireAdmin()
 	flash := web.NewFlash()
+	target := c.URLFor("ProfileController.Get")
 	id, err := c.GetInt(":key")
-	if err != nil {
-		logs.Error("Failed to get user ID:", err)
+	if err != nil || id == 1 {
+		flash.Error("This user cannot be deleted")
+		c.redirectWithFlash(flash, target)
 		return
 	}
 
 	o := orm.NewOrm()
 	user := models.User{Id: int64(id)}
-
-	// Read the user first to populate the Login field before deleting it from the database
-	err = o.Read(&user)
-	if err != nil {
+	if err := o.Read(&user); err != nil {
 		logs.Error("Failed to get user:", err)
+		flash.Error("User not found")
+		c.redirectWithFlash(flash, target)
 		return
 	}
 
 	if _, err := o.Delete(&user); err != nil {
 		logs.Error("Failed to delete user \""+user.Login+"\" profile:", err)
 		flash.Error("Failed to delete user \"%s\" profile", user.Login)
+		c.redirectWithFlash(flash, target)
 		return
 	}
 
-	logs.Info("New user with login \""+user.Login+"\" deleted successfully. It had user ID: ", id)
+	logs.Info("User with login \""+user.Login+"\" deleted. It had user ID: ", id)
 	flash.Success("User \"%s\" deleted successfully.", user.Login)
-	flash.Store(&c.Controller)
 	models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "user.delete", user.Login, "", c.Ctx.Input.IP())
-	c.List()
+	c.redirectWithFlash(flash, target)
 }
 
 func (c *ProfileController) AssignCert() {
@@ -438,6 +439,7 @@ func (c *ProfileController) SeedCerts() {
 
 // @router /profile/edit/:key [post]
 func (c *ProfileController) EditUser() {
+	c.RequireAdmin()
 	c.TplName = "profile.html"
 	flash := web.NewFlash()
 	id, err := c.GetInt(":key")

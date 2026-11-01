@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"html/template"
 
 	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/core/logs"
@@ -23,7 +22,6 @@ func (c *SettingsController) NestPrepare() {
 
 func (c *SettingsController) Get() {
 	c.TplName = "settings.html"
-	c.Data["xsrfdata"] = template.HTML(c.XSRFFormHTML())
 	settings := models.Settings{Profile: "default"}
 	_ = settings.Read("Profile")
 	c.Data["Settings"] = &settings

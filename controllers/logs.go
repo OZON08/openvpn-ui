@@ -19,7 +19,7 @@ type LogsController struct {
 func (c *LogsController) NestPrepare() {
 	if !c.IsLogin {
 		c.Ctx.Redirect(302, c.LoginPath())
-		return
+		c.StopRun()
 	}
 }
 

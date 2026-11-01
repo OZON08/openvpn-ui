@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"html/template"
 	"os"
 	"path/filepath"
 
@@ -38,7 +37,6 @@ func (c *EasyRSAConfigController) Get() {
 	}
 	c.Data["EasyRSAConf"] = string(easyRSAConfig)
 
-	c.Data["xsrfdata"] = template.HTML(c.XSRFFormHTML())
 	cfg := models.EasyRSAConfig{Profile: "default"}
 	_ = cfg.Read("Profile")
 	c.Data["Settings"] = &cfg

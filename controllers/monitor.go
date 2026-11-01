@@ -24,7 +24,7 @@ type MonitorController struct {
 func (c *MonitorController) NestPrepare() {
 	if !c.IsLogin {
 		c.Ctx.Redirect(302, c.LoginPath())
-		return
+		c.StopRun()
 	}
 	if !c.Userinfo.IsAdmin {
 		c.Ctx.Redirect(302, c.URLFor("MainController.Get"))
@@ -162,7 +162,7 @@ func loadInfluxStatus() (*InfluxStatusView, *InfluxConfigView) {
 func (c *MonitorController) SaveInflux() {
 	if !c.IsLogin {
 		c.Ctx.Redirect(302, c.LoginPath())
-		return
+		c.StopRun()
 	}
 	if c.Userinfo == nil || !c.Userinfo.IsAdmin {
 		c.Data["error"] = "admin privileges required"
