@@ -58,6 +58,12 @@ func RemoveCert(userID int64, certName string) error {
 	return err
 }
 
+// RemoveCertAssignments removes the assignments of a certificate name for all users.
+func RemoveCertAssignments(certName string) error {
+	_, err := orm.NewOrm().QueryTable(new(UserCertificate)).Filter("CertName", certName).Delete()
+	return err
+}
+
 // TransferCert atomically removes a cert assignment from one user and assigns it
 // to another. If toUserID already has the assignment, only the source is removed.
 func TransferCert(fromUserID, toUserID int64, certName string) error {

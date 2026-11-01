@@ -1077,6 +1077,10 @@ validity; the mapping only controls visibility and download access in the UI.
    whose login matches the certificate CN. Use this once when upgrading from a version without
    cert scoping.
 
+#### TLS control channel
+
+Choose `tls-crypt` or `tls-auth` under **OpenVPN Server > TLS control channel**, or set the line in `server.conf`. Client profiles follow the active line. After a change, existing clients need a newly downloaded profile.
+
 #### PKI index permissions
 
 The openvpn-ui container must be able to read `pki/index.txt`. In **rootless Docker** setups

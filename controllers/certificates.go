@@ -163,6 +163,10 @@ func (c *CertificatesController) showCerts() {
 func (c *CertificatesController) Post() {
 	c.TplName = "certificates.html"
 	flash := web.NewFlash()
+	if !c.Userinfo.IsAdmin {
+		c.Redirect(c.URLFor("CertificatesController.Get"), 302)
+		return
+	}
 
 	cParams := NewCertParams{}
 	if err := c.ParseForm(&cParams); err != nil {
@@ -173,6 +177,14 @@ func (c *CertificatesController) Post() {
 		if vMap := validateCertParams(cParams); vMap != nil {
 			c.Data["validation"] = vMap
 		} else {
+			// The name can be free again after a removal. Its former owner must not get this certificate.
+			if err := clearFreeCertName(cParams.Name); err != nil {
+				logs.Error(err)
+				flash.Error("%s", err.Error())
+				flash.Store(&c.Controller)
+				c.showCerts()
+				return
+			}
 			logs.Info("Controller: Creating certificate with parameters: Name=%s, Staticip=%s, Passphrase=%s, ExpireDays=%s, Email=%s, Country=%s, Province=%s, City=%s, Org=%s, OrgUnit=%s, TFAName=%s, TFAIssuer=%s", cParams.Name, cParams.Staticip, cParams.Passphrase, cParams.ExpireDays, cParams.Email, cParams.Country, cParams.Province, cParams.City, cParams.Org, cParams.OrgUnit, cParams.TFAName, cParams.TFAIssuer)
 			if err := lib.CreateCertificate(cParams.Name, cParams.Staticip, cParams.Passphrase, cParams.ExpireDays, cParams.Email, cParams.Country, cParams.Province, cParams.City, cParams.Org, cParams.OrgUnit, cParams.TFAName, cParams.TFAIssuer); err != nil {
 				logs.Error(err)
@@ -242,6 +254,9 @@ func (c *CertificatesController) Burn() {
 		flash.Success("Success! Certificate for the name \"%s\" and serial \"%s\" has been removed", CN, serial)
 		flash.Store(&c.Controller)
 		models.WriteAuditLog(c.Userinfo.Id, c.Userinfo.Login, "cert.burn", CN, "", c.Ctx.Input.IP())
+		if err := clearFreeCertName(CN); err != nil {
+			logs.Error(err)
+		}
 	}
 	c.showCerts()
 }
@@ -281,6 +296,37 @@ func validateCertParams(cert NewCertParams) map[string]map[string]string {
 		return lib.CreateValidationMap(valid)
 	}
 	return nil
+}
+
+// clearFreeCertName removes the assignments of a name no listed certificate uses.
+func clearFreeCertName(name string) error {
+	certs, err := lib.ReadCerts(filepath.Join(state.GlobalCfg.OVConfigPath, "pki/index.txt"))
+	if err != nil {
+		return err
+	}
+	for _, cert := range certs {
+		if cert.Details.Name == name {
+			return nil
+		}
+	}
+	return models.RemoveCertAssignments(name)
+}
+
+// saveProfile renders a client profile in the TLS mode of the server config.
+func saveProfile(tplPath string, cfg clientconfig.Config, destPath string) error {
+	tpl, err := os.ReadFile(tplPath)
+	if err != nil {
+		return err
+	}
+	serverConf, err := os.ReadFile(filepath.Join(state.GlobalCfg.OVConfigPath, "server.conf"))
+	if err != nil {
+		return err
+	}
+	text, err := clientconfig.GetText(lib.ProfileTemplateForServer(string(tpl), string(serverConf)), cfg)
+	if err != nil {
+		return err
+	}
+	return lib.WritePrivateFile(destPath, text)
 }
 
 func (c *CertificatesController) saveClientConfig(keysPath string, name string) (string, error) {
@@ -345,7 +391,7 @@ func (c *CertificatesController) saveClientConfig(keysPath string, name string) 
 	// cfg.Cipher = serverConfig.Cipher //Now getting it from client config
 
 	destPath := filepath.Join(state.GlobalCfg.OVConfigPath, "clients", name+".ovpn")
-	if err := clientconfig.SaveToFile(filepath.Join(c.ConfigDir, "openvpn-client-config.tpl"), cfg, destPath); err != nil {
+	if err := saveProfile(filepath.Join(c.ConfigDir, "openvpn-client-config.tpl"), cfg, destPath); err != nil {
 		logs.Error(err)
 		return "", err
 	}
