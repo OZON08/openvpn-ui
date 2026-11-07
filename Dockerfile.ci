@@ -1,5 +1,5 @@
 # ---- Stage 1: Build openvpn-ui binary ----
-FROM golang:1.26.10-alpine AS builder
+FROM golang:1.27.2-alpine AS builder
 
 RUN apk add --no-cache gcc musl-dev git
 
@@ -8,7 +8,7 @@ COPY . .
 RUN CGO_ENABLED=1 go build -mod=vendor -o openvpn-ui .
 
 # ---- Stage 2: Build qrencode ----
-FROM golang:1.26.10-alpine AS qrencode-builder
+FROM golang:1.27.2-alpine AS qrencode-builder
 
 RUN apk add --no-cache git
 RUN git clone --depth 1 --branch v0.2.0 https://github.com/OZON08/qrencode /app/qrencode
